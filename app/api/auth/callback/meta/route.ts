@@ -18,14 +18,16 @@ export async function GET(request: NextRequest) {
     try {
         const { workspaceId } = JSON.parse(atob(state))
 
-        // Exchange code for access token
-        const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+        // Exchange code for access_token
+        const redirectUri = `${request.nextUrl.origin}/api/auth/callback/meta`
+
+        const tokenResponse = await fetch('https://graph.facebook.com/v21.0/oauth/access_token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 client_id: process.env.META_APP_ID,
                 client_secret: process.env.META_APP_SECRET,
-                redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback/meta`,
+                redirect_uri: redirectUri,
                 code,
             }),
         })
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
 
         // Exchange short-lived token for long-lived token
         const longLivedResponse = await fetch(
-            `https://graph.facebook.com/v18.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${process.env.META_APP_ID}&client_secret=${process.env.META_APP_SECRET}&fb_exchange_token=${tokenData.access_token}`
+            `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${process.env.META_APP_ID}&client_secret=${process.env.META_APP_SECRET}&fb_exchange_token=${tokenData.access_token}`
         )
 
         const longLivedData = await longLivedResponse.json()
@@ -46,7 +48,7 @@ export async function GET(request: NextRequest) {
 
         // Get user's Instagram Business Account
         const accountsResponse = await fetch(
-            `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+            `https://graph.facebook.com/v21.0/me/accounts?access_token=${accessToken}`
         )
 
         const accountsData = await accountsResponse.json()
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
         const pageAccessToken = accountsData.data[0].access_token
 
         const igResponse = await fetch(
-            `https://graph.facebook.com/v18.0/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`
+            `https://graph.facebook.com/v21.0/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`
         )
 
         const igData = await igResponse.json()
@@ -73,7 +75,7 @@ export async function GET(request: NextRequest) {
 
         // Get Instagram account details
         const igDetailsResponse = await fetch(
-            `https://graph.facebook.com/v18.0/${igBusinessId}?fields=username,profile_picture_url&access_token=${pageAccessToken}`
+            `https://graph.facebook.com/v21.0/${igBusinessId}?fields=username,profile_picture_url&access_token=${pageAccessToken}`
         )
 
         const igDetails = await igDetailsResponse.json()
