@@ -16,7 +16,7 @@ export default function ConnectInstagramButton({ workspaceId }: { workspaceId: s
 
         const state = btoa(JSON.stringify({ workspaceId }))
 
-        const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`
+        const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`
 
         window.location.href = authUrl
     }
