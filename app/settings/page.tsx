@@ -12,13 +12,25 @@ export default async function SettingsPage() {
     }
 
     // Get user's workspaces
-    const { data: workspaces } = await supabase
+    let { data: workspaces } = await supabase
         .from('workspaces')
         .select('*')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false })
 
-    const currentWorkspace = workspaces?.[0]
+    // Create a workspace if none exists
+    let currentWorkspace = workspaces?.[0]
+    if (!currentWorkspace) {
+        const { data: newWorkspace } = await supabase
+            .from('workspaces')
+            .insert({
+                name: 'Default Workspace',
+                owner_id: user.id
+            })
+            .select()
+            .single()
+        currentWorkspace = newWorkspace
+    }
 
     // Get connected social accounts
     const { data: socialAccounts } = await supabase
