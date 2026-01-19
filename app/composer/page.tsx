@@ -45,19 +45,21 @@ export default async function ComposerPage() {
                         socialAccounts={socialAccounts}
                     />
                 ) : (
-                    <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 p-8 sm:p-12 text-center">
-                        <div className="text-4xl mb-4">🔌</div>
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                            No Social Accounts Connected
+                    <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-12 text-center shadow-sm">
+                        <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span className="text-4xl text-blue-600">📱</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                            Connect Your Instagram
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            You need to connect an Instagram account before creating posts
+                        <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-sm mx-auto">
+                            To start creating and scheduling posts, you'll need to link your Instagram Professional account first.
                         </p>
                         <a
                             href="/settings"
-                            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-lg shadow-blue-500/25 transform hover:-translate-y-0.5"
                         >
-                            Go to Settings
+                            Get Started in Settings
                         </a>
                     </div>
                 )}
