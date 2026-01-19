@@ -3,6 +3,7 @@
 import { Instagram, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Image from 'next/image'
 
 type SocialAccount = {
     id: string
@@ -44,11 +45,15 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
                 >
                     <div className="flex items-center gap-3">
                         {account.profile_picture_url ? (
-                            <img
-                                src={account.profile_picture_url}
-                                alt={account.account_name || 'Profile'}
-                                className="w-12 h-12 rounded-full"
-                            />
+                            <div className="relative w-12 h-12">
+                                <Image
+                                    src={account.profile_picture_url}
+                                    alt={account.account_name || 'Profile'}
+                                    fill
+                                    className="rounded-full object-cover"
+                                    unoptimized // Meta URLs can have expiration/complex params, sometimes best to leave resizing to their CDN but still use Next.js for lazy loading
+                                />
+                            </div>
                         ) : (
                             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white">
                                 <Instagram size={24} />

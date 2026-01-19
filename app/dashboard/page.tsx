@@ -23,37 +23,40 @@ export default async function DashboardPage() {
 
     const workspace = workspaces?.[0]
 
-    // Get stats
-    const { count: totalPosts } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('workspace_id', workspace?.id || '')
-
-    const { count: publishedPosts } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('workspace_id', workspace?.id || '')
-        .eq('status', 'published')
-
-    const { count: scheduledPosts } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('workspace_id', workspace?.id || '')
-        .eq('status', 'scheduled')
-
-    const { data: connectedAccounts } = await supabase
-        .from('social_accounts')
-        .select('*')
-        .eq('workspace_id', workspace?.id || '')
-        .eq('is_active', true)
-
-    // Get recent posts
-    const { data: recentPosts } = await supabase
-        .from('posts')
-        .select('*, social_accounts(*)')
-        .eq('workspace_id', workspace?.id || '')
-        .order('created_at', { ascending: false })
-        .limit(5)
+    // Get stats and recent posts in parallel
+    const [
+        { count: totalPosts },
+        { count: publishedPosts },
+        { count: scheduledPosts },
+        { data: connectedAccounts },
+        { data: recentPosts }
+    ] = await Promise.all([
+        supabase
+            .from('posts')
+            .select('*', { count: 'exact', head: true })
+            .eq('workspace_id', workspace?.id || ''),
+        supabase
+            .from('posts')
+            .select('*', { count: 'exact', head: true })
+            .eq('workspace_id', workspace?.id || '')
+            .eq('status', 'published'),
+        supabase
+            .from('posts')
+            .select('*', { count: 'exact', head: true })
+            .eq('workspace_id', workspace?.id || '')
+            .eq('status', 'scheduled'),
+        supabase
+            .from('social_accounts')
+            .select('*')
+            .eq('workspace_id', workspace?.id || '')
+            .eq('is_active', true),
+        supabase
+            .from('posts')
+            .select('*, social_accounts(*)')
+            .eq('workspace_id', workspace?.id || '')
+            .order('created_at', { ascending: false })
+            .limit(5)
+    ])
 
     return (
         <DashboardLayout currentPage="dashboard">
