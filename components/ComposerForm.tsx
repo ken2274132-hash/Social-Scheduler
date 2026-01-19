@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, X, Loader2, Sparkles, Calendar, Send } from 'lucide-react'
 
 type SocialAccount = {
     id: string
@@ -284,7 +285,7 @@ export default function ComposerForm({
                                         }}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     >
-                                        {aiGeneration.hooks.map((hook, i) => (
+                                        {aiGeneration.hooks.map((hook: string, i: number) => (
                                             <option key={i} value={hook}>{hook}</option>
                                         ))}
                                     </select>
