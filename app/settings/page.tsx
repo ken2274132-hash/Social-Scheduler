@@ -72,9 +72,7 @@ export default async function SettingsPage() {
                                 Connect your Instagram account to start posting
                             </p>
                         </div>
-                        {currentWorkspace && (
-                            <ConnectInstagramButton workspaceId={currentWorkspace.id} />
-                        )}
+                        <ConnectInstagramButton workspaceId={currentWorkspace?.id || 'default'} />
                     </div>
 
                     {socialAccounts && socialAccounts.length > 0 ? (
