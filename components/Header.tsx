@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LayoutDashboard } from 'lucide-react'
 import { useState } from 'react'
+import { User } from '@supabase/supabase-js'
 
-export default function Header() {
+export default function Header({ user }: { user: User | null }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     return (
@@ -34,18 +35,30 @@ export default function Header() {
 
                     {/* CTA Buttons */}
                     <div className="hidden md:flex items-center gap-4">
-                        <Link
-                            href="/login"
-                            className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                        >
-                            Log in
-                        </Link>
-                        <Link
-                            href="/signup"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                        >
-                            Get Started
-                        </Link>
+                        {user ? (
+                            <Link
+                                href="/dashboard"
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            >
+                                <LayoutDashboard size={18} />
+                                Dashboard
+                            </Link>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/login"
+                                    className="text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                >
+                                    Log in
+                                </Link>
+                                <Link
+                                    href="/signup"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                >
+                                    Get Started
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -83,20 +96,33 @@ export default function Header() {
                             FAQ
                         </Link>
                         <div className="pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
-                            <Link
-                                href="/login"
-                                className="block w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                Log in
-                            </Link>
-                            <Link
-                                href="/signup"
-                                className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                Get Started
-                            </Link>
+                            {user ? (
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <LayoutDashboard size={18} />
+                                    Go to Dashboard
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link
+                                        href="/login"
+                                        className="block w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Log in
+                                    </Link>
+                                    <Link
+                                        href="/signup"
+                                        className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Get Started
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

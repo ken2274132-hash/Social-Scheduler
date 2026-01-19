@@ -1,10 +1,14 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     return (
         <>
-            <Header />
+            <Header user={user} />
             <main className="min-h-screen bg-white dark:bg-gray-950">
                 {/* Hero Section */}
                 <section className="container mx-auto px-4 py-20 text-center">

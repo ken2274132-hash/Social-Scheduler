@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
-import { Upload, X, Loader2, Sparkles, Calendar, Send } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Upload, X, Loader2, Sparkles, Calendar, Send, Heart, MessageCircle, Bookmark, Instagram, AlertCircle } from 'lucide-react'
 
 type SocialAccount = {
     id: string
@@ -42,6 +43,14 @@ export default function ComposerForm({
     const [mediaFile, setMediaFile] = useState<File | null>(null)
     const [mediaPreview, setMediaPreview] = useState<string | null>(null)
     const [mediaId, setMediaId] = useState<string | null>(null)
+    const searchParams = useSearchParams()
+
+    useEffect(() => {
+        const dateParam = searchParams.get('date')
+        if (dateParam) {
+            setScheduledDate(dateParam)
+        }
+    }, [searchParams])
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -190,9 +199,9 @@ export default function ComposerForm({
     }
 
     return (
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
             {/* Left: Content Input & Media */}
-            <div className="space-y-6">
+            <div className="lg:col-span-1 space-y-6">
                 <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         1. Media & Intent
@@ -261,8 +270,9 @@ export default function ComposerForm({
                     </div>
                 </div>
             </div>
-            {/* Right: AI Content & Scheduling */}
-            <div className="space-y-6">
+
+            {/* Middle: AI Content & Scheduling */}
+            <div className="lg:col-span-1 space-y-6">
                 {aiGeneration && (
                     <>
                         {/* AI Generated Content */}
@@ -281,7 +291,9 @@ export default function ComposerForm({
                                         value={selectedHook}
                                         onChange={(e) => {
                                             setSelectedHook(e.target.value)
-                                            setCaption(e.target.value + '\n\n' + selectedCaption + '\n\n' + aiGeneration.hashtags.join(' '))
+                                            if (aiGeneration) {
+                                                setCaption(e.target.value + '\n\n' + selectedCaption + '\n\n' + aiGeneration.hashtags.join(' '))
+                                            }
                                         }}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                                     >
@@ -300,10 +312,12 @@ export default function ComposerForm({
                                             <button
                                                 key={length}
                                                 onClick={() => {
-                                                    setSelectedCaption(aiGeneration.captions[length])
-                                                    setCaption(selectedHook + '\n\n' + aiGeneration.captions[length] + '\n\n' + aiGeneration.hashtags.join(' '))
+                                                    if (aiGeneration) {
+                                                        setSelectedCaption(aiGeneration.captions[length])
+                                                        setCaption(selectedHook + '\n\n' + aiGeneration.captions[length] + '\n\n' + aiGeneration.hashtags.join(' '))
+                                                    }
                                                 }}
-                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${selectedCaption === aiGeneration.captions[length]
+                                                className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${aiGeneration && selectedCaption === aiGeneration.captions[length]
                                                     ? 'bg-blue-600 text-white'
                                                     : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
                                                     }`}
@@ -391,6 +405,85 @@ export default function ComposerForm({
                         </div>
                     </>
                 )}
+            </div>
+
+            {/* Right: Instagram Preview (Sticky) */}
+            <div className="lg:col-span-1">
+                <div className="sticky top-24 space-y-4">
+                    <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-1">
+                        Live Preview
+                    </h2>
+
+                    <div className="bg-white dark:bg-black rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm max-w-[400px] mx-auto">
+                        {/* IG Header */}
+                        <div className="flex items-center justify-between p-3 border-b border-gray-50 dark:border-gray-900">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 p-[2px]">
+                                    <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 border-2 border-white dark:border-black flex items-center justify-center overflow-hidden">
+                                        <div className="bg-blue-600 w-full h-full flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                                            {socialAccounts.find(a => a.id === selectedAccount)?.account_name?.slice(0, 2) || 'SM'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    {socialAccounts.find(a => a.id === selectedAccount)?.account_name || 'your_account'}
+                                </div>
+                            </div>
+                            <button className="text-gray-500">•••</button>
+                        </div>
+
+                        {/* IG Media */}
+                        <div className="aspect-square bg-gray-50 dark:bg-gray-900 flex items-center justify-center relative group min-h-[300px]">
+                            {mediaPreview ? (
+                                <Image
+                                    src={mediaPreview}
+                                    alt="Preview"
+                                    fill
+                                    className="object-cover"
+                                />
+                            ) : (
+                                <div className="text-gray-400 text-sm flex flex-col items-center gap-2">
+                                    <Instagram size={40} className="opacity-20" />
+                                    <span>No media uploaded</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* IG Actions */}
+                        <div className="p-3">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex gap-4">
+                                    <Heart size={24} className="text-gray-900 dark:text-gray-100" />
+                                    <MessageCircle size={24} className="text-gray-900 dark:text-gray-100" />
+                                    <Send size={24} className="text-gray-900 dark:text-gray-100" />
+                                </div>
+                                <Bookmark size={24} className="text-gray-900 dark:text-gray-100" />
+                            </div>
+
+                            {/* IG Caption */}
+                            <div className="space-y-1">
+                                <p className="text-sm text-gray-900 dark:text-gray-100">
+                                    <span className="font-semibold mr-2">
+                                        {socialAccounts.find(a => a.id === selectedAccount)?.account_name?.toLowerCase().replace(/\s+/g, '_') || 'your_account'}
+                                    </span>
+                                    {caption ? (
+                                        <span className="whitespace-pre-wrap">{caption}</span>
+                                    ) : (
+                                        <span className="text-gray-400 italic">Your caption will appear here...</span>
+                                    )}
+                                </p>
+                                <p className="text-[10px] text-gray-500 uppercase mt-2">
+                                    Just now
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 px-1 text-xs text-gray-500 justify-center">
+                        <AlertCircle size={12} />
+                        Preview might look slightly different on the actual app.
+                    </div>
+                </div>
             </div>
         </div>
     )
