@@ -150,6 +150,65 @@ export default function ComposerForm({
         }
     }
 
+    const handlePublishNow = async () => {
+        if (!mediaFile && !mediaId) {
+            alert('Please upload an image or video first')
+            return
+        }
+
+        if (!confirm('Are you sure you want to publish this post right now?')) {
+            return
+        }
+
+        setLoading(true)
+        try {
+            let currentMediaId = mediaId
+            if (!currentMediaId && mediaFile) {
+                currentMediaId = await uploadMedia(mediaFile)
+            }
+
+            if (!currentMediaId) throw new Error('Media upload failed')
+
+            // 1. Create the post in 'draft' or 'scheduled' status first
+            const scheduleResponse = await fetch('/api/posts/schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    workspaceId,
+                    socialAccountId: selectedAccount,
+                    caption,
+                    scheduledAt: new Date().toISOString(),
+                    mediaId: currentMediaId,
+                }),
+            })
+
+            const scheduleData = await scheduleResponse.json()
+            if (!scheduleResponse.ok) throw new Error(scheduleData.error || 'Failed to initialize post')
+
+            // 2. Trigger immediate publish
+            const publishResponse = await fetch('/api/posts/publish-now', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    postId: scheduleData.post.id,
+                    workspaceId,
+                }),
+            })
+
+            const publishData = await publishResponse.json()
+            if (publishResponse.ok) {
+                alert('Post published successfully!')
+                window.location.href = '/dashboard'
+            } else {
+                throw new Error(publishData.error || 'Failed to publish post')
+            }
+        } catch (error: any) {
+            alert('Error: ' + error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handleSchedulePost = async () => {
         if (!scheduledDate || !scheduledTime) {
             alert('Please select date and time')
@@ -393,14 +452,24 @@ export default function ComposerForm({
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={handleSchedulePost}
-                                    disabled={loading || !scheduledDate || !scheduledTime}
-                                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-                                >
-                                    <Send size={20} />
-                                    {loading ? 'Scheduling...' : 'Schedule Post'}
-                                </button>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={handlePublishNow}
+                                        disabled={loading}
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium disabled:opacity-50"
+                                    >
+                                        <Send size={18} />
+                                        {loading ? '...' : 'Publish Now'}
+                                    </button>
+                                    <button
+                                        onClick={handleSchedulePost}
+                                        disabled={loading || !scheduledDate || !scheduledTime}
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                                    >
+                                        <Calendar size={18} />
+                                        {loading ? '...' : 'Schedule'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </>

@@ -30,6 +30,7 @@ export async function publishScheduledPosts() {
             .select('*, social_accounts(*), media_assets(*)')
             .eq('status', 'scheduled')
             .lte('scheduled_at', now)
+            .order('scheduled_at', { ascending: true })
             .limit(10) // Process max 10 at a time
 
         if (fetchError || !posts || posts.length === 0) {
@@ -53,6 +54,14 @@ export async function publishScheduledPosts() {
                     event: 'publishing_started',
                     details: { timestamp: new Date().toISOString() },
                 })
+
+                // Check if token is expired
+                if (post.social_accounts.token_expires_at) {
+                    const expiresAt = new Date(post.social_accounts.token_expires_at)
+                    if (expiresAt < new Date()) {
+                        throw new Error('Social account token expired. Please reconnect.')
+                    }
+                }
 
                 // Publish to Instagram
                 const result = await publishToInstagram(
@@ -111,23 +120,32 @@ async function publishToInstagram(post: any, accessToken: string) {
     try {
         const igUserId = post.social_accounts.account_id
         const caption = post.caption
-        const imageUrl = post.media_assets?.url
+        const mediaUrl = post.media_assets?.url
+        const mediaType = post.media_assets?.type // 'image' or 'video'
 
-        if (!imageUrl) {
+        if (!mediaUrl) {
             throw new Error('No media attached to post')
         }
 
         // Step 1: Create media container
+        const payload: any = {
+            caption: caption,
+            access_token: accessToken,
+        }
+
+        if (mediaType === 'video') {
+            payload.video_url = mediaUrl
+            payload.media_type = 'VIDEO'
+        } else {
+            payload.image_url = mediaUrl
+        }
+
         const containerResponse = await fetch(
             `https://graph.facebook.com/v18.0/${igUserId}/media`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    image_url: imageUrl,
-                    caption: caption,
-                    access_token: accessToken,
-                }),
+                body: JSON.stringify(payload),
             }
         )
 
@@ -139,7 +157,24 @@ async function publishToInstagram(post: any, accessToken: string) {
 
         const creationId = containerData.id
 
-        // Step 2: Publish the container
+        // Step 2: For videos, we need to wait for processing
+        if (mediaType === 'video') {
+            let status = 'IN_PROGRESS'
+            let attempts = 0
+            while (status !== 'FINISHED' && attempts < 10) {
+                await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5s
+                const statusResponse = await fetch(
+                    `https://graph.facebook.com/v18.0/${creationId}?fields=status_code&access_token=${accessToken}`
+                )
+                const statusData = await statusResponse.json()
+                status = statusData.status_code
+                attempts++
+                if (status === 'ERROR') throw new Error('Video processing failed on Instagram')
+            }
+            if (status !== 'FINISHED') throw new Error('Video processing timed out')
+        }
+
+        // Step 3: Publish the container
         const publishResponse = await fetch(
             `https://graph.facebook.com/v18.0/${igUserId}/media_publish`,
             {
