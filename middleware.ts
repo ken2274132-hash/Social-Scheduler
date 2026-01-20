@@ -56,6 +56,32 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl)
     }
 
+    // Admin route protection
+    const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
+    if (isAdminPath && session) {
+        const { data: userData } = await supabase
+            .from('users')
+            .select('role, status')
+            .eq('id', session.user.id)
+            .single()
+
+        // Block banned users
+        if (userData?.status === 'banned') {
+            await supabase.auth.signOut()
+            const redirectUrl = request.nextUrl.clone()
+            redirectUrl.pathname = '/login'
+            redirectUrl.searchParams.set('error', 'Your account has been suspended')
+            return NextResponse.redirect(redirectUrl)
+        }
+
+        // Redirect non-admins to dashboard
+        if (userData?.role !== 'super_admin') {
+            const redirectUrl = request.nextUrl.clone()
+            redirectUrl.pathname = '/dashboard'
+            return NextResponse.redirect(redirectUrl)
+        }
+    }
+
     return supabaseResponse
 }
 

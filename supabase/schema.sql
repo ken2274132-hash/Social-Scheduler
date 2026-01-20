@@ -84,6 +84,16 @@ CREATE TABLE IF NOT EXISTS post_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Users Table (RBAC - extends auth.users)
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT,
+    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'super_admin')),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'banned', 'suspended')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
@@ -92,6 +102,51 @@ ALTER TABLE media_assets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_generations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+-- Super Admin Check Function (SECURITY DEFINER bypasses RLS)
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.users
+        WHERE id = auth.uid() AND role = 'super_admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Users Table Policies
+CREATE POLICY "Users can view their own profile"
+    ON public.users FOR SELECT
+    USING (id = auth.uid() OR is_super_admin());
+
+CREATE POLICY "Super admins can view all users"
+    ON public.users FOR SELECT
+    USING (is_super_admin());
+
+CREATE POLICY "Super admins can update users"
+    ON public.users FOR UPDATE
+    USING (is_super_admin());
+
+-- Sync auth.users to public.users on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+    INSERT INTO public.users (id, email, role, status)
+    VALUES (NEW.id, NEW.email, 'user', 'active')
+    ON CONFLICT (id) DO NOTHING;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_profile ON auth.users;
+CREATE TRIGGER on_auth_user_created_profile
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_profile();
+
 
 -- Workspaces Policies
 CREATE POLICY "Users can view their own workspaces"
