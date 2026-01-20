@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -28,6 +28,28 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
         router.push('/login')
         router.refresh()
     }
+
+    // Cron Job Simulator for Local Development
+    useEffect(() => {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('⏰ Starting local cron simulator...')
+            const runCron = async () => {
+                try {
+                    await fetch('/api/cron/publish')
+                    console.log('⏰ Cron tick executed')
+                } catch (e) {
+                    console.error('⏰ Cron tick failed', e)
+                }
+            }
+
+            // Run immediately on mount
+            runCron()
+
+            // Then run every 60 seconds
+            const interval = setInterval(runCron, 60 * 1000)
+            return () => clearInterval(interval)
+        }
+    }, [])
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
