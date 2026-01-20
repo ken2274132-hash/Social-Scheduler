@@ -117,56 +117,69 @@ CREATE POLICY "Workspace owners can delete their workspaces"
     ON workspaces FOR DELETE
     USING (owner_id = auth.uid());
 
+-- Helper function to check workspace membership without recursion
+CREATE OR REPLACE FUNCTION public.check_is_workspace_admin(target_workspace_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.workspaces w
+        WHERE w.id = target_workspace_id AND w.owner_id = auth.uid()
+    ) OR EXISTS (
+        SELECT 1 FROM public.workspace_members wm
+        WHERE wm.workspace_id = target_workspace_id 
+        AND wm.user_id = auth.uid() 
+        AND wm.role = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.check_is_workspace_member(target_workspace_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.workspaces w
+        WHERE w.id = target_workspace_id AND w.owner_id = auth.uid()
+    ) OR EXISTS (
+        SELECT 1 FROM public.workspace_members wm
+        WHERE wm.workspace_id = target_workspace_id 
+        AND wm.user_id = auth.uid()
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 -- Workspace Members Policies
 CREATE POLICY "Users can view workspace members"
     ON workspace_members FOR SELECT
-    USING (user_id = auth.uid());
+    USING (user_id = auth.uid() OR check_is_workspace_member(workspace_id));
 
 CREATE POLICY "Workspace admins can manage members"
     ON workspace_members FOR ALL
-    USING (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid() AND role = 'admin')
-    );
+    USING (check_is_workspace_admin(workspace_id));
 
 -- Social Accounts Policies
 CREATE POLICY "Users can view social accounts in their workspaces"
     ON social_accounts FOR SELECT
-    USING (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
-    );
+    USING (check_is_workspace_member(workspace_id));
 
 CREATE POLICY "Workspace admins can manage social accounts"
     ON social_accounts FOR ALL
-    USING (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid() AND role = 'admin')
-    );
+    USING (check_is_workspace_admin(workspace_id));
 
 -- Media Assets Policies
 CREATE POLICY "Users can view media in their workspaces"
     ON media_assets FOR SELECT
-    USING (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
-    );
+    USING (check_is_workspace_member(workspace_id));
 
 CREATE POLICY "Users can create media in their workspaces"
     ON media_assets FOR INSERT
-    WITH CHECK (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
-    );
+    WITH CHECK (check_is_workspace_member(workspace_id));
 
 -- AI Generations Policies
 CREATE POLICY "Users can view AI generations for their media"
     ON ai_generations FOR SELECT
     USING (
         media_id IN (
-            SELECT id FROM media_assets WHERE 
-            workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-            workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
+            SELECT id FROM media_assets WHERE check_is_workspace_member(workspace_id)
         )
     );
 
@@ -177,33 +190,22 @@ CREATE POLICY "Users can create AI generations"
 -- Posts Policies
 CREATE POLICY "Users can view posts in their workspaces"
     ON posts FOR SELECT
-    USING (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
-    );
+    USING (check_is_workspace_member(workspace_id));
 
 CREATE POLICY "Users can create posts in their workspaces"
     ON posts FOR INSERT
-    WITH CHECK (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
-    );
+    WITH CHECK (check_is_workspace_member(workspace_id));
 
 CREATE POLICY "Users can update posts in their workspaces"
     ON posts FOR UPDATE
-    USING (
-        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid() AND role IN ('admin', 'editor'))
-    );
+    USING (check_is_workspace_member(workspace_id));
 
 -- Post Logs Policies
 CREATE POLICY "Users can view post logs"
     ON post_logs FOR SELECT
     USING (
         post_id IN (
-            SELECT id FROM posts WHERE 
-            workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
-            workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
+            SELECT id FROM posts WHERE check_is_workspace_member(workspace_id)
         )
     );
 
