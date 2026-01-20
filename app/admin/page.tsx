@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/AdminLayout'
 import { Users, FileText, AlertTriangle, HardDrive } from 'lucide-react'
 
+// Force dynamic rendering to avoid build-time DB queries
+export const dynamic = 'force-dynamic'
+
 export default async function AdminDashboard() {
     const supabase = await createClient()
 

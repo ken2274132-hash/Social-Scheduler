@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/AdminLayout'
 import { Shield, Ban, Eye } from 'lucide-react'
 
+// Force dynamic rendering to avoid build-time DB queries
+export const dynamic = 'force-dynamic'
+
 export default async function AdminUsersPage() {
     const supabase = await createClient()
 
@@ -67,8 +70,8 @@ export default async function AdminUsersPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${user.role === 'super_admin'
-                                                        ? 'bg-red-900/50 text-red-400'
-                                                        : 'bg-gray-700 text-gray-300'
+                                                    ? 'bg-red-900/50 text-red-400'
+                                                    : 'bg-gray-700 text-gray-300'
                                                     }`}>
                                                     {user.role === 'super_admin' && <Shield size={12} />}
                                                     {user.role}
@@ -76,10 +79,10 @@ export default async function AdminUsersPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${user.status === 'active'
-                                                        ? 'bg-green-900/50 text-green-400'
-                                                        : user.status === 'banned'
-                                                            ? 'bg-red-900/50 text-red-400'
-                                                            : 'bg-yellow-900/50 text-yellow-400'
+                                                    ? 'bg-green-900/50 text-green-400'
+                                                    : user.status === 'banned'
+                                                        ? 'bg-red-900/50 text-red-400'
+                                                        : 'bg-yellow-900/50 text-yellow-400'
                                                     }`}>
                                                     {user.status}
                                                 </span>
