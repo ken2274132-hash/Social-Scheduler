@@ -120,14 +120,7 @@ CREATE POLICY "Workspace owners can delete their workspaces"
 -- Workspace Members Policies
 CREATE POLICY "Users can view workspace members"
     ON workspace_members FOR SELECT
-    USING (
-        user_id = auth.uid() OR
-        EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE id = workspace_members.workspace_id 
-            AND owner_id = auth.uid()
-        )
-    );
+    USING (user_id = auth.uid());
 
 CREATE POLICY "Workspace admins can manage members"
     ON workspace_members FOR ALL
@@ -143,32 +136,15 @@ CREATE POLICY "Workspace admins can manage members"
 CREATE POLICY "Users can view social accounts in their workspaces"
     ON social_accounts FOR SELECT
     USING (
-        EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE id = social_accounts.workspace_id 
-            AND owner_id = auth.uid()
-        ) OR
-        EXISTS (
-            SELECT 1 FROM workspace_members 
-            WHERE workspace_id = social_accounts.workspace_id 
-            AND user_id = auth.uid()
-        )
+        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
+        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid())
     );
 
 CREATE POLICY "Workspace admins can manage social accounts"
     ON social_accounts FOR ALL
     USING (
-        EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE id = social_accounts.workspace_id 
-            AND owner_id = auth.uid()
-        ) OR
-        EXISTS (
-            SELECT 1 FROM workspace_members 
-            WHERE workspace_id = social_accounts.workspace_id 
-            AND user_id = auth.uid() 
-            AND role = 'admin'
-        )
+        workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()) OR
+        workspace_id IN (SELECT workspace_id FROM workspace_members WHERE user_id = auth.uid() AND role = 'admin')
     );
 
 -- Media Assets Policies
