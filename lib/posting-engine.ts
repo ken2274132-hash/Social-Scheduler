@@ -63,11 +63,19 @@ export async function publishScheduledPosts() {
                     }
                 }
 
-                // Publish to Instagram
-                const result = await publishToInstagram(
-                    post,
-                    post.social_accounts.access_token
-                )
+                // Route by platform
+                let result;
+                if (post.social_accounts.platform === 'facebook') {
+                    result = await publishToFacebook(
+                        post,
+                        post.social_accounts.access_token
+                    )
+                } else {
+                    result = await publishToInstagram(
+                        post,
+                        post.social_accounts.access_token
+                    )
+                }
 
                 if (result.success) {
                     // Update post status to published
@@ -206,6 +214,64 @@ async function publishToInstagram(post: any, accessToken: string) {
         return {
             success: true,
             postId: publishData.id,
+        }
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.message,
+        }
+    }
+}
+async function publishToFacebook(post: any, accessToken: string) {
+    try {
+        // Simulation Mode Check
+        if (accessToken === 'demo_token_simulator') {
+            console.log('🚀 SIMULATION MODE: Publishing to Facebook...')
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            return {
+                success: true,
+                postId: `fb_demo_${Math.random().toString(36).substring(7)}`,
+            }
+        }
+
+        const pageId = post.social_accounts.account_id
+        const message = post.caption
+        const mediaUrl = post.media_assets?.url
+        const mediaType = post.media_assets?.type // 'image' or 'video'
+
+        let endpoint = `https://graph.facebook.com/v21.0/${pageId}/feed`
+        const payload: any = {
+            message: message,
+            access_token: accessToken,
+        }
+
+        if (mediaUrl) {
+            if (mediaType === 'video') {
+                endpoint = `https://graph.facebook.com/v21.0/${pageId}/videos`
+                payload.file_url = mediaUrl
+                payload.description = message
+            } else {
+                endpoint = `https://graph.facebook.com/v21.0/${pageId}/photos`
+                payload.url = mediaUrl
+                payload.caption = message
+            }
+        }
+
+        const publishResponse = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        })
+
+        const publishData = await publishResponse.json()
+
+        if (publishData.error) {
+            throw new Error(publishData.error.message)
+        }
+
+        return {
+            success: true,
+            postId: publishData.id || publishData.post_id,
         }
     } catch (error: any) {
         return {
