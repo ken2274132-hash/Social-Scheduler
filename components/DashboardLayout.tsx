@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { ThemeToggle } from './ThemeToggle'
 
 interface DashboardLayoutProps {
     children: React.ReactNode
@@ -61,17 +62,20 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                     </div>
                     <span className="hidden sm:inline">Social Scheduler</span>
                 </Link>
-                <button
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    aria-label="Toggle menu"
-                >
-                    {isMobileMenuOpen ? (
-                        <X size={24} className="text-gray-600 dark:text-gray-400" />
-                    ) : (
-                        <Menu size={24} className="text-gray-600 dark:text-gray-400" />
-                    )}
-                </button>
+                <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        aria-label="Toggle menu"
+                    >
+                        {isMobileMenuOpen ? (
+                            <X size={24} className="text-gray-600 dark:text-gray-400" />
+                        ) : (
+                            <Menu size={24} className="text-gray-600 dark:text-gray-400" />
+                        )}
+                    </button>
+                </div>
             </header>
 
             {/* Mobile Menu Overlay */}
@@ -118,7 +122,11 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                     })}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800">
+                <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
+                    <div className="flex items-center justify-between px-3">
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Appearance</span>
+                        <ThemeToggle />
+                    </div>
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-3 py-2 w-full text-left text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"

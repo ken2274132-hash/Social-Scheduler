@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     email TEXT,
     role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'super_admin')),
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'banned', 'suspended')),
+    post_limit INTEGER NOT NULL DEFAULT 10,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

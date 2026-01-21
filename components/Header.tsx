@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Menu, X, LayoutDashboard } from 'lucide-react'
 import { useState } from 'react'
 import { User } from '@supabase/supabase-js'
+import { ThemeToggle } from './ThemeToggle'
 
 export default function Header({ user }: { user: User | null }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -59,16 +60,20 @@ export default function Header({ user }: { user: User | null }) {
                                 </Link>
                             </>
                         )}
+                        <ThemeToggle />
                     </div>
 
                     {/* Mobile Menu Button */}
-                    <button
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="md:hidden text-gray-900 dark:text-white"
-                        aria-label="Toggle menu"
-                    >
-                        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
+                    <div className="flex items-center gap-2 md:hidden">
+                        <ThemeToggle />
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="text-gray-900 dark:text-white"
+                            aria-label="Toggle menu"
+                        >
+                            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Menu */}

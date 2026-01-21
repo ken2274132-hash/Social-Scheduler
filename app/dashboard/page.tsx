@@ -13,6 +13,13 @@ export default async function DashboardPage() {
         redirect('/login')
     }
 
+    // Get user's profile for post_limit
+    const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
     // Get user's workspace
     let { data: workspaces } = await supabase
         .from('workspaces')
@@ -37,13 +44,17 @@ export default async function DashboardPage() {
     }
 
     // Get stats and recent posts in parallel
+    // Get stats and recent posts in parallel
+    // Get stats and recent posts in parallel
     const [
         { count: totalPosts },
         { count: publishedPosts },
         { count: scheduledPosts },
+        { count: failedPosts },
         { data: connectedAccounts },
         { data: recentPosts },
-        { data: draftPosts }
+        { data: draftPosts },
+        { data: upcomingPosts }
     ] = await Promise.all([
         supabase
             .from('posts')
@@ -60,6 +71,11 @@ export default async function DashboardPage() {
             .eq('workspace_id', workspace?.id || '')
             .eq('status', 'scheduled'),
         supabase
+            .from('posts')
+            .select('*', { count: 'exact', head: true })
+            .eq('workspace_id', workspace?.id || '')
+            .eq('status', 'failed'),
+        supabase
             .from('social_accounts')
             .select('*')
             .eq('workspace_id', workspace?.id || '')
@@ -74,10 +90,19 @@ export default async function DashboardPage() {
             .from('posts')
             .select('*', { count: 'exact', head: true })
             .eq('workspace_id', workspace?.id || '')
-            .eq('status', 'draft')
+            .eq('status', 'draft'),
+        // Fetch 3 upcoming posts
+        supabase
+            .from('posts')
+            .select('*, social_accounts(*)')
+            .eq('workspace_id', workspace?.id || '')
+            .eq('status', 'scheduled')
+            .gte('scheduled_at', new Date().toISOString())
+            .order('scheduled_at', { ascending: true })
+            .limit(3)
     ])
 
-    const planLimit = 10; // Placeholder for free plan limit
+    const planLimit = profile?.post_limit || 10;
     const usagePercentage = Math.min(((totalPosts || 0) / planLimit) * 100, 100);
 
     return (
@@ -200,60 +225,79 @@ export default async function DashboardPage() {
 
                     {/* Sidebar Stats */}
                     <div className="space-y-6">
-                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20">
-                            <h3 className="text-base font-bold mb-1">Growth Overview</h3>
-                            <p className="text-blue-100 text-xs mb-6">Your posting frequency is up 12%</p>
+                        {/* Upcoming Queue */}
+                        <div className="bg-gray-950 rounded-2xl p-6 border border-gray-800 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-bold text-white">Upcoming Queue</h3>
+                                <CalendarIcon size={16} className="text-orange-500" />
+                            </div>
 
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="opacity-80">Efficiency</span>
-                                    <span className="font-bold">88%</span>
-                                </div>
-                                <div className="w-full bg-white/20 rounded-full h-1.5">
-                                    <div className="bg-white rounded-full h-1.5 w-[88%] shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
-                                </div>
-
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="opacity-80">AI Utilization</span>
-                                    <span className="font-bold">95%</span>
-                                </div>
-                                <div className="w-full bg-white/20 rounded-full h-1.5">
-                                    <div className="bg-white rounded-full h-1.5 w-[95%] shadow-[0_0_8px_rgba(255,255,255,0.5)]"></div>
-                                </div>
+                                {upcomingPosts && upcomingPosts.length > 0 ? (
+                                    upcomingPosts.map((post: any) => (
+                                        <div key={post.id} className="flex items-start gap-3 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
+                                            <div className="mt-1">
+                                                {post.social_accounts?.platform === 'instagram' ? (
+                                                    <Instagram size={14} className="text-pink-500" />
+                                                ) : (
+                                                    <Instagram size={14} className="text-blue-500" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-medium text-gray-200 truncate">
+                                                    {post.caption || 'No caption'}
+                                                </p>
+                                                <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-tight">
+                                                    {new Date(post.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-6">
+                                        <p className="text-xs text-gray-500 italic">No posts scheduled next</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
+                        {/* Account Health/Status */}
                         <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Platform Reach</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Channel Status</h3>
                             <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center text-pink-600">
-                                        <Instagram size={16} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between text-xs mb-1">
-                                            <span className="font-medium dark:text-gray-300">Instagram</span>
-                                            <span className="text-gray-500">80%</span>
+                                {connectedAccounts && connectedAccounts.length > 0 ? (
+                                    connectedAccounts.map((account) => (
+                                        <div key={account.id} className="flex items-center justify-between group">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${account.platform === 'instagram'
+                                                    ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600'
+                                                    : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600'
+                                                    }`}>
+                                                    <Instagram size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">
+                                                        {account.account_name}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-500 capitalize">
+                                                        {account.platform}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                                <span className="text-[10px] font-bold text-green-600 uppercase">Active</span>
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1">
-                                            <div className="bg-pink-500 rounded-full h-1 w-[80%]"></div>
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <p className="text-xs text-gray-500">No accounts connected</p>
+                                        <Link href="/settings" className="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline mt-2 inline-block">
+                                            Connect Now
+                                        </Link>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
-                                        <Instagram size={16} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between text-xs mb-1">
-                                            <span className="font-medium dark:text-gray-300">Facebook</span>
-                                            <span className="text-gray-500">20%</span>
-                                        </div>
-                                        <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1">
-                                            <div className="bg-blue-500 rounded-full h-1 w-[20%]"></div>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
