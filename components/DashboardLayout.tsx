@@ -2,19 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut } from 'lucide-react'
+import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut, GitBranch } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { ThemeToggle } from './ThemeToggle'
 
 interface DashboardLayoutProps {
     children: React.ReactNode
-    currentPage: 'dashboard' | 'composer' | 'calendar' | 'settings'
+    currentPage: 'dashboard' | 'composer' | 'calendar' | 'settings' | 'workflow'
 }
 
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, key: 'dashboard' },
     { href: '/composer', label: 'Create Post', icon: FileText, key: 'composer' },
+    { href: '/workflow', label: 'Workflow', icon: GitBranch, key: 'workflow' },
     { href: '/calendar', label: 'Calendar', icon: CalendarIcon, key: 'calendar' },
     { href: '/settings', label: 'Settings', icon: Settings, key: 'settings' },
 ]

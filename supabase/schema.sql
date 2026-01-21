@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS workspace_members (
 CREATE TABLE IF NOT EXISTS social_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
-    platform TEXT NOT NULL DEFAULT 'instagram' CHECK (platform IN ('instagram', 'facebook')),
+    platform TEXT NOT NULL DEFAULT 'instagram' CHECK (platform IN ('instagram', 'facebook', 'pinterest')),
     account_name TEXT,
     account_id TEXT NOT NULL,
     access_token TEXT NOT NULL,
@@ -95,6 +95,46 @@ CREATE TABLE IF NOT EXISTS public.users (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Shopify Accounts Table
+CREATE TABLE IF NOT EXISTS shopify_accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+    shop_domain TEXT NOT NULL,
+    access_token TEXT NOT NULL,
+    shop_name TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(workspace_id, shop_domain)
+);
+
+-- Video Templates Table (for hook line overlays)
+CREATE TABLE IF NOT EXISTS video_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    hook_line TEXT NOT NULL,
+    font_size INTEGER DEFAULT 48,
+    text_color TEXT DEFAULT '#FFFFFF',
+    background_color TEXT DEFAULT '#000000',
+    position TEXT DEFAULT 'top' CHECK (position IN ('top', 'center', 'bottom')),
+    duration_seconds INTEGER DEFAULT 5,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Product Schedules Table (for workflow/bulk scheduling)
+CREATE TABLE IF NOT EXISTS product_schedules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+    shopify_product_id TEXT NOT NULL,
+    product_title TEXT NOT NULL,
+    product_image_url TEXT,
+    scheduled_date DATE NOT NULL,
+    social_account_id UUID REFERENCES social_accounts(id) ON DELETE SET NULL,
+    post_id UUID REFERENCES posts(id) ON DELETE SET NULL,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'scheduled', 'posted')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
@@ -104,6 +144,9 @@ ALTER TABLE ai_generations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shopify_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE video_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_schedules ENABLE ROW LEVEL SECURITY;
 
 -- Super Admin Check Function (SECURITY DEFINER bypasses RLS)
 CREATE OR REPLACE FUNCTION public.is_super_admin()
@@ -341,3 +384,52 @@ USING (
     auth.role() = 'authenticated' AND
     public.check_is_workspace_member( (SPLIT_PART(name, '/', 1))::uuid )
 );
+
+-- Shopify Accounts Policies
+CREATE POLICY "Users can view shopify accounts in their workspaces"
+    ON shopify_accounts FOR SELECT
+    USING (check_is_workspace_member(workspace_id));
+
+CREATE POLICY "Workspace admins can manage shopify accounts"
+    ON shopify_accounts FOR ALL
+    USING (check_is_workspace_admin(workspace_id));
+
+-- Video Templates Policies
+CREATE POLICY "Users can view video templates in their workspaces"
+    ON video_templates FOR SELECT
+    USING (check_is_workspace_member(workspace_id));
+
+CREATE POLICY "Workspace members can create video templates"
+    ON video_templates FOR INSERT
+    WITH CHECK (check_is_workspace_member(workspace_id));
+
+CREATE POLICY "Workspace admins can manage video templates"
+    ON video_templates FOR UPDATE
+    USING (check_is_workspace_admin(workspace_id));
+
+CREATE POLICY "Workspace admins can delete video templates"
+    ON video_templates FOR DELETE
+    USING (check_is_workspace_admin(workspace_id));
+
+-- Product Schedules Policies
+CREATE POLICY "Users can view product schedules in their workspaces"
+    ON product_schedules FOR SELECT
+    USING (check_is_workspace_member(workspace_id));
+
+CREATE POLICY "Workspace members can create product schedules"
+    ON product_schedules FOR INSERT
+    WITH CHECK (check_is_workspace_member(workspace_id));
+
+CREATE POLICY "Workspace members can update product schedules"
+    ON product_schedules FOR UPDATE
+    USING (check_is_workspace_member(workspace_id));
+
+CREATE POLICY "Workspace admins can delete product schedules"
+    ON product_schedules FOR DELETE
+    USING (check_is_workspace_admin(workspace_id));
+
+-- Create indexes for new tables
+CREATE INDEX idx_shopify_accounts_workspace_id ON shopify_accounts(workspace_id);
+CREATE INDEX idx_video_templates_workspace_id ON video_templates(workspace_id);
+CREATE INDEX idx_product_schedules_workspace_id ON product_schedules(workspace_id);
+CREATE INDEX idx_product_schedules_scheduled_date ON product_schedules(scheduled_date);

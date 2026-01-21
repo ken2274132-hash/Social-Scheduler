@@ -15,15 +15,19 @@ This document tracks the completion of features and milestones for the Social Me
 | **Phase 4** | AI Composer | ✅ Done | 2026-01-19 | Media upload, AI hooks, and captions |
 | **Phase 5** | Dashboard & Polish | ✅ Done | 2026-01-19 | Premium UI, Preview, and Calendar |
 | **Phase 6** | Auto-Posting Engine | ✅ Done | 2026-01-19 | Edge Functions + Instagram API |
-| **Phase 7** | Testing (Instagram) | 🟡 In Progress | - | End-to-end validation |
+| **Phase 7** | Testing (Instagram) | ✅ Done | 2026-01-20 | End-to-end validation |
 | **Phase 8** | Facebook Integration | ✅ Done | 2026-01-20 | FB Page connection & RLS fixed |
+| **Phase 9** | Shopify Integration | ✅ Done | 2026-01-21 | OAuth, products API, store connection |
+| **Phase 10** | Pinterest Integration | ✅ Done | 2026-01-21 | OAuth + Pin creation via API v5 |
+| **Phase 11** | Workflow Builder | ✅ Done | 2026-01-21 | Multi-product bulk scheduling |
+| **Phase 12** | Video Generation | ✅ Done | 2026-01-21 | Hook line overlay templates |
 
 ---
 
 ## 🎯 Current Focus
 
-**Status**: Phase 8 Complete ✅  
-**Next**: Final End-to-End Testing
+**Status**: Phase 12 Complete ✅  
+**Next**: Testing new integrations (Shopify, Pinterest, Workflow)
 
 ---
 

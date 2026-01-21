@@ -70,6 +70,11 @@ export async function publishScheduledPosts() {
                         post,
                         post.social_accounts.access_token
                     )
+                } else if (post.social_accounts.platform === 'pinterest') {
+                    result = await publishToPinterest(
+                        post,
+                        post.social_accounts.access_token
+                    )
                 } else {
                     result = await publishToInstagram(
                         post,
@@ -272,6 +277,72 @@ async function publishToFacebook(post: any, accessToken: string) {
         return {
             success: true,
             postId: publishData.id || publishData.post_id,
+        }
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.message,
+        }
+    }
+}
+
+async function publishToPinterest(post: any, accessToken: string) {
+    try {
+        // Simulation Mode Check
+        if (accessToken === 'demo_token_simulator') {
+            console.log('🚀 SIMULATION MODE: Publishing to Pinterest...')
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            return {
+                success: true,
+                postId: `pin_demo_${Math.random().toString(36).substring(7)}`,
+            }
+        }
+
+        const mediaUrl = post.media_assets?.url
+        const caption = post.caption || ''
+
+        if (!mediaUrl) {
+            throw new Error('No media attached to post')
+        }
+
+        // First, we need to get user's boards to post to
+        // For now, we'll create a Pin without specifying a board (goes to profile)
+        // In a full implementation, you'd let users select a board
+
+        const pinPayload: any = {
+            title: caption.substring(0, 100), // Pinterest title max 100 chars
+            description: caption,
+            link: post.media_assets?.product_url || process.env.NEXT_PUBLIC_APP_URL,
+            media_source: {
+                source_type: 'image_url',
+                url: mediaUrl,
+            },
+        }
+
+        // If we have a board_id stored in post metadata, use it
+        if (post.pinterest_board_id) {
+            pinPayload.board_id = post.pinterest_board_id
+        }
+
+        const pinResponse = await fetch('https://api.pinterest.com/v5/pins', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(pinPayload),
+        })
+
+        const pinData = await pinResponse.json()
+
+        if (pinData.code || pinData.message) {
+            // Pinterest API returns error in code/message format
+            throw new Error(pinData.message || 'Pinterest API error')
+        }
+
+        return {
+            success: true,
+            postId: pinData.id,
         }
     } catch (error: any) {
         return {

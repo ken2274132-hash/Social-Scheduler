@@ -2,8 +2,11 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ConnectInstagramButton from '@/components/ConnectInstagramButton'
 import ConnectFacebookButton from '@/components/ConnectFacebookButton'
+import ConnectPinterestButton from '@/components/ConnectPinterestButton'
+import ConnectShopifyButton from '@/components/ConnectShopifyButton'
 import DemoAccountButton from '@/components/DemoAccountButton'
 import ConnectedAccounts from '@/components/ConnectedAccounts'
+import ShopifyStatus from '@/components/ShopifyStatus'
 import DashboardLayout from '@/components/DashboardLayout'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 
@@ -119,6 +122,7 @@ export default async function SettingsPage({
                             <DemoAccountButton workspaceId={currentWorkspace?.id || 'default'} />
                             <ConnectInstagramButton workspaceId={currentWorkspace?.id || 'default'} />
                             <ConnectFacebookButton workspaceId={currentWorkspace?.id || 'default'} />
+                            <ConnectPinterestButton workspaceId={currentWorkspace?.id || 'default'} />
                         </div>
                     </div>
 
@@ -135,6 +139,22 @@ export default async function SettingsPage({
                             </p>
                         </div>
                     )}
+                </section>
+
+                {/* Shopify Integration */}
+                <section className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 p-4 sm:p-6 mt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                                Shopify Store
+                            </h2>
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                Connect your Shopify store to import products for posting
+                            </p>
+                        </div>
+                        <ConnectShopifyButton workspaceId={currentWorkspace?.id || 'default'} />
+                    </div>
+                    <ShopifyStatus />
                 </section>
             </div>
         </DashboardLayout>
