@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import AdminLayout from '@/components/AdminLayout'
 import { Shield, Ban, Eye, Save, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
