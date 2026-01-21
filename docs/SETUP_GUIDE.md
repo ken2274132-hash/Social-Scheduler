@@ -133,9 +133,9 @@ NEXT_PUBLIC_META_APP_ID=your-app-id-here
 
 ### Step 3: Configure Redirect URLs
 1. In your app dashboard, click **"App setup"**
-2. Under **"App URL"**, enter: `https://social-media-scheduler-auto-repurpo.vercel.app`
+2. Under **"App URL"**, enter: `https://social-scheduler-mu.vercel.app`
 3. Under **"Allowed redirection URL(s)"**, add:
-   - `https://social-media-scheduler-auto-repurpo.vercel.app/api/shopify/callback`
+   - `https://social-scheduler-mu.vercel.app/api/shopify/callback`
    - `http://localhost:3000/api/shopify/callback` (for dev)
 
 ### Step 4: Get API Credentials
@@ -163,7 +163,7 @@ NEXT_PUBLIC_META_APP_ID=your-app-id-here
 ### Step 3: Configure Redirect URIs
 1. In your app settings, find **"Callback URLs"**
 2. Add:
-   - `https://social-media-scheduler-auto-repurpo.vercel.app/api/auth/callback/pinterest`
+   - `https://social-scheduler-mu.vercel.app/api/auth/callback/pinterest`
    - `http://localhost:3000/api/auth/callback/pinterest` (for dev)
 
 ### Step 4: Get App ID & Secret
@@ -181,7 +181,7 @@ NEXT_PUBLIC_META_APP_ID=your-app-id-here
 ### Update App Domain
 Update `.env.local`:
 ```env
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
+NEXT_PUBLIC_APP_URL=https://social-scheduler-mu.vercel.app
 NODE_ENV=production
 ```
 
@@ -189,7 +189,7 @@ NODE_ENV=production
 1. Go to Meta Developer Console
 2. Update **"App Domains"** with your production domain
 3. Update **OAuth Redirect URIs**:
-   - `https://yourdomain.com/api/auth/callback/meta`
+   - `https://social-scheduler-mu.vercel.app/api/auth/callback/meta`
 
 ---
 
@@ -247,7 +247,7 @@ NEXT_PUBLIC_META_APP_ID=123456789
 OPENAI_API_KEY=sk-...
 
 # App
-NEXT_PUBLIC_APP_URL=https://social-media-scheduler-auto-repurpo.vercel.app
+NEXT_PUBLIC_APP_URL=https://social-scheduler-mu.vercel.app
 NODE_ENV=production
 
 # Shopify
