@@ -120,7 +120,63 @@ NEXT_PUBLIC_META_APP_ID=your-app-id-here
 
 ---
 
-## 4️⃣ Production Setup (When Ready to Deploy)
+## 4️⃣ Shopify Store Setup
+
+### Step 1: Create Shopify Partner Account
+1. Go to **[https://partners.shopify.com](https://partners.shopify.com)**
+2. Sign up or log in
+
+### Step 2: Create a Custom App
+1. Click **"Apps"** in sidebar → **"Create app"**
+2. Select **"Create app manually"**
+3. App Name: `Social Scheduler`
+
+### Step 3: Configure Redirect URLs
+1. In your app dashboard, click **"App setup"**
+2. Under **"App URL"**, enter: `https://social-media-scheduler-auto-repurpo.vercel.app`
+3. Under **"Allowed redirection URL(s)"**, add:
+   - `https://social-media-scheduler-auto-repurpo.vercel.app/api/shopify/callback`
+   - `http://localhost:3000/api/shopify/callback` (for dev)
+
+### Step 4: Get API Credentials
+1. Scroll to **"API credentials"**
+2. Copy **"Client ID"** and **"Client secret"**
+3. Update `.env.local`:
+   ```env
+   SHOPIFY_API_KEY=your-client-id
+   SHOPIFY_API_SECRET=your-client-secret
+   SHOPIFY_SCOPES=read_products
+   ```
+
+---
+
+## 5️⃣ Pinterest Developer Setup
+
+### Step 1: Create Pinterest Developer Account
+1. Go to **[https://developers.pinterest.com](https://developers.pinterest.com)**
+2. Log in with your Pinterest account
+
+### Step 2: Create New App
+1. Click **"My apps"** → **"Create new app"**
+2. Fill in App Name and Description
+
+### Step 3: Configure Redirect URIs
+1. In your app settings, find **"Callback URLs"**
+2. Add:
+   - `https://social-media-scheduler-auto-repurpo.vercel.app/api/auth/callback/pinterest`
+   - `http://localhost:3000/api/auth/callback/pinterest` (for dev)
+
+### Step 4: Get App ID & Secret
+1. Copy **"App ID"** and **"App secret"**
+2. Update `.env.local`:
+   ```env
+   PINTEREST_APP_ID=your-app-id
+   PINTEREST_APP_SECRET=your-app-secret
+   ```
+
+---
+
+## 6️⃣ Production Setup (When Ready to Deploy)
 
 ### Update App Domain
 Update `.env.local`:
@@ -191,8 +247,17 @@ NEXT_PUBLIC_META_APP_ID=123456789
 OPENAI_API_KEY=sk-...
 
 # App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NODE_ENV=development
+NEXT_PUBLIC_APP_URL=https://social-media-scheduler-auto-repurpo.vercel.app
+NODE_ENV=production
+
+# Shopify
+SHOPIFY_API_KEY=your_key
+SHOPIFY_API_SECRET=your_secret
+SHOPIFY_SCOPES=read_products
+
+# Pinterest
+PINTEREST_APP_ID=your_id
+PINTEREST_APP_SECRET=your_secret
 ```
 
 ---

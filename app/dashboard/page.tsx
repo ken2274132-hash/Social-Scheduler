@@ -108,36 +108,36 @@ export default async function DashboardPage() {
     return (
         <DashboardLayout currentPage="dashboard">
             <div className="max-w-7xl mx-auto">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
                     Welcome, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">
                     Here's what's happening with your social media
                 </p>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-10">
                     <StatCard
-                        title="Storage"
+                        title="Limit"
                         value={`${usagePercentage.toFixed(0)}%`}
-                        subtitle={`${totalPosts || 0} of ${planLimit} posts used`}
-                        icon={<FileText className="text-blue-600" size={20} />}
+                        subtitle={`${totalPosts || 0}/${planLimit}`}
+                        icon={<FileText className="text-blue-600" size={18} />}
                         progress={usagePercentage}
                     />
                     <StatCard
                         title="Published"
                         value={publishedPosts || 0}
-                        icon={<Instagram className="text-green-600" size={20} />}
+                        icon={<Instagram className="text-green-600" size={18} />}
                     />
                     <StatCard
                         title="Scheduled"
                         value={scheduledPosts || 0}
-                        icon={<CalendarIcon className="text-orange-600" size={20} />}
+                        icon={<CalendarIcon className="text-orange-600" size={18} />}
                     />
                     <StatCard
                         title="Accounts"
                         value={connectedAccounts?.length || 0}
-                        icon={<Instagram className="text-purple-600" size={20} />}
+                        icon={<Instagram className="text-purple-600" size={18} />}
                     />
                 </div>
 
@@ -201,14 +201,20 @@ export default async function DashboardPage() {
                                                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
                                                     {post.caption}
                                                 </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                                    {post.social_accounts?.account_name} • {new Date(post.scheduled_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                </p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                                                        {post.social_accounts?.account_name}
+                                                    </span>
+                                                    <span className="text-[10px] text-gray-400 dark:text-gray-500">•</span>
+                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                        {new Date(post.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg ${post.status === 'published' ? 'bg-green-100 dark:bg-green-900/20 text-green-600' :
-                                                post.status === 'scheduled' ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-600' :
-                                                    post.status === 'failed' ? 'bg-red-100 dark:bg-red-900/20 text-red-600' :
-                                                        'bg-gray-100 dark:bg-gray-800 text-gray-600'
+                                            <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md border ${post.status === 'published' ? 'bg-green-100/50 dark:bg-green-900/20 text-green-600 border-green-200 dark:border-green-800' :
+                                                post.status === 'scheduled' ? 'bg-blue-100/50 dark:bg-blue-900/20 text-blue-600 border-blue-200 dark:border-blue-800' :
+                                                    post.status === 'failed' ? 'bg-red-100/50 dark:bg-red-900/20 text-red-600 border-red-200 dark:border-red-800' :
+                                                        'bg-gray-100/50 dark:bg-gray-800 text-gray-600 border-gray-200 dark:border-gray-700'
                                                 }`}>
                                                 {post.status}
                                             </span>
@@ -309,20 +315,20 @@ export default async function DashboardPage() {
 
 function StatCard({ title, value, subtitle, icon, progress }: { title: string; value: string | number; subtitle?: string; icon: React.ReactNode; progress?: number }) {
     return (
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className="relative z-10 flex items-center justify-between mb-2">
-                <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-colors">
+        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div className="relative z-10 flex items-center justify-between mb-1 sm:mb-2">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-colors">
                     {icon}
                 </div>
             </div>
             <div className="relative z-10">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{value}</h3>
-                    {subtitle && <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium tracking-tight">{subtitle}</span>}
+                <p className="text-[11px] sm:text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+                <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{value}</h3>
+                    {subtitle && <span className="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500 font-medium tracking-tight truncate max-w-[50px] sm:max-w-none">{subtitle}</span>}
                 </div>
                 {progress !== undefined && (
-                    <div className="mt-4 w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="mt-3 sm:mt-4 w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 sm:h-1.5 overflow-hidden">
                         <div
                             className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]"
                             style={{ width: `${progress}%` }}

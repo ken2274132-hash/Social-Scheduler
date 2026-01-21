@@ -56,12 +56,12 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Mobile Header */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
+            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">
+                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm shadow-lg shadow-blue-500/20">
                         SM
                     </div>
-                    <span className="hidden sm:inline">Social Scheduler</span>
+                    <span>Social Scheduler</span>
                 </Link>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
@@ -139,12 +139,14 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
             </aside>
 
             {/* Main Content */}
-            <main className="lg:ml-64 pt-20 p-4 sm:p-6 lg:p-8">
-                {children}
+            <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 pb-20 lg:pb-0">
+                <div className="p-4 sm:p-6 lg:p-8">
+                    {children}
+                </div>
             </main>
 
             {/* Mobile Bottom Navigation */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 z-40 safe-area-bottom">
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-40 pb-safe">
                 <div className="flex items-center justify-around h-16">
                     {navItems.map((item) => {
                         const Icon = item.icon
@@ -153,13 +155,15 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${isActive
+                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all ${isActive
                                     ? 'text-blue-600 dark:text-blue-400'
-                                    : 'text-gray-500 dark:text-gray-400'
+                                    : 'text-gray-500 dark:text-gray-400 active:scale-95'
                                     }`}
                             >
-                                <Icon size={20} />
-                                <span className="text-xs">{item.label.split(' ')[0]}</span>
+                                <Icon size={20} className={isActive ? 'scale-110' : ''} />
+                                <span className={`text-[10px] font-medium ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                                    {item.label.split(' ')[0]}
+                                </span>
                             </Link>
                         )
                     })}
