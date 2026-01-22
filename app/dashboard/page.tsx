@@ -1,3 +1,4 @@
+import React from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Instagram } from 'lucide-react'
@@ -107,205 +108,226 @@ export default async function DashboardPage() {
 
     return (
         <DashboardLayout currentPage="dashboard">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                    Welcome, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
-                </h1>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">
-                    Here's what's happening with your social media
-                </p>
+            <div className="max-w-7xl mx-auto space-y-10">
+                <header className="relative py-4">
+                    <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
+                    <h1 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                        Dashboard
+                    </h1>
+                    <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 font-medium mt-1">
+                        Welcome back, <span className="text-gray-900 dark:text-white font-bold">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+                    </p>
+                </header>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <StatCard
-                        title="Limit"
+                        title="Usage Limit"
                         value={`${usagePercentage.toFixed(0)}%`}
                         subtitle={`${totalPosts || 0}/${planLimit}`}
-                        icon={<FileText className="text-blue-600" size={18} />}
+                        icon={<FileText size={20} />}
                         progress={usagePercentage}
+                        color="blue"
                     />
                     <StatCard
                         title="Published"
                         value={publishedPosts || 0}
-                        icon={<Instagram className="text-green-600" size={18} />}
+                        icon={<Instagram size={20} />}
+                        color="green"
                     />
                     <StatCard
                         title="Scheduled"
                         value={scheduledPosts || 0}
-                        icon={<CalendarIcon className="text-orange-600" size={18} />}
+                        icon={<CalendarIcon size={20} />}
+                        color="orange"
                     />
                     <StatCard
-                        title="Accounts"
+                        title="Active Channels"
                         value={connectedAccounts?.length || 0}
-                        icon={<Instagram className="text-purple-600" size={18} />}
+                        icon={<Instagram size={20} />}
+                        color="purple"
                     />
                 </div>
 
-                <div className="grid lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-10">
+                <div className="grid lg:grid-cols-3 gap-8">
                     {/* Main Actions */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="lg:col-span-2 space-y-8">
+                        <section className="grid sm:grid-cols-2 gap-6">
                             <Link
                                 href="/composer"
-                                className="group bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-xl hover:shadow-blue-500/10"
+                                className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-8 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10"
                             >
-                                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                                    <FileText size={24} />
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <FileText size={80} />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                                    Create New Post
+                                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-blue-500/30 group-hover:rotate-6 transition-transform">
+                                    <FileText size={28} />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                    Create Post
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                    Generate AI captions, upload media, and schedule to automated platforms.
+                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                                    Magic AI composer is ready for your next viral post.
                                 </p>
                             </Link>
 
                             <Link
                                 href="/settings"
-                                className="group bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 hover:border-purple-500 dark:hover:border-purple-500 transition-all shadow-sm hover:shadow-xl hover:shadow-purple-500/10"
+                                className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-8 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/10"
                             >
-                                <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-xl flex items-center justify-center text-purple-600 mb-6 group-hover:scale-110 transition-transform">
-                                    <Instagram size={24} />
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Settings size={80} />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                                    Manage Channels
+                                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-700 rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-purple-500/30 group-hover:-rotate-6 transition-transform">
+                                    <Settings size={28} />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                    Settings
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                    Link or unlink your Instagram and Facebook professional accounts.
+                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                                    Manage your connected accounts and preferences.
                                 </p>
                             </Link>
-                        </div>
+                        </section>
 
                         {/* Recent Activity */}
-                        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                            <div className="p-6 border-b border-gray-100 dark:border-gray-900 flex items-center justify-between">
-                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                        <section className="bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 overflow-hidden shadow-sm">
+                            <div className="px-8 py-6 border-b border-gray-100/50 dark:border-gray-900/50 flex items-center justify-between">
+                                <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-wider">
                                     Recent Activity
                                 </h2>
-                                <Link href="/calendar" className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline">
-                                    View Calendar
+                                <Link href="/calendar" className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 font-bold hover:bg-blue-600 hover:text-white transition-all">
+                                    View All
                                 </Link>
                             </div>
-                            <div className="p-2">
+                            <div className="divide-y divide-gray-100/50 dark:divide-gray-900/50">
                                 {recentPosts && recentPosts.length > 0 ? (
                                     recentPosts.map(post => (
                                         <Link
                                             key={post.id}
                                             href={`/composer?postId=${post.id}`}
-                                            className="flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-900/50 rounded-xl transition-colors gap-4 group cursor-pointer"
+                                            className="flex items-center px-8 py-5 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors gap-6 group"
                                         >
-                                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
-                                                {post.caption?.slice(0, 1) || 'P'}
+                                            <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                                                <span className="text-lg font-black text-gray-400 dark:text-gray-600 uppercase">
+                                                    {post.caption?.slice(0, 1) || 'P'}
+                                                </span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
+                                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
                                                     {post.caption}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                                                        {post.social_accounts?.account_name}
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
+                                                        @{post.social_accounts?.account_name}
                                                     </span>
-                                                    <span className="text-[10px] text-gray-400 dark:text-gray-500">•</span>
-                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
+                                                    <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
                                                         {new Date(post.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <span className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-md border ${post.status === 'published' ? 'bg-green-100/50 dark:bg-green-900/20 text-green-600 border-green-200 dark:border-green-800' :
-                                                post.status === 'scheduled' ? 'bg-blue-100/50 dark:bg-blue-900/20 text-blue-600 border-blue-200 dark:border-blue-800' :
-                                                    post.status === 'failed' ? 'bg-red-100/50 dark:bg-red-900/20 text-red-600 border-red-200 dark:border-red-800' :
-                                                        'bg-gray-100/50 dark:bg-gray-800 text-gray-600 border-gray-200 dark:border-gray-700'
+                                            <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border shadow-sm ${post.status === 'published' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                                                post.status === 'scheduled' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                                                    post.status === 'failed' ? 'bg-red-500/10 text-red-600 border-red-500/20' :
+                                                        'bg-gray-500/10 text-gray-500 border-gray-500/20'
                                                 }`}>
                                                 {post.status}
                                             </span>
                                         </Link>
                                     ))
                                 ) : (
-                                    <div className="p-8 text-center">
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity found.</p>
+                                    <div className="py-16 text-center">
+                                        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <FileText className="text-gray-300" size={24} />
+                                        </div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">No posts found.</p>
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </section>
                     </div>
 
                     {/* Sidebar Stats */}
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                         {/* Upcoming Queue */}
-                        <div className="bg-gray-950 rounded-2xl p-6 border border-gray-800 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-sm font-bold text-white">Upcoming Queue</h3>
-                                <CalendarIcon size={16} className="text-orange-500" />
+                        <section className="bg-gray-950 rounded-3xl p-8 border border-gray-800 shadow-2xl shadow-blue-900/10">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-sm font-black text-white uppercase tracking-widest">Upcoming</h3>
+                                <div className="p-2 bg-blue-500/10 rounded-lg">
+                                    <CalendarIcon size={16} className="text-blue-500" />
+                                </div>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 {upcomingPosts && upcomingPosts.length > 0 ? (
                                     upcomingPosts.map((post: any) => (
-                                        <div key={post.id} className="flex items-start gap-3 p-3 bg-gray-900/50 rounded-xl border border-gray-800">
-                                            <div className="mt-1">
-                                                {post.social_accounts?.platform === 'instagram' ? (
-                                                    <Instagram size={14} className="text-pink-500" />
-                                                ) : (
-                                                    <Instagram size={14} className="text-blue-500" />
-                                                )}
+                                        <div key={post.id} className="flex items-start gap-4 group">
+                                            <div className="mt-1 flex flex-col items-center gap-1">
+                                                <div className="w-px h-10 bg-gradient-to-b from-gray-800 to-transparent group-last:hidden" />
+                                                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-medium text-gray-200 truncate">
-                                                    {post.caption || 'No caption'}
-                                                </p>
-                                                <p className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-tight">
+                                                <p className="text-[10px] text-gray-500 font-black uppercase mb-1">
                                                     {new Date(post.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                                <p className="text-xs font-bold text-gray-200 truncate group-hover:text-blue-400 transition-colors">
+                                                    {post.caption || 'No caption'}
                                                 </p>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-6">
-                                        <p className="text-xs text-gray-500 italic">No posts scheduled next</p>
+                                    <div className="text-center py-12">
+                                        <p className="text-[10px] font-bold text-gray-600 uppercase">Queue empty</p>
                                     </div>
                                 )}
                             </div>
-                        </div>
 
-                        {/* Account Health/Status */}
-                        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Channel Status</h3>
-                            <div className="space-y-4">
+                            <Link href="/calendar" className="mt-8 block w-full py-3 text-center bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                Full Queue
+                            </Link>
+                        </section>
+
+                        {/* Channel Status */}
+                        <section className="bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm">
+                            <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-8">Channels</h3>
+                            <div className="space-y-6">
                                 {connectedAccounts && connectedAccounts.length > 0 ? (
                                     connectedAccounts.map((account) => (
                                         <div key={account.id} className="flex items-center justify-between group">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${account.platform === 'instagram'
-                                                    ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-600'
-                                                    : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600'
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${account.platform === 'instagram'
+                                                    ? 'bg-gradient-to-br from-pink-500 to-orange-400 text-white'
+                                                    : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'
                                                     }`}>
-                                                    <Instagram size={16} />
+                                                    <Instagram size={18} />
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">
+                                                    <p className="text-xs font-black text-gray-900 dark:text-white truncate max-w-[120px]">
                                                         {account.account_name}
                                                     </p>
-                                                    <p className="text-[10px] text-gray-500 capitalize">
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
                                                         {account.platform}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                                                <span className="text-[10px] font-bold text-green-600 uppercase">Active</span>
+                                            <div className="flex items-center gap-2 px-2 py-1 bg-green-500/10 rounded-lg">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                <span className="text-[9px] font-black text-green-600 uppercase">Active</span>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-4">
-                                        <p className="text-xs text-gray-500">No accounts connected</p>
-                                        <Link href="/settings" className="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline mt-2 inline-block">
-                                            Connect Now
+                                    <div className="text-center py-8">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">No channels</p>
+                                        <Link href="/settings" className="mt-4 inline-block text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase underline-offset-4 hover:underline transition-all">
+                                            Connect Account
                                         </Link>
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -313,33 +335,45 @@ export default async function DashboardPage() {
     )
 }
 
-function StatCard({ title, value, subtitle, icon, progress }: { title: string; value: string | number; subtitle?: string; icon: React.ReactNode; progress?: number }) {
+function StatCard({ title, value, subtitle, icon, progress, color }: { title: string; value: string | number; subtitle?: string; icon: React.ReactNode; progress?: number; color: 'blue' | 'green' | 'purple' | 'orange' }) {
+    const colors = {
+        blue: 'from-blue-500 to-blue-700 shadow-blue-500/20 text-blue-600',
+        green: 'from-green-500 to-emerald-700 shadow-green-500/20 text-green-600',
+        purple: 'from-purple-500 to-indigo-700 shadow-purple-500/20 text-purple-600',
+        orange: 'from-orange-500 to-red-600 shadow-orange-500/20 text-orange-600'
+    }
+
     return (
-        <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className="relative z-10 flex items-center justify-between mb-1 sm:mb-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-colors">
+        <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-2xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-6 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.08] transition-transform duration-700 group-hover:scale-150 rotate-12">
+                {React.cloneElement(icon as React.ReactElement, { size: 64 })}
+            </div>
+
+            <div className="relative z-10 flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${colors[color]} flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110`}>
                     {icon}
                 </div>
             </div>
+
             <div className="relative z-10">
-                <p className="text-[11px] sm:text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-                <div className="flex items-baseline gap-1 sm:gap-2 mt-0.5">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{value}</h3>
-                    {subtitle && <span className="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500 font-medium tracking-tight truncate max-w-[50px] sm:max-w-none">{subtitle}</span>}
+                <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{title}</p>
+                <div className="flex items-baseline gap-2 mt-1">
+                    <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">{value}</h3>
+                    {subtitle && (
+                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                            / {subtitle}
+                        </span>
+                    )}
                 </div>
+
                 {progress !== undefined && (
-                    <div className="mt-3 sm:mt-4 w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1 sm:h-1.5 overflow-hidden">
+                    <div className="mt-6 w-full bg-gray-100 dark:bg-gray-800/50 rounded-full h-1.5 overflow-hidden">
                         <div
-                            className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]"
+                            className={`bg-gradient-to-r ${colors[color]} h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]`}
                             style={{ width: `${progress}%` }}
                         />
                     </div>
                 )}
-            </div>
-
-            {/* Subtle background decoration */}
-            <div className="absolute -right-4 -bottom-4 opacity-[0.03] dark:opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                {icon}
             </div>
         </div>
     )

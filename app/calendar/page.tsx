@@ -50,17 +50,26 @@ export default async function CalendarPage() {
     return (
         <DashboardLayout currentPage="calendar">
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                        Calendar
-                    </h1>
+                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-4">
+                            <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
+                            <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
+                                Calendar
+                            </h1>
+                        </div>
+                        <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-6">
+                            Visualize and manage your content timeline
+                        </p>
+                    </div>
                     <Link
                         href="/composer"
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-center"
+                        className="group relative overflow-hidden px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95 shadow-xl"
                     >
-                        Create Post
+                        <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="relative">Create Post</span>
                     </Link>
-                </div>
+                </header>
 
                 <CalendarView posts={posts || []} />
             </div>

@@ -55,51 +55,56 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'published':
-                return <CheckCircle size={14} className="text-green-600" />
+                return <CheckCircle size={10} className="text-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
             case 'failed':
-                return <XCircle size={14} className="text-red-600" />
+                return <XCircle size={10} className="text-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
             case 'scheduled':
-                return <Clock size={14} className="text-blue-600" />
+                return <Clock size={10} className="text-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
             default:
-                return <AlertCircle size={14} className="text-gray-600" />
+                return <AlertCircle size={10} className="text-gray-400" />
         }
     }
 
     return (
-        <div className="bg-white dark:bg-gray-950 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+        <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm hover:shadow-2xl transition-all duration-700">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </h2>
-                <div className="flex gap-2">
+            <div className="flex items-center justify-between mb-10 relative">
+                <div className="flex items-center gap-4">
+                    <div className="w-1 h-8 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
+                        {currentDate.toLocaleDateString('en-US', { month: 'long' })}
+                        <span className="ml-2 text-blue-600 opacity-50">{year}</span>
+                    </h2>
+                </div>
+
+                <div className="flex gap-3 bg-gray-100/50 dark:bg-gray-900/50 p-2 rounded-2xl backdrop-blur-xl border border-gray-200/50 dark:border-gray-800/50">
                     <button
                         onClick={prevMonth}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        className="p-3 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all hover:scale-110 active:scale-90 shadow-sm"
                     >
-                        <ChevronLeft size={20} className="text-gray-900 dark:text-white" />
+                        <ChevronLeft size={18} className="text-gray-900 dark:text-white" />
                     </button>
                     <button
                         onClick={nextMonth}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        className="p-3 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all hover:scale-110 active:scale-90 shadow-sm"
                     >
-                        <ChevronRight size={20} className="text-gray-900 dark:text-white" />
+                        <ChevronRight size={18} className="text-gray-900 dark:text-white" />
                     </button>
                 </div>
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-4">
                 {/* Day Headers */}
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">
+                    <div key={day} className="text-center text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-widest pb-4">
                         {day}
                     </div>
                 ))}
 
-                {/* Empty cells for days before month starts */}
+                {/* Empty cells */}
                 {Array.from({ length: startingDayOfWeek }).map((_, i) => (
-                    <div key={`empty-${i}`} className="aspect-square" />
+                    <div key={`empty-${i}`} className="aspect-square rounded-3xl bg-gray-50/30 dark:bg-gray-900/10 border border-transparent" />
                 ))}
 
                 {/* Days of the month */}
@@ -118,37 +123,39 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
                                 const paddingMonth = (month + 1) < 10 ? `0${month + 1}` : (month + 1)
                                 router.push(`/composer?date=${year}-${paddingMonth}-${paddingDay}`)
                             }}
-                            className={`aspect-square border border-gray-200 dark:border-gray-800 rounded-lg p-2 cursor-pointer hover:border-blue-500 transition-colors group relative ${isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500' : ''
+                            className={`aspect-square relative group/day rounded-3xl border transition-all duration-500 cursor-pointer overflow-hidden p-3 ${isToday
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-xl shadow-blue-500/30 scale-[1.02] z-10'
+                                    : 'bg-white/40 dark:bg-gray-900/40 border-gray-100 dark:border-gray-800/50 hover:border-blue-500/50 hover:shadow-lg hover:-translate-y-1'
                                 }`}
                         >
-                            <div className="flex justify-between items-start mb-1">
-                                <span className={`text-sm font-medium ${isToday
-                                    ? 'text-blue-600 dark:text-blue-400'
-                                    : 'text-gray-900 dark:text-white'
-                                    }`}>
+                            <div className="flex justify-between items-start mb-2">
+                                <span className={`text-sm font-black ${isToday ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                                     {day}
                                 </span>
-                                {dayPosts.length > 0 ? (
-                                    <span className="text-xs bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center">
-                                        {dayPosts.length}
-                                    </span>
-                                ) : (
-                                    <Plus size={14} className="text-gray-300 dark:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                {!isToday && dayPosts.length > 0 && (
+                                    <div className="flex -space-x-1">
+                                        {dayPosts.slice(0, 3).map((post, idx) => (
+                                            <div key={post.id} className="w-1.5 h-1.5 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-950" />
+                                        ))}
+                                    </div>
                                 )}
                             </div>
-                            <div className="space-y-1">
-                                {dayPosts.slice(0, 2).map(post => (
+
+                            <div className="space-y-1.5">
+                                {dayPosts.slice(0, 1).map(post => (
                                     <div
                                         key={post.id}
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             router.push(`/composer?postId=${post.id}`)
                                         }}
-                                        className="flex items-center gap-1 text-[10px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded px-1 py-0.5 hover:ring-1 hover:ring-blue-500 transition-all"
-                                        title={post.caption}
+                                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl transition-all ${isToday
+                                                ? 'bg-white/20 text-white'
+                                                : 'bg-gray-100/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700'
+                                            }`}
                                     >
-                                        {getStatusIcon(post.status)}
-                                        <span className="truncate">
+                                        <div className={`${isToday ? 'text-white' : ''}`}>{getStatusIcon(post.status)}</div>
+                                        <span className="text-[10px] font-black uppercase tracking-tighter truncate">
                                             {new Date(post.scheduled_at).toLocaleTimeString('en-US', {
                                                 hour: 'numeric',
                                                 minute: '2-digit'
@@ -156,30 +163,45 @@ export default function CalendarView({ posts }: { posts: Post[] }) {
                                         </span>
                                     </div>
                                 ))}
-                                {dayPosts.length > 2 && (
-                                    <div className="text-[10px] text-gray-500 dark:text-gray-500 pl-1">
-                                        +{dayPosts.length - 2} more
-                                    </div>
-                                )}
                             </div>
+
+                            {/* Hover Plus Button */}
+                            {!isToday && (
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/day:opacity-100 transition-opacity bg-blue-500/5 backdrop-blur-[2px]">
+                                    <div className="w-8 h-8 rounded-2xl bg-white dark:bg-gray-800 shadow-xl flex items-center justify-center text-blue-600 animate-in zoom-in-50 duration-300">
+                                        <Plus size={16} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Today Glow */}
+                            {isToday && (
+                                <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+                            )}
                         </div>
                     )
                 })}
             </div>
 
-            {/* Legend */}
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 flex gap-6">
-                <div className="flex items-center gap-2 text-sm">
-                    <Clock size={16} className="text-blue-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Scheduled</span>
+            {/* Legend & Stats */}
+            <div className="mt-10 pt-8 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div className="flex gap-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2h-2 p-1 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                            <Clock size={12} className="text-blue-500" />
+                        </div>
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Scheduled</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 p-1 rounded-full bg-green-100 dark:bg-green-900/30">
+                            <CheckCircle size={12} className="text-green-500" />
+                        </div>
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle size={16} className="text-green-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Published</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                    <XCircle size={16} className="text-red-600" />
-                    <span className="text-gray-600 dark:text-gray-400">Failed</span>
+
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 dark:bg-gray-900 px-4 py-2 rounded-2xl">
+                    {posts.length} Total Campaigns
                 </div>
             </div>
         </div>

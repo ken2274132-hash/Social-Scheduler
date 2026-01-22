@@ -89,20 +89,22 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
 
             {/* Side Navigation - Desktop always visible, Mobile slides in */}
             <aside className={`
-                fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 p-6 z-50
+                fixed left-0 top-0 h-full w-64 bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-800/50 p-6 z-50
                 flex flex-col
-                transform transition-transform duration-300 ease-in-out
+                transform transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
                 lg:translate-x-0
-                ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+                ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl shadow-blue-500/20' : '-translate-x-full'}
             `}>
-                <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white mb-8">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">
+                <Link href="/dashboard" className="flex items-center gap-3 text-xl font-black text-gray-900 dark:text-white mb-10 group">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center text-white text-sm shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
                         SM
                     </div>
-                    Social Scheduler
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                        Social Scheduler
+                    </span>
                 </Link>
 
-                <nav className="space-y-2">
+                <nav className="space-y-1.5">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = currentPage === item.key
@@ -111,43 +113,52 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                                 key={item.key}
                                 href={item.href}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group ${isActive
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/80 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
-                                <Icon size={20} />
-                                {item.label}
+                                <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                <span className="font-semibold text-sm">{item.label}</span>
+                                {isActive && (
+                                    <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                )}
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
-                    <div className="flex items-center justify-between px-3">
-                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Appearance</span>
+                <div className="mt-auto pt-6 border-t border-gray-200/50 dark:border-gray-800/50 space-y-4">
+                    <div className="flex items-center justify-between px-4 py-2 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl border border-gray-200/50 dark:border-gray-800/50">
+                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Theme</span>
                         <ThemeToggle />
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-3 py-2 w-full text-left text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-600 dark:text-gray-400 hover:bg-red-500 hover:text-white rounded-xl transition-all duration-300 group shadow-sm hover:shadow-red-500/20"
                     >
-                        <LogOut size={20} />
-                        Logout
+                        <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+                        <span className="font-semibold text-sm">Logout</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 pb-20 lg:pb-0">
-                <div className="p-4 sm:p-6 lg:p-8">
+            <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 pb-24 lg:pb-0 relative overflow-hidden">
+                {/* Background Blobs */}
+                <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+                    <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px]" />
+                </div>
+
+                <div className="p-4 sm:p-6 lg:p-10">
                     {children}
                 </div>
             </main>
 
             {/* Mobile Bottom Navigation */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-40 pb-safe">
-                <div className="flex items-center justify-around h-16">
+            <nav className="lg:hidden fixed bottom-6 left-6 right-6 h-16 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-800/50 rounded-2xl z-40 shadow-2xl shadow-blue-500/10 pb-safe ring-1 ring-black/5 dark:ring-white/5">
+                <div className="flex items-center justify-around h-full">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = currentPage === item.key
@@ -155,15 +166,18 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all ${isActive
+                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all relative ${isActive
                                     ? 'text-blue-600 dark:text-blue-400'
-                                    : 'text-gray-500 dark:text-gray-400 active:scale-95'
+                                    : 'text-gray-500 dark:text-gray-400 active:scale-90'
                                     }`}
                             >
-                                <Icon size={20} className={isActive ? 'scale-110' : ''} />
-                                <span className={`text-[10px] font-medium ${isActive ? 'opacity-100' : 'opacity-70'}`}>
+                                <Icon size={22} className={`transition-all duration-300 ${isActive ? 'scale-110 -translate-y-1' : 'group-hover:scale-110'}`} />
+                                <span className={`text-[10px] font-bold uppercase tracking-tighter transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0.5' : 'opacity-60 scale-90'}`}>
                                     {item.label.split(' ')[0]}
                                 </span>
+                                {isActive && (
+                                    <div className="absolute -bottom-1 w-8 h-1 bg-blue-600 dark:bg-blue-400 rounded-t-full shadow-[0_-4px_8px_rgba(37,99,235,0.4)]" />
+                                )}
                             </Link>
                         )
                     })}
