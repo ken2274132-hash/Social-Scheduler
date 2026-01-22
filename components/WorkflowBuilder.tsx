@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Calendar, Plus, Trash2, ChevronRight, Package, Clock } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2 } from 'lucide-react'
 import Image from 'next/image'
 
 type Product = {
@@ -12,8 +12,15 @@ type Product = {
     url: string
 }
 
-type ScheduledProduct = {
-    product: Product
+type ContentItem = {
+    id: string
+    title: string
+    image: string | null
+    caption: string
+}
+
+type ScheduledItem = {
+    item: ContentItem
     date: string
     time: string
 }
@@ -32,9 +39,10 @@ export default function WorkflowBuilder({
     socialAccounts: SocialAccount[]
 }) {
     const [products, setProducts] = useState<Product[]>([])
+    const [manualItems, setManualItems] = useState<ContentItem[]>([])
     const [loading, setLoading] = useState(true)
     const [shopifyConnected, setShopifyConnected] = useState(false)
-    const [selectedProducts, setSelectedProducts] = useState<ScheduledProduct[]>([])
+    const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([])
     const [selectedAccount, setSelectedAccount] = useState<string>('')
     const [startDate, setStartDate] = useState(() => {
         const tomorrow = new Date()
@@ -44,7 +52,15 @@ export default function WorkflowBuilder({
     const [postTime, setPostTime] = useState('10:00')
     const [interval, setInterval] = useState<'daily' | 'every2days' | 'weekly'>('daily')
     const [creating, setCreating] = useState(false)
-    const [showProductPicker, setShowProductPicker] = useState(false)
+    const [showItemPicker, setShowItemPicker] = useState(false)
+    const [showManualForm, setShowManualForm] = useState(false)
+    const [manualTitle, setManualTitle] = useState('')
+    const [manualCaption, setManualCaption] = useState('')
+    const [manualImage, setManualImage] = useState<string | null>(null)
+    const [uploading, setUploading] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const hasAnyConnectedAccount = socialAccounts.length > 0
 
     useEffect(() => {
         fetchProducts()
@@ -68,34 +84,89 @@ export default function WorkflowBuilder({
         }
     }
 
-    const addProduct = (product: Product) => {
-        const lastDate = selectedProducts.length > 0
-            ? selectedProducts[selectedProducts.length - 1].date
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploading(true)
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                setManualImage(data.url)
+            }
+        } catch (error) {
+            console.error('Upload failed:', error)
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const addManualItem = () => {
+        if (!manualTitle.trim()) {
+            alert('Please enter a title')
+            return
+        }
+
+        const newItem: ContentItem = {
+            id: `manual-${Date.now()}`,
+            title: manualTitle,
+            image: manualImage,
+            caption: manualCaption || manualTitle
+        }
+
+        setManualItems([...manualItems, newItem])
+        setManualTitle('')
+        setManualCaption('')
+        setManualImage(null)
+        setShowManualForm(false)
+    }
+
+    const addItemToSchedule = (item: ContentItem) => {
+        const lastDate = scheduledItems.length > 0
+            ? scheduledItems[scheduledItems.length - 1].date
             : startDate
 
         let nextDate = new Date(lastDate)
-        if (selectedProducts.length > 0) {
+        if (scheduledItems.length > 0) {
             if (interval === 'daily') nextDate.setDate(nextDate.getDate() + 1)
             else if (interval === 'every2days') nextDate.setDate(nextDate.getDate() + 2)
             else if (interval === 'weekly') nextDate.setDate(nextDate.getDate() + 7)
         }
 
-        setSelectedProducts([...selectedProducts, {
-            product,
+        setScheduledItems([...scheduledItems, {
+            item,
             date: nextDate.toISOString().split('T')[0],
             time: postTime
         }])
-        setShowProductPicker(false)
+        setShowItemPicker(false)
     }
 
-    const removeProduct = (index: number) => {
-        setSelectedProducts(selectedProducts.filter((_, i) => i !== index))
+    const addProductToSchedule = (product: Product) => {
+        const contentItem: ContentItem = {
+            id: product.id,
+            title: product.title,
+            image: product.image,
+            caption: `${product.title}\n\n🛒 Shop now: ${product.url}\n\n#shopify #product #sale`
+        }
+        addItemToSchedule(contentItem)
     }
 
-    const updateProductDate = (index: number, date: string) => {
-        const updated = [...selectedProducts]
+    const removeItem = (index: number) => {
+        setScheduledItems(scheduledItems.filter((_, i) => i !== index))
+    }
+
+    const updateItemDate = (index: number, date: string) => {
+        const updated = [...scheduledItems]
         updated[index].date = date
-        setSelectedProducts(updated)
+        setScheduledItems(updated)
     }
 
     const createWorkflow = async () => {
@@ -103,24 +174,23 @@ export default function WorkflowBuilder({
             alert('Please select a social account')
             return
         }
-        if (selectedProducts.length === 0) {
-            alert('Please add at least one product')
+        if (scheduledItems.length === 0) {
+            alert('Please add at least one item')
             return
         }
 
         setCreating(true)
         try {
-            // Create posts for each scheduled product
-            for (const item of selectedProducts) {
-                const scheduledAt = new Date(`${item.date}T${item.time}:00`)
+            for (const scheduled of scheduledItems) {
+                const scheduledAt = new Date(`${scheduled.date}T${scheduled.time}:00`)
 
                 const res = await fetch('/api/posts/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         socialAccountId: selectedAccount,
-                        caption: `${item.product.title}\n\n🛒 Shop now: ${item.product.url}\n\n#shopify #product #sale`,
-                        mediaUrl: item.product.image,
+                        caption: scheduled.item.caption,
+                        mediaUrl: scheduled.item.image,
                         scheduledAt: scheduledAt.toISOString(),
                     })
                 })
@@ -130,12 +200,21 @@ export default function WorkflowBuilder({
                 }
             }
 
-            alert(`Successfully scheduled ${selectedProducts.length} posts!`)
-            setSelectedProducts([])
+            alert(`Successfully scheduled ${scheduledItems.length} posts!`)
+            setScheduledItems([])
         } catch (error: any) {
             alert('Error creating workflow: ' + error.message)
         } finally {
             setCreating(false)
+        }
+    }
+
+    const getPlatformIcon = (platform: string) => {
+        switch (platform.toLowerCase()) {
+            case 'instagram': return <Instagram size={16} className="text-pink-500" />
+            case 'facebook': return <Facebook size={16} className="text-blue-600" />
+            case 'pinterest': return <Share2 size={16} className="text-red-600" />
+            default: return <Share2 size={16} />
         }
     }
 
@@ -147,15 +226,16 @@ export default function WorkflowBuilder({
         )
     }
 
-    if (!shopifyConnected) {
+    // Show "Connect Account" only if NO social accounts are connected
+    if (!hasAnyConnectedAccount) {
         return (
             <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center">
-                <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <Share2 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    Connect Shopify First
+                    Connect a Social Account First
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    To use the Workflow Builder, connect your Shopify store in Settings.
+                    To use the Workflow Builder, connect at least one social account (Instagram, Facebook, or Pinterest) in Settings.
                 </p>
                 <a
                     href="/settings"
@@ -190,7 +270,7 @@ export default function WorkflowBuilder({
                             <option value="">Select account...</option>
                             {socialAccounts.map((account) => (
                                 <option key={account.id} value={account.id}>
-                                    {account.account_name || account.platform}
+                                    {account.platform}: {account.account_name || 'Connected'}
                                 </option>
                             ))}
                         </select>
@@ -241,77 +321,77 @@ export default function WorkflowBuilder({
 
                 <button
                     onClick={createWorkflow}
-                    disabled={creating || selectedProducts.length === 0}
+                    disabled={creating || scheduledItems.length === 0}
                     className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {creating ? 'Creating...' : `Schedule ${selectedProducts.length} Posts`}
+                    {creating ? 'Creating...' : `Schedule ${scheduledItems.length} Posts`}
                 </button>
             </div>
 
-            {/* Right: Product Queue */}
+            {/* Right: Content Queue */}
             <div className="lg:col-span-2">
                 <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900 dark:text-white">
-                            Scheduled Products ({selectedProducts.length})
+                            Scheduled Content ({scheduledItems.length})
                         </h3>
                         <button
-                            onClick={() => setShowProductPicker(true)}
+                            onClick={() => setShowItemPicker(true)}
                             className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors"
                         >
                             <Plus size={16} />
-                            Add Product
+                            Add Content
                         </button>
                     </div>
 
-                    {selectedProducts.length === 0 ? (
+                    {scheduledItems.length === 0 ? (
                         <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg">
                             <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                             <p className="text-gray-600 dark:text-gray-400">
-                                No products scheduled yet. Click "Add Product" to start.
+                                No content scheduled yet. Click &quot;Add Content&quot; to start.
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {selectedProducts.map((item, index) => (
+                            {scheduledItems.map((scheduled, index) => (
                                 <div
                                     key={index}
                                     className="flex items-center gap-4 p-4 border border-gray-200 dark:border-gray-800 rounded-lg"
                                 >
                                     <div className="relative w-16 h-16 flex-shrink-0">
-                                        {item.product.image ? (
+                                        {scheduled.item.image ? (
                                             <Image
-                                                src={item.product.image}
-                                                alt={item.product.title}
+                                                src={scheduled.item.image}
+                                                alt={scheduled.item.title}
                                                 fill
                                                 className="object-cover rounded-lg"
                                                 unoptimized
                                             />
                                         ) : (
                                             <div className="w-full h-full bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                                                <Package size={24} className="text-gray-400" />
+                                                <ImageIcon size={24} className="text-gray-400" />
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium text-gray-900 dark:text-white truncate">
-                                            {item.product.title}
+                                            {scheduled.item.title}
                                         </p>
                                         <div className="flex items-center gap-2 mt-1">
                                             <Clock size={14} className="text-gray-400" />
                                             <input
                                                 type="date"
-                                                value={item.date}
-                                                onChange={(e) => updateProductDate(index, e.target.value)}
+                                                value={scheduled.date}
+                                                onChange={(e) => updateItemDate(index, e.target.value)}
                                                 className="text-sm px-2 py-1 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                             />
                                             <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                at {item.time}
+                                                at {scheduled.time}
                                             </span>
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => removeProduct(index)}
+                                        onClick={() => removeItem(index)}
                                         className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                     >
                                         <Trash2 size={18} />
@@ -323,52 +403,189 @@ export default function WorkflowBuilder({
                 </div>
             </div>
 
-            {/* Product Picker Modal */}
-            {showProductPicker && (
+            {/* Content Picker Modal */}
+            {showItemPicker && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl">
+                    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-3xl w-full max-h-[80vh] overflow-y-auto shadow-xl">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                Select a Product
+                                Add Content to Schedule
                             </h3>
                             <button
-                                onClick={() => setShowProductPicker(false)}
+                                onClick={() => setShowItemPicker(false)}
                                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                             >
                                 ✕
                             </button>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {products.map((product) => (
-                                <button
-                                    key={product.id}
-                                    onClick={() => addProduct(product)}
-                                    className="text-left p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-blue-500 transition-colors"
-                                >
-                                    <div className="relative w-full aspect-square mb-2">
-                                        {product.image ? (
-                                            <Image
-                                                src={product.image}
-                                                alt={product.title}
-                                                fill
-                                                className="object-cover rounded-lg"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                                                <Package size={32} className="text-gray-400" />
+
+                        {/* Create Custom Content Button */}
+                        <div className="mb-6">
+                            <button
+                                onClick={() => setShowManualForm(!showManualForm)}
+                                className="w-full py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                            >
+                                <Plus size={20} />
+                                Create Custom Content
+                            </button>
+
+                            {showManualForm && (
+                                <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Title *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={manualTitle}
+                                            onChange={(e) => setManualTitle(e.target.value)}
+                                            placeholder="Enter content title..."
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Caption
+                                        </label>
+                                        <textarea
+                                            value={manualCaption}
+                                            onChange={(e) => setManualCaption(e.target.value)}
+                                            placeholder="Enter caption for your post..."
+                                            rows={3}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Image (Optional)
+                                        </label>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                        />
+                                        {manualImage ? (
+                                            <div className="relative w-32 h-32">
+                                                <Image
+                                                    src={manualImage}
+                                                    alt="Preview"
+                                                    fill
+                                                    className="object-cover rounded-lg"
+                                                    unoptimized
+                                                />
+                                                <button
+                                                    onClick={() => setManualImage(null)}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                                >
+                                                    ✕
+                                                </button>
                                             </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={uploading}
+                                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                            >
+                                                <Upload size={16} />
+                                                {uploading ? 'Uploading...' : 'Upload Image'}
+                                            </button>
                                         )}
                                     </div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {product.title}
-                                    </p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        ${product.price}
-                                    </p>
-                                </button>
-                            ))}
+                                    <button
+                                        onClick={addManualItem}
+                                        className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        Add to Library
+                                    </button>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Manual Items */}
+                        {manualItems.length > 0 && (
+                            <div className="mb-6">
+                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                    Your Custom Content
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {manualItems.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => addItemToSchedule(item)}
+                                            className="text-left p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-blue-500 transition-colors"
+                                        >
+                                            <div className="relative w-full aspect-square mb-2">
+                                                {item.image ? (
+                                                    <Image
+                                                        src={item.image}
+                                                        alt={item.title}
+                                                        fill
+                                                        className="object-cover rounded-lg"
+                                                        unoptimized
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-lg flex items-center justify-center">
+                                                        <ImageIcon size={32} className="text-gray-400" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                {item.title}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Shopify Products */}
+                        {shopifyConnected && products.length > 0 && (
+                            <div>
+                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                                    <Package size={16} />
+                                    Shopify Products
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {products.map((product) => (
+                                        <button
+                                            key={product.id}
+                                            onClick={() => addProductToSchedule(product)}
+                                            className="text-left p-3 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-blue-500 transition-colors"
+                                        >
+                                            <div className="relative w-full aspect-square mb-2">
+                                                {product.image ? (
+                                                    <Image
+                                                        src={product.image}
+                                                        alt={product.title}
+                                                        fill
+                                                        className="object-cover rounded-lg"
+                                                        unoptimized
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                                        <Package size={32} className="text-gray-400" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                {product.title}
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                ${product.price}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {!shopifyConnected && manualItems.length === 0 && (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <p>Create custom content above, or connect Shopify in Settings to import products.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
