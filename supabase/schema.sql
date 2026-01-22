@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS social_accounts (
     account_name TEXT,
     account_id TEXT NOT NULL,
     access_token TEXT NOT NULL,
+    refresh_token TEXT,
     token_expires_at TIMESTAMPTZ,
     profile_picture_url TEXT,
     is_active BOOLEAN DEFAULT true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * Pinterest OAuth - Step 2: Callback
@@ -58,9 +58,9 @@ export async function GET(request: NextRequest) {
         const tokenData = await tokenResponse.json()
 
         if (tokenData.error || !tokenData.access_token) {
-            console.error('Pinterest token error:', tokenData)
+            console.error('Pinterest token exchange failed:', tokenData)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=token_exchange_failed`
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=token_exchange_failed&details=${encodeURIComponent(JSON.stringify(tokenData))}`
             )
         }
 
@@ -83,17 +83,25 @@ export async function GET(request: NextRequest) {
         // Calculate token expiry
         const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString()
 
-        // Use service role to bypass RLS
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+        // Use standard server client which is safer
+        const supabase = await createClient()
+
+        // Use the userId from state to ensure we're targeting the right account
+        // but we'll use the authenticated user's session for security
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+
+        if (!authUser || authUser.id !== userId) {
+            console.error('Pinterest auth mismatch:', { authUser: authUser?.id, stateUser: userId })
+            return NextResponse.redirect(
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=invalid_session`
+            )
+        }
 
         // Get user's workspace
         const { data: workspace, error: workspaceError } = await supabase
             .from('workspaces')
             .select('id')
-            .eq('owner_id', userId)
+            .eq('owner_id', authUser.id)
             .single()
 
         if (workspaceError || !workspace) {
@@ -111,6 +119,7 @@ export async function GET(request: NextRequest) {
                 account_name: accountName,
                 account_id: accountId,
                 access_token: accessToken,
+                refresh_token: refreshToken,
                 token_expires_at: expiresAt,
                 profile_picture_url: profilePicture,
                 is_active: true,
@@ -130,9 +139,9 @@ export async function GET(request: NextRequest) {
             `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=pinterest_connected`
         )
     } catch (error: any) {
-        console.error('Pinterest callback error:', error)
+        console.error('Pinterest callback critical error:', error)
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=unknown`
+            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=callback_error&details=${encodeURIComponent(error.message)}`
         )
     }
 }

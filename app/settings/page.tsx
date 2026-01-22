@@ -83,10 +83,16 @@ export default async function SettingsPage({
                                     {error === 'no_pages' && 'No Facebook Pages found. You need a Facebook Page to connect Instagram.'}
                                     {error === 'no_instagram' && 'No Instagram Professional account linked to this Facebook Page.'}
                                     {error === 'oauth_denied' && 'Connection cancelled or denied.'}
+                                    {error === 'pinterest_denied' && 'Pinterest connection was cancelled or denied.'}
+                                    {error === 'token_exchange_failed' && 'Failed to exchange Pinterest code for access token. Check your App Secret.'}
+                                    {error === 'workspace_not_found' && 'No active workspace found for your account.'}
+                                    {error === 'save_failed' && 'Failed to save Pinterest account to database.'}
                                     {error === 'connection_failed' && 'Failed to connect. Please try again.'}
-                                    {error === 'config_error' && 'Environment configuration error. Check META_APP_ID and META_APP_SECRET.'}
+                                    {error === 'config_error' && 'Environment configuration error. Check your API keys.'}
                                     {error === 'invalid_state' && 'Invalid session state. Please try again.'}
-                                    {!['no_pages', 'no_instagram', 'oauth_denied', 'connection_failed', 'config_error', 'invalid_state'].includes(error) && 'An unexpected error occurred.'}
+                                    {error === 'invalid_session' && 'Session mismatch. Please try logging in again.'}
+                                    {error === 'callback_error' && 'A technical error occurred during the callback.'}
+                                    {!['no_pages', 'no_instagram', 'oauth_denied', 'pinterest_denied', 'token_exchange_failed', 'workspace_not_found', 'save_failed', 'connection_failed', 'config_error', 'invalid_state', 'invalid_session', 'callback_error'].includes(error) && `An unexpected error occurred: ${error}`}
                                 </p>
                                 {details && (
                                     <div className="mt-4 p-3 bg-red-600/10 rounded-xl font-mono text-[10px] break-all border border-red-500/10">

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut, GitBranch } from 'lucide-react'
+import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut, GitBranch, Hexagon, ChevronRight, Search, Sun, Moon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { ThemeToggle } from './ThemeToggle'
 
 interface DashboardLayoutProps {
@@ -22,8 +23,18 @@ const navItems = [
 
 export default function DashboardLayout({ children, currentPage }: DashboardLayoutProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [user, setUser] = useState<any>(null)
+    const { theme, setTheme } = useTheme()
     const router = useRouter()
     const supabase = createClient()
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            setUser(user)
+        }
+        getUser()
+    }, [])
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
@@ -54,14 +65,14 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
     }, [])
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-black">
             {/* Mobile Header */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
-                <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm shadow-lg shadow-blue-500/20">
+            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
+                <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
+                    <div className="w-8 h-8 bg-[#5932EA] rounded-lg flex items-center justify-center text-white text-sm font-bold">
                         SM
                     </div>
-                    <span>Social Scheduler</span>
+                    <span className="tracking-tight">Social Scheduler</span>
                 </Link>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
@@ -71,19 +82,19 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
 
             {/* Side Navigation - Desktop always visible, Mobile slides in */}
             <aside className={`
-                fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 p-6 z-50
+                fixed left-0 top-0 h-full w-[280px] bg-white dark:bg-black border-r border-gray-100 dark:border-gray-800/50 p-7 z-50
                 flex flex-col hidden lg:flex
             `}>
-                <Link href="/dashboard" className="flex items-center gap-3 text-xl font-bold text-gray-900 dark:text-white mb-10 group">
-                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-sm shadow-sm group-hover:scale-105 transition-transform">
+                <Link href="/dashboard" className="flex items-center gap-3 text-2xl font-bold text-gray-900 dark:text-white mb-10 group">
+                    <div className="w-9 h-9 bg-[#5932EA] rounded-xl flex items-center justify-center text-white text-base font-bold shadow-lg shadow-[#5932EA]/20 group-hover:scale-110 transition-transform">
                         SM
                     </div>
-                    <span>
-                        Social Scheduler
-                    </span>
+                    <div className="flex flex-col">
+                        <span className="tracking-tight leading-none text-xl">Social Scheduler</span>
+                    </div>
                 </Link>
 
-                <nav className="space-y-1.5">
+                <nav className="space-y-1">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = currentPage === item.key
@@ -92,40 +103,47 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                                 key={item.key}
                                 href={item.href}
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group ${isActive
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100/80 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-white'
+                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 relative group ${isActive
+                                    ? 'bg-[#5932EA] text-white shadow-lg shadow-[#5932EA]/20'
+                                    : 'text-[#9197B3] hover:bg-gray-50 dark:hover:bg-gray-900/40 hover:text-gray-900 dark:hover:text-white'
                                     }`}
                             >
-                                <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                                <span className="font-semibold text-sm">{item.label}</span>
-                                {isActive && (
-                                    <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                )}
+                                <Icon size={20} className={`opacity-80 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                <span className="font-medium text-[15px] flex-1">{item.label}</span>
+                                {!isActive && <ChevronRight size={16} className="opacity-0 group-hover:opacity-40 transition-opacity" />}
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
-                    <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-[9px]">Theme</span>
-                        <ThemeToggle />
-                    </div>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-300"
+                <div className="mt-auto space-y-3">
+                    {/* Theme Toggle Card */}
+                    <div
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="bg-[#F9FBFF] dark:bg-gray-900/50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all border border-gray-100 dark:border-gray-800/50 group"
                     >
-                        <LogOut size={20} />
-                        <span className="font-semibold text-sm">Logout</span>
-                    </button>
+                        <span className="text-[11px] font-bold text-[#9197B3] uppercase tracking-wider">Theme</span>
+                        {theme === 'dark' ? (
+                            <Sun size={20} className="text-yellow-500 transition-transform group-hover:rotate-12" />
+                        ) : (
+                            <Moon size={20} className="text-[#9197B3] transition-transform group-hover:-rotate-12" />
+                        )}
+                    </div>
+
+                    {/* Logout Card */}
+                    <div
+                        onClick={handleLogout}
+                        className="bg-[#F9FBFF] dark:bg-gray-900/50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/10 transition-all border border-gray-100 dark:border-gray-800/50 group"
+                    >
+                        <span className="text-[11px] font-bold text-[#9197B3] group-hover:text-red-500 uppercase tracking-wider transition-colors">Logout</span>
+                        <LogOut size={20} className="text-[#9197B3] group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
+                    </div>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0 pb-24 lg:pb-0 relative">
-
-                <div className="p-4 sm:p-6 lg:p-10">
+            <main className="lg:ml-[280px] min-h-screen pt-16 lg:pt-0 pb-24 lg:pb-0 relative bg-[#FAFBFF] dark:bg-black">
+                <div className="p-4 sm:p-6 lg:p-10 max-w-[1400px] mx-auto">
                     {children}
                 </div>
             </main>
@@ -141,17 +159,14 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                                 key={item.key}
                                 href={item.href}
                                 className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all relative ${isActive
-                                    ? 'text-blue-600 dark:text-blue-400'
-                                    : 'text-gray-500 dark:text-gray-400 active:scale-90'
+                                    ? 'text-[#5932EA]'
+                                    : 'text-gray-400'
                                     }`}
                             >
-                                <Icon size={22} className={`transition-all duration-300 ${isActive ? 'scale-110 -translate-y-1' : 'group-hover:scale-110'}`} />
-                                <span className={`text-[10px] font-bold uppercase tracking-tighter transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0.5' : 'opacity-60 scale-90'}`}>
+                                <Icon size={22} className={`transition-all duration-300 ${isActive ? 'scale-110' : ''}`} />
+                                <span className={`text-[10px] font-bold uppercase tracking-tighter ${isActive ? 'opacity-100' : 'opacity-60'}`}>
                                     {item.label.split(' ')[0]}
                                 </span>
-                                {isActive && (
-                                    <div className="absolute -bottom-1 w-8 h-1 bg-blue-600 dark:bg-blue-400 rounded-t-full shadow-[0_-4px_8px_rgba(37,99,235,0.4)]" />
-                                )}
                             </Link>
                         )
                     })}
