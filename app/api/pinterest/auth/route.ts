@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
         }
 
         const clientId = process.env.PINTEREST_APP_ID
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback/pinterest`
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || ''
+        const redirectUri = `${baseUrl}/api/auth/callback/pinterest`
 
         // Pinterest scopes for reading/writing pins and boards
         const scopes = 'boards:read,boards:write,pins:read,pins:write,user_accounts:read'
