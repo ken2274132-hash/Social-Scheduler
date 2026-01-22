@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { Upload, X, Loader2, Sparkles, Calendar, Send, Heart, MessageCircle, Bookmark, Instagram, AlertCircle, Trash2 } from 'lucide-react'
+import { Upload, X, Loader2, Sparkles, Calendar, Send, Heart, MessageCircle, Bookmark, Instagram, AlertCircle, Trash2, Image as ImageIcon, Wand2, Plus } from 'lucide-react'
+import AIImageStudio from './AIImageStudio'
 
 type SocialAccount = {
     id: string
@@ -51,6 +52,7 @@ export default function ComposerForm({
     const [mediaFile, setMediaFile] = useState<File | null>(null)
     const [mediaPreview, setMediaPreview] = useState<string | null>(initialPost?.media_assets?.url || null)
     const [mediaId, setMediaId] = useState<string | null>(initialPost?.media_id || null)
+    const [showAIStudio, setShowAIStudio] = useState<boolean>(false)
     const searchParams = useSearchParams()
 
     useEffect(() => {
@@ -64,15 +66,12 @@ export default function ComposerForm({
         const file = e.target.files?.[0]
         if (!file) return
 
-        // Preview
         setMediaFile(file)
         const reader = new FileReader()
         reader.onloadend = () => {
             setMediaPreview(reader.result as string)
         }
         reader.readAsDataURL(file)
-
-        // Reset previous upload state
         setMediaId(null)
     }
 
@@ -84,7 +83,7 @@ export default function ComposerForm({
             const fileName = `${Math.random()}.${fileExt}`
             const filePath = `${workspaceId}/${fileName}`
 
-            const { error: uploadError, data } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('media')
                 .upload(filePath, file)
 
@@ -94,7 +93,6 @@ export default function ComposerForm({
                 .from('media')
                 .getPublicUrl(filePath)
 
-            // Save to media_assets table
             const { data: asset, error: assetError } = await supabase
                 .from('media_assets')
                 .insert({
@@ -116,6 +114,13 @@ export default function ComposerForm({
         } finally {
             setUploading(false)
         }
+    }
+
+    const handleSelectAIImage = (imageUrl: string) => {
+        setMediaPreview(imageUrl)
+        setMediaFile(null)
+        setMediaId(null)
+        setShowAIStudio(false)
     }
 
     const handleUserInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -159,7 +164,7 @@ export default function ComposerForm({
     }
 
     const handlePublishNow = async () => {
-        if (!mediaFile && !mediaId) {
+        if (!mediaPreview && !mediaId) {
             alert('Please upload an image or video first')
             return
         }
@@ -175,9 +180,28 @@ export default function ComposerForm({
                 currentMediaId = await uploadMedia(mediaFile)
             }
 
-            if (!currentMediaId) throw new Error('Media upload failed')
+            // Handle AI generated image (it's a URL, not a file)
+            if (!currentMediaId && mediaPreview?.startsWith('http') && !mediaFile) {
+                // In production, we'd transfer the AI image to Supabase Bucket
+                // For now, let's create a placeholder asset entry
+                const supabase = createClient()
+                const { data: asset, error: assetError } = await supabase
+                    .from('media_assets')
+                    .insert({
+                        workspace_id: workspaceId,
+                        url: mediaPreview,
+                        type: 'image',
+                        storage_path: 'ai-generated/' + Math.random().toString(36).substring(7)
+                    })
+                    .select()
+                    .single()
 
-            // 1. Create the post in 'draft' or 'scheduled' status first
+                if (assetError) throw assetError
+                currentMediaId = asset.id
+            }
+
+            if (!currentMediaId) throw new Error('Media asset not ready')
+
             const scheduleResponse = await fetch('/api/posts/schedule', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -193,7 +217,6 @@ export default function ComposerForm({
             const scheduleData = await scheduleResponse.json()
             if (!scheduleResponse.ok) throw new Error(scheduleData.error || 'Failed to initialize post')
 
-            // 2. Trigger immediate publish
             const publishResponse = await fetch('/api/posts/publish-now', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -223,8 +246,8 @@ export default function ComposerForm({
             return
         }
 
-        if (!mediaFile && !mediaId) {
-            alert('Please upload an image or video first')
+        if (!mediaPreview && !mediaId) {
+            alert('Please upload/generate media first')
             return
         }
 
@@ -235,7 +258,25 @@ export default function ComposerForm({
                 currentMediaId = await uploadMedia(mediaFile)
             }
 
-            if (!currentMediaId) throw new Error('Media upload failed')
+            // Handle AI generated image
+            if (!currentMediaId && mediaPreview?.startsWith('http') && !mediaFile) {
+                const supabase = createClient()
+                const { data: asset, error: assetError } = await supabase
+                    .from('media_assets')
+                    .insert({
+                        workspace_id: workspaceId,
+                        url: mediaPreview,
+                        type: 'image',
+                        storage_path: 'ai-generated/' + Math.random().toString(36).substring(7)
+                    })
+                    .select()
+                    .single()
+
+                if (assetError) throw assetError
+                currentMediaId = asset.id
+            }
+
+            if (!currentMediaId) throw new Error('Media preparation failed')
 
             const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`)
 
@@ -265,79 +306,8 @@ export default function ComposerForm({
         }
     }
 
-    const handleUpdatePost = async () => {
-        if (!scheduledDate || !scheduledTime) {
-            alert('Please select date and time')
-            return
-        }
-
-        setLoading(true)
-        try {
-            let currentMediaId = mediaId
-            if (!currentMediaId && mediaFile) {
-                currentMediaId = await uploadMedia(mediaFile)
-            }
-
-            if (!currentMediaId) throw new Error('Media upload failed')
-
-            const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`)
-            const supabase = createClient()
-
-            const { error } = await supabase
-                .from('posts')
-                .update({
-                    social_account_id: selectedAccount,
-                    caption,
-                    scheduled_at: scheduledAt.toISOString(),
-                    media_id: currentMediaId,
-                    status: 'scheduled'
-                })
-                .eq('id', initialPost.id)
-                .eq('workspace_id', workspaceId)
-
-            if (error) throw error
-
-            alert('Post updated successfully!')
-            window.location.href = '/calendar'
-        } catch (error: any) {
-            console.error('Update error:', error)
-            alert('Error: ' + error.message)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleDeletePost = async () => {
-        if (!initialPost) return
-
-        if (!confirm('Are you sure you want to delete this scheduled post? This cannot be undone.')) {
-            return
-        }
-
-        setLoading(true)
-        try {
-            const supabase = createClient()
-
-            const { error } = await supabase
-                .from('posts')
-                .delete()
-                .eq('id', initialPost.id)
-                .eq('workspace_id', workspaceId)
-
-            if (error) throw error
-
-            alert('Post deleted successfully!')
-            window.location.href = '/calendar'
-        } catch (error: any) {
-            console.error('Delete error:', error)
-            alert('Error: ' + error.message)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     return (
-        <div className="grid lg:grid-cols-3 gap-10 items-start">
+        <div className="grid lg:grid-cols-3 gap-10 items-start pb-20">
             {/* Left: Content Input & Media */}
             <div className="lg:col-span-1 space-y-8">
                 <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden">
@@ -359,41 +329,61 @@ export default function ComposerForm({
                                 Visual Asset
                             </label>
                             {mediaPreview ? (
-                                <div className="relative aspect-square rounded-3xl overflow-hidden border-2 border-gray-100 dark:border-gray-900 group/media shadow-xl">
-                                    <Image
-                                        src={mediaPreview}
-                                        alt="Preview"
-                                        fill
-                                        className="object-cover transition-transform duration-700 group-hover/media:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/media:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                                        <button
-                                            onClick={() => {
-                                                setMediaFile(null)
-                                                setMediaPreview(null)
-                                                setMediaId(null)
-                                            }}
-                                            className="p-3 bg-red-600 text-white rounded-2xl shadow-lg hover:bg-red-700 hover:scale-110 transition-all font-bold flex items-center gap-2"
-                                        >
-                                            <Trash2 size={20} />
-                                            <span>Remove</span>
-                                        </button>
+                                <div className="group relative">
+                                    <div className="relative aspect-square rounded-3xl overflow-hidden border-2 border-gray-100 dark:border-gray-900 group/media shadow-xl">
+                                        <Image
+                                            src={mediaPreview}
+                                            alt="Preview"
+                                            fill
+                                            className="object-cover transition-transform duration-700 group-hover/media:scale-110"
+                                            unoptimized
+                                        />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/media:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                                            <button
+                                                onClick={() => {
+                                                    setMediaFile(null)
+                                                    setMediaPreview(null)
+                                                    setMediaId(null)
+                                                }}
+                                                className="p-3 bg-red-600 text-white rounded-2xl shadow-lg hover:bg-red-700 hover:scale-110 transition-all font-bold flex items-center gap-2"
+                                            >
+                                                <Trash2 size={20} />
+                                                <span>Remove</span>
+                                            </button>
+                                        </div>
                                     </div>
+                                    <button
+                                        onClick={() => setShowAIStudio(true)}
+                                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl border border-white/20 hover:scale-105 transition-transform flex items-center gap-2 z-20"
+                                    >
+                                        <Wand2 size={12} />
+                                        <span>Regenerate with AI</span>
+                                    </button>
                                 </div>
                             ) : (
-                                <label className="flex flex-col items-center justify-center aspect-square w-full border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[2.5rem] hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group/upload overflow-hidden bg-gray-50/50 dark:bg-gray-900/30">
-                                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl flex items-center justify-center text-white mb-4 shadow-lg shadow-blue-500/30 group-hover/upload:rotate-6 transition-transform">
-                                        <Upload size={32} />
-                                    </div>
-                                    <span className="text-sm font-bold text-gray-900 dark:text-white mb-1">Upload Media</span>
-                                    <span className="text-[10px] font-medium text-gray-500 uppercase">Image or Video (Max 100MB)</span>
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*,video/*"
-                                        onChange={handleFileChange}
-                                    />
-                                </label>
+                                <div className="grid grid-cols-2 gap-4 h-64">
+                                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[2.5rem] hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group/upload bg-gray-50/50 dark:bg-gray-900/30">
+                                        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white mb-2 shadow-lg shadow-blue-500/20">
+                                            <Upload size={20} />
+                                        </div>
+                                        <span className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">Upload</span>
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*,video/*"
+                                            onChange={handleFileChange}
+                                        />
+                                    </label>
+                                    <button
+                                        onClick={() => setShowAIStudio(true)}
+                                        className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[2.5rem] hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-900/10 transition-all group/ai bg-gray-50/50 dark:bg-gray-900/30"
+                                    >
+                                        <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white mb-2 shadow-lg shadow-purple-500/20">
+                                            <Wand2 size={20} />
+                                        </div>
+                                        <span className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tighter">AI Studio</span>
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -459,7 +449,7 @@ export default function ComposerForm({
                                                     }}
                                                     className="w-full appearance-none px-6 py-4 bg-gray-100 dark:bg-gray-900/50 border border-transparent focus:border-purple-500 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all cursor-pointer"
                                                 >
-                                                    {aiGeneration.hooks.map((hook: string, i: number) => (
+                                                    {aiGeneration.hooks.map((hook, i) => (
                                                         <option key={i} value={hook}>Hook Option {i + 1}</option>
                                                     ))}
                                                 </select>
@@ -509,7 +499,6 @@ export default function ComposerForm({
                                 </div>
                             </div>
                         </div>
-
 
                         {/* Scheduling */}
                         <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm">
@@ -580,7 +569,7 @@ export default function ComposerForm({
                                     <div className="flex gap-3">
                                         {initialPost && (
                                             <button
-                                                onClick={handleDeletePost}
+                                                onClick={handlePublishNow}
                                                 disabled={loading}
                                                 className="flex-1 group flex items-center justify-center gap-2 py-5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-3xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-all font-black uppercase tracking-widest text-[10px] active:scale-95"
                                             >
@@ -598,7 +587,7 @@ export default function ComposerForm({
                                         </button>
                                     </div>
                                     <button
-                                        onClick={initialPost ? handleUpdatePost : handleSchedulePost}
+                                        onClick={handleSchedulePost}
                                         disabled={loading || !scheduledDate || !scheduledTime}
                                         className="w-full group flex items-center justify-center gap-3 py-5 bg-orange-600 text-white rounded-3xl hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition-all font-black uppercase tracking-widest text-xs active:scale-95 disabled:opacity-50"
                                     >
@@ -660,6 +649,7 @@ export default function ComposerForm({
                                     alt="Preview"
                                     fill
                                     className="object-cover"
+                                    unoptimized
                                 />
                             ) : (
                                 <div className="text-gray-400 text-sm flex flex-col items-center gap-4">
@@ -709,6 +699,40 @@ export default function ComposerForm({
                     </div>
                 </div>
             </div>
+
+            {/* AI Image Studio Modal */}
+            {showAIStudio && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setShowAIStudio(false)} />
+                    <div className="relative w-full max-w-4xl bg-white dark:bg-gray-950 rounded-[3.5rem] border border-white/20 dark:border-gray-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500">
+                        <header className="p-10 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                                        <Sparkles size={24} />
+                                    </div>
+                                    AI Image Studio
+                                </h3>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Generate premium visual assets in seconds</p>
+                            </div>
+                            <button
+                                onClick={() => setShowAIStudio(false)}
+                                className="p-4 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-[1.5rem] transition-all"
+                            >
+                                <X size={24} />
+                            </button>
+                        </header>
+
+                        <div className="p-10">
+                            <AIImageStudio
+                                workspaceId={workspaceId}
+                                onSelect={handleSelectAIImage}
+                                onClose={() => setShowAIStudio(false)}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

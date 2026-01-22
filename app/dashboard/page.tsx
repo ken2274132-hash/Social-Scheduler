@@ -109,9 +109,8 @@ export default async function DashboardPage() {
     return (
         <DashboardLayout currentPage="dashboard">
             <div className="max-w-7xl mx-auto space-y-10">
-                <header className="relative py-4">
-                    <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
-                    <h1 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                <header className="mb-6">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                         Dashboard
                     </h1>
                     <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 font-medium mt-1">
@@ -155,82 +154,73 @@ export default async function DashboardPage() {
                         <section className="grid sm:grid-cols-2 gap-6">
                             <Link
                                 href="/composer"
-                                className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-8 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10"
+                                className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 transition-colors hover:border-blue-500"
                             >
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <FileText size={80} />
+                                <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                                    <FileText size={24} />
                                 </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-blue-500/30 group-hover:rotate-6 transition-transform">
-                                    <FileText size={28} />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                                     Create Post
                                 </h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                                <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
                                     Magic AI composer is ready for your next viral post.
                                 </p>
                             </Link>
 
                             <Link
                                 href="/settings"
-                                className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-8 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/10"
+                                className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 transition-colors hover:border-blue-500"
                             >
-                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                    <Settings size={80} />
+                                <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 mb-6 transition-colors group-hover:text-blue-600">
+                                    <Settings size={24} />
                                 </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-700 rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-purple-500/30 group-hover:-rotate-6 transition-transform">
-                                    <Settings size={28} />
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                                     Settings
                                 </h3>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed font-medium">
+                                <p className="text-gray-500 dark:text-gray-400 text-xs leading-relaxed">
                                     Manage your connected accounts and preferences.
                                 </p>
                             </Link>
                         </section>
 
                         {/* Recent Activity */}
-                        <section className="bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 overflow-hidden shadow-sm">
-                            <div className="px-8 py-6 border-b border-gray-100/50 dark:border-gray-900/50 flex items-center justify-between">
-                                <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                        <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                <h2 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
                                     Recent Activity
                                 </h2>
-                                <Link href="/calendar" className="text-sm px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-400 font-bold hover:bg-blue-600 hover:text-white transition-all">
+                                <Link href="/calendar" className="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline">
                                     View All
                                 </Link>
                             </div>
-                            <div className="divide-y divide-gray-100/50 dark:divide-gray-900/50">
+                            <div className="divide-y divide-gray-100 dark:divide-gray-800">
                                 {recentPosts && recentPosts.length > 0 ? (
                                     recentPosts.map(post => (
                                         <Link
                                             key={post.id}
                                             href={`/composer?postId=${post.id}`}
-                                            className="flex items-center px-8 py-5 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors gap-6 group"
+                                            className="flex items-center px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors gap-4 group"
                                         >
-                                            <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 shadow-inner group-hover:scale-110 transition-transform">
-                                                <span className="text-lg font-black text-gray-400 dark:text-gray-600 uppercase">
-                                                    {post.caption?.slice(0, 1) || 'P'}
-                                                </span>
+                                            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                                <FileText size={18} className="text-gray-400" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                                                     {post.caption}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
                                                         @{post.social_accounts?.account_name}
                                                     </span>
-                                                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
-                                                    <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
-                                                        {new Date(post.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                                    <span className="text-[10px] text-gray-400">
+                                                        • {new Date(post.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border shadow-sm ${post.status === 'published' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
-                                                post.status === 'scheduled' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
-                                                    post.status === 'failed' ? 'bg-red-500/10 text-red-600 border-red-500/20' :
-                                                        'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                                            <span className={`px-2 py-0.5 text-[9px] font-bold uppercase rounded-md border ${post.status === 'published' ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
+                                                post.status === 'scheduled' ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' :
+                                                    post.status === 'failed' ? 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
+                                                        'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
                                                 }`}>
                                                 {post.status}
                                             </span>
@@ -251,12 +241,10 @@ export default async function DashboardPage() {
                     {/* Sidebar Stats */}
                     <div className="space-y-8">
                         {/* Upcoming Queue */}
-                        <section className="bg-gray-950 rounded-3xl p-8 border border-gray-800 shadow-2xl shadow-blue-900/10">
-                            <div className="flex items-center justify-between mb-8">
-                                <h3 className="text-sm font-black text-white uppercase tracking-widest">Upcoming</h3>
-                                <div className="p-2 bg-blue-500/10 rounded-lg">
-                                    <CalendarIcon size={16} className="text-blue-500" />
-                                </div>
+                        <section className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest">Upcoming</h3>
+                                <CalendarIcon size={16} className="text-gray-400" />
                             </div>
 
                             <div className="space-y-6">
@@ -290,18 +278,15 @@ export default async function DashboardPage() {
                         </section>
 
                         {/* Channel Status */}
-                        <section className="bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm">
-                            <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest mb-8">Channels</h3>
-                            <div className="space-y-6">
+                        <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
+                            <h3 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest mb-6">Channels</h3>
+                            <div className="space-y-4">
                                 {connectedAccounts && connectedAccounts.length > 0 ? (
                                     connectedAccounts.map((account) => (
-                                        <div key={account.id} className="flex items-center justify-between group">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${account.platform === 'instagram'
-                                                    ? 'bg-gradient-to-br from-pink-500 to-orange-400 text-white'
-                                                    : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white'
-                                                    }`}>
-                                                    <Instagram size={18} />
+                                        <div key={account.id} className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400">
+                                                    <Instagram size={16} />
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-black text-gray-900 dark:text-white truncate max-w-[120px]">
@@ -337,39 +322,35 @@ export default async function DashboardPage() {
 
 function StatCard({ title, value, subtitle, icon, progress, color }: { title: string; value: string | number; subtitle?: string; icon: React.ReactNode; progress?: number; color: 'blue' | 'green' | 'purple' | 'orange' }) {
     const colors = {
-        blue: 'from-blue-500 to-blue-700 shadow-blue-500/20 text-blue-600',
-        green: 'from-green-500 to-emerald-700 shadow-green-500/20 text-green-600',
-        purple: 'from-purple-500 to-indigo-700 shadow-purple-500/20 text-purple-600',
-        orange: 'from-orange-500 to-red-600 shadow-orange-500/20 text-orange-600'
+        blue: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20',
+        green: 'text-green-600 bg-green-50 dark:bg-green-900/20',
+        purple: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20',
+        orange: 'text-orange-600 bg-orange-50 dark:bg-orange-900/20'
     }
 
     return (
-        <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-2xl rounded-3xl border border-gray-200/50 dark:border-gray-800/50 p-6 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.08] transition-transform duration-700 group-hover:scale-150 rotate-12">
-                {React.cloneElement(icon as React.ReactElement, { size: 64 })}
-            </div>
-
-            <div className="relative z-10 flex items-center justify-between mb-4">
-                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${colors[color]} flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110`}>
-                    {icon}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 rounded-xl ${colors[color]} flex items-center justify-center`}>
+                    {React.cloneElement(icon as React.ReactElement, { size: 20 })}
                 </div>
             </div>
 
-            <div className="relative z-10">
-                <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{title}</p>
+            <div>
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{title}</p>
                 <div className="flex items-baseline gap-2 mt-1">
-                    <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter">{value}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{value}</h3>
                     {subtitle && (
-                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                        <span className="text-[10px] font-bold text-gray-400">
                             / {subtitle}
                         </span>
                     )}
                 </div>
 
                 {progress !== undefined && (
-                    <div className="mt-6 w-full bg-gray-100 dark:bg-gray-800/50 rounded-full h-1.5 overflow-hidden">
+                    <div className="mt-4 w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1">
                         <div
-                            className={`bg-gradient-to-r ${colors[color]} h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]`}
+                            className="bg-blue-600 h-full rounded-full transition-all duration-1000"
                             style={{ width: `${progress}%` }}
                         />
                     </div>

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2 } from 'lucide-react'
+import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2, X, Sparkles, Wand2 } from 'lucide-react'
 import Image from 'next/image'
+import AIImageStudio from './AIImageStudio'
 
 type Product = {
     id: string
@@ -53,6 +54,7 @@ export default function WorkflowBuilder({
     const [interval, setInterval] = useState<'daily' | 'every2days' | 'weekly'>('daily')
     const [creating, setCreating] = useState(false)
     const [showItemPicker, setShowItemPicker] = useState(false)
+    const [activeTab, setActiveTab] = useState<'upload' | 'shopify' | 'ai'>('upload')
     const [showManualForm, setShowManualForm] = useState(false)
     const [manualTitle, setManualTitle] = useState('')
     const [manualCaption, setManualCaption] = useState('')
@@ -90,6 +92,8 @@ export default function WorkflowBuilder({
 
         setUploading(true)
         try {
+            // Ideally, we'd use the same Supabase upload logic as ComposerForm
+            // For now, staying consistent with the existing helper API if it exists
             const formData = new FormData()
             formData.append('file', file)
 
@@ -188,6 +192,7 @@ export default function WorkflowBuilder({
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        workspaceId,
                         socialAccountId: selectedAccount,
                         caption: scheduled.item.caption,
                         mediaUrl: scheduled.item.image,
@@ -209,15 +214,6 @@ export default function WorkflowBuilder({
         }
     }
 
-    const getPlatformIcon = (platform: string) => {
-        switch (platform.toLowerCase()) {
-            case 'instagram': return <Instagram size={16} className="text-pink-500" />
-            case 'facebook': return <Facebook size={16} className="text-blue-600" />
-            case 'pinterest': return <Share2 size={16} className="text-red-600" />
-            default: return <Share2 size={16} />
-        }
-    }
-
     if (loading) {
         return (
             <div className="flex items-center justify-center py-16">
@@ -226,30 +222,31 @@ export default function WorkflowBuilder({
         )
     }
 
-    // Show "Connect Account" only if NO social accounts are connected
     if (!hasAnyConnectedAccount) {
         return (
-            <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center">
-                <Share2 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <div className="bg-white dark:bg-gray-950 rounded-[2.5rem] border border-gray-200 dark:border-gray-800 p-16 text-center max-w-2xl mx-auto shadow-sm">
+                <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-8">
+                    <Share2 className="w-10 h-10 text-gray-400" />
+                </div>
+                <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-4">
                     Connect a Social Account First
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-10 leading-relaxed uppercase text-[10px] tracking-widest px-10">
                     To use the Workflow Builder, connect at least one social account (Instagram, Facebook, or Pinterest) in Settings.
                 </p>
                 <a
                     href="/settings"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-blue-500/20"
                 >
-                    Go to Settings
-                    <ChevronRight size={16} />
+                    Enable Accounts
+                    <ChevronRight size={18} />
                 </a>
             </div>
         )
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start pb-20">
             {/* Left: Configuration */}
             <div className="lg:col-span-1 space-y-8">
                 <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden">
@@ -260,7 +257,7 @@ export default function WorkflowBuilder({
                     <header className="relative mb-8">
                         <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
                         <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-wider">
-                            Workflow Settings
+                            Sync Settings
                         </h2>
                     </header>
 
@@ -289,36 +286,36 @@ export default function WorkflowBuilder({
                             </div>
                         </div>
 
-                        {/* Start Date */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                Launch Date
-                            </label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                            />
-                        </div>
-
-                        {/* Post Time */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                Preferred Time
-                            </label>
-                            <input
-                                type="time"
-                                value={postTime}
-                                onChange={(e) => setPostTime(e.target.value)}
-                                className="w-full px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                            />
+                        {/* Date & Time */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
+                                    Launch Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
+                                    Preferred Time
+                                </label>
+                                <input
+                                    type="time"
+                                    value={postTime}
+                                    onChange={(e) => setPostTime(e.target.value)}
+                                    className="w-full px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
+                                />
+                            </div>
                         </div>
 
                         {/* Interval */}
                         <div className="space-y-3">
                             <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                Posting Cadence
+                                Frequency
                             </label>
                             <div className="grid grid-cols-1 gap-2">
                                 {(['daily', 'every2days', 'weekly'] as const).map((opt) => (
@@ -330,7 +327,7 @@ export default function WorkflowBuilder({
                                             : 'bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
                                             }`}
                                     >
-                                        <span className="text-sm font-bold uppercase tracking-widest">
+                                        <span className="text-xs font-bold uppercase tracking-widest">
                                             {opt === 'daily' ? 'Every Day' : opt === 'every2days' ? 'Every 2 Days' : 'Every Week'}
                                         </span>
                                         {interval === opt && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(37,99,235,0.6)]" />}
@@ -374,12 +371,12 @@ export default function WorkflowBuilder({
                     </header>
 
                     {scheduledItems.length === 0 ? (
-                        <div className="text-center py-20 border-2 border-dashed border-gray-100 dark:border-gray-900 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-900/10">
+                        <div className="text-center py-24 border-2 border-dashed border-gray-100 dark:border-gray-900 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-900/10">
                             <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Calendar className="w-10 h-10 text-gray-300" />
                             </div>
                             <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">
-                                Queue remains empty. Click &quot;Add Content&quot; to begin.
+                                Queue remains empty. Use the Library to populate.
                             </p>
                         </div>
                     ) : (
@@ -442,196 +439,174 @@ export default function WorkflowBuilder({
             {/* Content Picker Modal */}
             {showItemPicker && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-2xl rounded-[3rem] p-10 max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-800/50 animate-in zoom-in-95 duration-300">
-                        <header className="flex items-center justify-between mb-10">
-                            <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                                Content Library
-                            </h3>
+                    <div className="bg-white dark:bg-gray-950 rounded-[3.5rem] p-10 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-800/50 animate-in zoom-in-95 duration-300">
+                        <header className="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
+                                    Content Library
+                                </h3>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Source assets for your bulk schedule</p>
+                            </div>
                             <button
                                 onClick={() => setShowItemPicker(false)}
-                                className="w-12 h-12 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-2xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-bold"
+                                className="w-14 h-14 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-3xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-bold"
                             >
-                                ✕
+                                <X size={24} />
                             </button>
                         </header>
 
-                        {/* Create Custom Content Trigger */}
-                        <div className="mb-10">
+                        {/* Tabs */}
+                        <div className="flex gap-2 mb-10 p-1.5 bg-gray-100 dark:bg-gray-900/50 rounded-2xl w-fit">
                             <button
-                                onClick={() => setShowManualForm(!showManualForm)}
-                                className="w-full group relative py-8 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[2rem] hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center gap-3 bg-gray-50/50 dark:bg-gray-900/30"
+                                onClick={() => setActiveTab('upload')}
+                                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-900'}`}
                             >
-                                <div className="w-14 h-14 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                                    <Plus size={24} className="text-blue-600" />
-                                </div>
-                                <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Create Custom Asset</span>
+                                Custom Asset
                             </button>
-
-                            {showManualForm && (
-                                <div className="mt-8 p-8 bg-blue-50/30 dark:bg-blue-900/10 rounded-[2rem] border border-blue-100 dark:border-blue-900/20 space-y-6 animate-in slide-in-from-top-4 duration-500">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">
-                                            Title
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={manualTitle}
-                                            onChange={(e) => setManualTitle(e.target.value)}
-                                            placeholder="Enter asset title..."
-                                            className="w-full px-6 py-4 bg-white dark:bg-gray-950 border border-transparent focus:border-blue-500 rounded-2xl text-sm font-bold outline-none transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">
-                                            Description
-                                        </label>
-                                        <textarea
-                                            value={manualCaption}
-                                            onChange={(e) => setManualCaption(e.target.value)}
-                                            placeholder="Enter caption for your post..."
-                                            rows={3}
-                                            className="w-full px-6 py-4 bg-white dark:bg-gray-950 border border-transparent focus:border-blue-500 rounded-2xl text-sm font-medium outline-none transition-all resize-none"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">
-                                            Featured Image
-                                        </label>
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="hidden"
-                                        />
-                                        {manualImage ? (
-                                            <div className="relative w-40 h-40 group/img">
-                                                <Image
-                                                    src={manualImage}
-                                                    alt="Preview"
-                                                    fill
-                                                    className="object-cover rounded-[2rem] shadow-xl"
-                                                    unoptimized
-                                                />
-                                                <button
-                                                    onClick={() => setManualImage(null)}
-                                                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-xl p-2 shadow-lg hover:scale-110 transition-transform"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={() => fileInputRef.current?.click()}
-                                                disabled={uploading}
-                                                className="flex items-center gap-3 px-6 py-4 bg-white dark:bg-gray-950 rounded-2xl border border-dashed border-blue-200 dark:border-blue-800 text-sm font-bold text-blue-600 hover:bg-white transition-all shadow-sm"
-                                            >
-                                                <Upload size={18} />
-                                                <span>{uploading ? 'Processing...' : 'Upload Asset'}</span>
-                                            </button>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={addManualItem}
-                                        className="w-full py-5 bg-blue-600 text-white rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
-                                    >
-                                        Add to Library
-                                    </button>
-                                </div>
+                            {shopifyConnected && (
+                                <button
+                                    onClick={() => setActiveTab('shopify')}
+                                    className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shopify' ? 'bg-white dark:bg-gray-800 text-green-600 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-900'}`}
+                                >
+                                    Shopify
+                                </button>
                             )}
+                            <button
+                                onClick={() => setActiveTab('ai')}
+                                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-gray-800 text-purple-600 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-900'}`}
+                            >
+                                AI Studio
+                            </button>
                         </div>
 
-                        {/* Manual Items */}
-                        {manualItems.length > 0 && (
-                            <div className="mb-12">
-                                <h4 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-1">
-                                    Custom Assets
-                                </h4>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                                    {manualItems.map((item) => (
-                                        <button
-                                            key={item.id}
-                                            onClick={() => addItemToSchedule(item)}
-                                            className="group/asset text-left p-2 bg-gray-50/50 dark:bg-gray-900/50 rounded-[2rem] border border-transparent hover:border-blue-500/50 hover:bg-white dark:hover:bg-gray-900 transition-all duration-500"
-                                        >
-                                            <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-[1.5rem] shadow-md">
-                                                {item.image ? (
-                                                    <Image
-                                                        src={item.image}
-                                                        alt={item.title}
-                                                        fill
-                                                        className="object-cover transition-transform duration-700 group-hover/asset:scale-110"
-                                                        unoptimized
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center">
-                                                        <ImageIcon size={32} className="text-gray-300" />
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover/asset:opacity-100 transition-opacity" />
-                                            </div>
-                                            <div className="px-3 pb-3">
-                                                <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                                                    {item.title}
-                                                </p>
-                                                <p className="text-[10px] font-bold text-blue-600 uppercase mt-1">Select Asset</p>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {activeTab === 'upload' && (
+                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                                {/* Upload Form Toggle */}
+                                {!showManualForm && (
+                                    <button
+                                        onClick={() => setShowManualForm(true)}
+                                        className="w-full group relative py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[2.5rem] hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center gap-4 bg-gray-50/50 dark:bg-gray-900/30"
+                                    >
+                                        <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform text-blue-600">
+                                            <Plus size={28} />
+                                        </div>
+                                        <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Construct Custom Asset</span>
+                                    </button>
+                                )}
 
-                        {/* Shopify Products */}
-                        {shopifyConnected && products.length > 0 && (
-                            <div>
-                                <h4 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6 px-1 flex items-center gap-2">
-                                    <Package size={14} className="text-green-500" />
-                                    Shopify Inventory
-                                </h4>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                                    {products.map((product) => (
-                                        <button
-                                            key={product.id}
-                                            onClick={() => addProductToSchedule(product)}
-                                            className="group/product text-left p-2 bg-gray-50/50 dark:bg-gray-900/50 rounded-[2rem] border border-transparent hover:border-green-500/50 hover:bg-white dark:hover:bg-gray-900 transition-all duration-500"
-                                        >
-                                            <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-[1.5rem] shadow-md">
-                                                {product.image ? (
-                                                    <Image
-                                                        src={product.image}
-                                                        alt={product.title}
-                                                        fill
-                                                        className="object-cover transition-transform duration-700 group-hover/product:scale-110"
-                                                        unoptimized
+                                {showManualForm && (
+                                    <div className="p-8 bg-blue-50/30 dark:bg-blue-900/10 rounded-[2.5rem] border border-blue-100 dark:border-blue-900/20 space-y-6">
+                                        <div className="grid grid-cols-2 gap-8">
+                                            <div className="space-y-6">
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Title</label>
+                                                    <input
+                                                        type="text"
+                                                        value={manualTitle}
+                                                        onChange={(e) => setManualTitle(e.target.value)}
+                                                        placeholder="Summer Collection Lookbook..."
+                                                        className="w-full px-6 py-4 bg-white dark:bg-gray-950 border border-transparent focus:border-blue-500 rounded-2xl text-sm font-bold outline-none transition-all shadow-sm"
                                                     />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                                        <Package size={32} className="text-gray-300" />
-                                                    </div>
-                                                )}
-                                                <div className="absolute top-2 right-2 px-3 py-1 bg-green-500 text-white rounded-full text-[10px] font-black shadow-lg">
-                                                    ${product.price}
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Caption</label>
+                                                    <textarea
+                                                        value={manualCaption}
+                                                        onChange={(e) => setManualCaption(e.target.value)}
+                                                        placeholder="Write your story..."
+                                                        rows={4}
+                                                        className="w-full px-6 py-4 bg-white dark:bg-gray-950 border border-transparent focus:border-blue-500 rounded-2xl text-sm font-medium outline-none transition-all resize-none shadow-sm"
+                                                    />
                                                 </div>
                                             </div>
-                                            <div className="px-3 pb-3">
-                                                <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                                                    {product.title}
-                                                </p>
-                                                <p className="text-[10px] font-bold text-green-600 uppercase mt-1">Import Product</p>
+                                            <div className="space-y-3">
+                                                <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Featured Visual</label>
+                                                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+
+                                                {manualImage ? (
+                                                    <div className="relative aspect-square w-full group/img">
+                                                        <Image src={manualImage} alt="Preview" fill className="object-cover rounded-[2rem] shadow-xl" unoptimized />
+                                                        <button onClick={() => setManualImage(null)} className="absolute top-4 right-4 bg-red-600 text-white rounded-xl p-3 shadow-lg hover:scale-110 transition-transform">
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                        disabled={uploading}
+                                                        className="w-full aspect-square flex flex-col items-center justify-center gap-3 bg-white dark:bg-gray-950 rounded-[2rem] border-2 border-dashed border-blue-200 dark:border-blue-800 text-blue-600 hover:bg-white transition-all shadow-sm"
+                                                    >
+                                                        <Upload size={32} />
+                                                        <span className="text-xs font-black uppercase tracking-widest">{uploading ? 'Synthesizing...' : 'Upload File'}</span>
+                                                    </button>
+                                                )}
                                             </div>
-                                        </button>
-                                    ))}
-                                </div>
+                                        </div>
+                                        <div className="flex gap-4 pt-4">
+                                            <button onClick={() => setShowManualForm(false)} className="flex-1 py-5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 transition-all">Cancel</button>
+                                            <button onClick={addManualItem} className="flex-[2] py-5 bg-blue-600 text-white rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02]">Save to Library</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {manualItems.length > 0 && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                                        {manualItems.map((item) => (
+                                            <button key={item.id} onClick={() => addItemToSchedule(item)} className="group/asset text-left p-3 bg-gray-50/50 dark:bg-gray-900/50 rounded-[2.5rem] border border-transparent hover:border-blue-500/50 hover:bg-white dark:hover:bg-gray-900 transition-all duration-500">
+                                                <div className="relative aspect-square mb-4 overflow-hidden rounded-[1.8rem] shadow-md">
+                                                    {item.image ? (
+                                                        <Image src={item.image} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover/asset:scale-110" unoptimized />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                                                            <ImageIcon size={32} className="text-gray-300" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="px-3 pb-2">
+                                                    <p className="text-xs font-black text-gray-900 dark:text-white truncate">{item.title}</p>
+                                                    <p className="text-[10px] font-bold text-blue-600 uppercase mt-1">Add to Queue</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {!shopifyConnected && manualItems.length === 0 && (
-                            <div className="text-center py-20 px-10 bg-gray-50 dark:bg-gray-900/50 rounded-[2rem] border-2 border-dashed border-gray-100 dark:border-gray-800">
-                                <Package className="w-16 h-16 text-gray-200 mx-auto mb-6" />
-                                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest text-[10px] leading-relaxed max-w-xs mx-auto">
-                                    Create custom assets above, or connect Shopify in Settings to sync your inventory as post content.
-                                </p>
+                        {activeTab === 'shopify' && shopifyConnected && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
+                                {products.map((product) => (
+                                    <button key={product.id} onClick={() => addProductToSchedule(product)} className="group/product text-left p-3 bg-gray-50/50 dark:bg-gray-900/50 rounded-[2.5rem] border border-transparent hover:border-green-500/50 hover:bg-white dark:hover:bg-gray-900 transition-all duration-500">
+                                        <div className="relative aspect-square mb-4 overflow-hidden rounded-[1.8rem] shadow-md">
+                                            {product.image ? (
+                                                <Image src={product.image} alt={product.title} fill className="object-cover transition-transform duration-700 group-hover/product:scale-110" unoptimized />
+                                            ) : (
+                                                <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><Package size={32} className="text-gray-300" /></div>
+                                            )}
+                                        </div>
+                                        <div className="px-3 pb-2">
+                                            <p className="text-xs font-black text-gray-900 dark:text-white truncate">{product.title}</p>
+                                            <p className="text-[10px] font-bold text-green-600 uppercase mt-1">Import Post</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeTab === 'ai' && (
+                            <div className="animate-in fade-in duration-500">
+                                <AIImageStudio
+                                    workspaceId={workspaceId}
+                                    onSelect={(url) => {
+                                        addItemToSchedule({
+                                            id: `ai-${Date.now()}`,
+                                            title: 'AI Synthesis ' + new Date().toLocaleTimeString(),
+                                            image: url,
+                                            caption: 'Generated via AI Social Architect'
+                                        })
+                                    }}
+                                    onClose={() => setShowItemPicker(false)}
+                                />
                             </div>
                         )}
                     </div>

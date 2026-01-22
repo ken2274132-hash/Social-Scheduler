@@ -23,6 +23,13 @@
   --border: #1e293b;
 }
 
+html,
+body {
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
