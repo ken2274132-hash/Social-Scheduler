@@ -261,8 +261,16 @@ CREATE POLICY "Users can view social accounts in their workspaces"
     ON social_accounts FOR SELECT
     USING (check_is_workspace_member(workspace_id));
 
-CREATE POLICY "Workspace admins can manage social accounts"
-    ON social_accounts FOR ALL
+CREATE POLICY "Workspace admins can insert social accounts"
+    ON social_accounts FOR INSERT
+    WITH CHECK (check_is_workspace_admin(workspace_id));
+
+CREATE POLICY "Workspace admins can update social accounts"
+    ON social_accounts FOR UPDATE
+    USING (check_is_workspace_admin(workspace_id));
+
+CREATE POLICY "Workspace admins can delete social accounts"
+    ON social_accounts FOR DELETE
     USING (check_is_workspace_admin(workspace_id));
 
 -- Media Assets Policies

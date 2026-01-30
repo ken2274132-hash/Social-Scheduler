@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 import LoadingBar from "@/components/LoadingBar";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -102,6 +103,22 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     {children}
+                    <Toaster
+                        position="top-right"
+                        toastOptions={{
+                            style: {
+                                background: 'var(--background)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '1rem',
+                            },
+                            classNames: {
+                                success: 'text-success',
+                                error: 'text-danger',
+                            }
+                        }}
+                        richColors
+                        closeButton
+                    />
                 </ThemeProvider>
             </body>
         </html>

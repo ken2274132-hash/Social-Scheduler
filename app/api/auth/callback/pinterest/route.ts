@@ -42,8 +42,9 @@ export async function GET(request: NextRequest) {
 
         // Exchange code for access token
         const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+        const apiBaseUrl = process.env.PINTEREST_API_BASE_URL || 'https://api.pinterest.com'
 
-        const tokenResponse = await fetch('https://api.pinterest.com/v5/oauth/token', {
+        const tokenResponse = await fetch(`${apiBaseUrl}/v5/oauth/token`, {
             method: 'POST',
             headers: {
                 'Authorization': `Basic ${credentials}`,
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
         const expiresIn = tokenData.expires_in // seconds
 
         // Get Pinterest user info
-        const userResponse = await fetch('https://api.pinterest.com/v5/user_account', {
+        const userResponse = await fetch(`${apiBaseUrl}/v5/user_account`, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
             },
@@ -130,9 +131,15 @@ export async function GET(request: NextRequest) {
             })
 
         if (upsertError) {
-            console.error('Pinterest save error:', upsertError)
+            console.error('Pinterest save error - FULL DETAILS:', {
+                code: upsertError.code,
+                message: upsertError.message,
+                details: upsertError.details,
+                hint: upsertError.hint,
+                fullError: JSON.stringify(upsertError, null, 2)
+            })
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=save_failed`
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=save_failed&msg=${encodeURIComponent(upsertError.message)}`
             )
         }
 

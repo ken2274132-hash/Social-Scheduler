@@ -324,7 +324,8 @@ async function publishToPinterest(post: any, accessToken: string) {
             pinPayload.board_id = post.pinterest_board_id
         }
 
-        const pinResponse = await fetch('https://api.pinterest.com/v5/pins', {
+        const apiBaseUrl = process.env.PINTEREST_API_BASE_URL || 'https://api.pinterest.com'
+        const pinResponse = await fetch(`${apiBaseUrl}/v5/pins`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,

@@ -8,7 +8,7 @@ import DemoAccountButton from '@/components/DemoAccountButton'
 import ConnectedAccounts from '@/components/ConnectedAccounts'
 import ShopifyStatus from '@/components/ShopifyStatus'
 import DashboardLayout from '@/components/DashboardLayout'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Settings, Link2, ShoppingBag, User, Mail, Building2 } from 'lucide-react'
 
 export default async function SettingsPage({
     searchParams,
@@ -54,180 +54,173 @@ export default async function SettingsPage({
         .eq('workspace_id', currentWorkspace?.id || '')
         .eq('is_active', true)
 
+    const connectedCount = socialAccounts?.length || 0
+
     return (
         <DashboardLayout currentPage="settings">
-            <div className="max-w-6xl mx-auto space-y-10">
-                <header className="relative flex flex-col gap-2">
-                    <div className="flex items-center gap-4">
-                        <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
-                        <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
+            <div className="max-w-5xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                             Settings
                         </h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Manage your workspace and connected accounts
+                        </p>
                     </div>
-                    <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-6">
-                        Configure your command center and integrations
-                    </p>
-                </header>
+                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                            {connectedCount} account{connectedCount !== 1 ? 's' : ''} connected
+                        </span>
+                    </div>
+                </div>
 
+                {/* Alerts */}
                 {error && (
-                    <div className="group relative overflow-hidden p-6 rounded-[2rem] bg-red-500/10 dark:bg-red-500/5 border border-red-500/20 backdrop-blur-xl animate-in slide-in-from-top-4 duration-500">
-                        <div className="flex items-start gap-4 text-red-600 dark:text-red-400 relative z-10">
-                            <div className="w-10 h-10 rounded-2xl bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center shrink-0">
-                                <AlertCircle size={24} />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm font-black uppercase tracking-tight">
-                                    Connection Error
-                                </p>
-                                <p className="text-xs font-bold opacity-80 leading-relaxed">
-                                    {error === 'no_pages' && 'No Facebook Pages found. You need a Facebook Page to connect Instagram.'}
-                                    {error === 'no_instagram' && 'No Instagram Professional account linked to this Facebook Page.'}
-                                    {error === 'oauth_denied' && 'Connection cancelled or denied.'}
-                                    {error === 'pinterest_denied' && 'Pinterest connection was cancelled or denied.'}
-                                    {error === 'token_exchange_failed' && 'Failed to exchange Pinterest code for access token. Check your App Secret.'}
-                                    {error === 'workspace_not_found' && 'No active workspace found for your account.'}
-                                    {error === 'save_failed' && 'Failed to save Pinterest account to database.'}
-                                    {error === 'connection_failed' && 'Failed to connect. Please try again.'}
-                                    {error === 'config_error' && 'Environment configuration error. Check your API keys.'}
-                                    {error === 'invalid_state' && 'Invalid session state. Please try again.'}
-                                    {error === 'invalid_session' && 'Session mismatch. Please try logging in again.'}
-                                    {error === 'callback_error' && 'A technical error occurred during the callback.'}
-                                    {!['no_pages', 'no_instagram', 'oauth_denied', 'pinterest_denied', 'token_exchange_failed', 'workspace_not_found', 'save_failed', 'connection_failed', 'config_error', 'invalid_state', 'invalid_session', 'callback_error'].includes(error) && `An unexpected error occurred: ${error}`}
-                                </p>
-                                {details && (
-                                    <div className="mt-4 p-3 bg-red-600/10 rounded-xl font-mono text-[10px] break-all border border-red-500/10">
-                                        TRACING: {details}
-                                    </div>
-                                )}
-                            </div>
+                    <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                                Connection Error
+                            </p>
+                            <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                                {error === 'no_pages' && 'No Facebook Pages found. You need a Facebook Page to connect Instagram.'}
+                                {error === 'no_instagram' && 'No Instagram Professional account linked to this Facebook Page.'}
+                                {error === 'oauth_denied' && 'Connection cancelled or denied.'}
+                                {error === 'pinterest_denied' && 'Pinterest connection was cancelled or denied.'}
+                                {error === 'token_exchange_failed' && 'Failed to exchange Pinterest code for access token.'}
+                                {error === 'workspace_not_found' && 'No active workspace found for your account.'}
+                                {error === 'save_failed' && 'Failed to save account to database.'}
+                                {error === 'shopify_save_failed' && 'Failed to save Shopify store to database.'}
+                                {error === 'connection_failed' && 'Failed to connect. Please try again.'}
+                                {error === 'config_error' && 'Environment configuration error. Check your API keys.'}
+                                {error === 'invalid_state' && 'Invalid session state. Please try again.'}
+                                {error === 'invalid_session' && 'Session mismatch. Please try logging in again.'}
+                                {error === 'callback_error' && 'A technical error occurred during the callback.'}
+                                {!['no_pages', 'no_instagram', 'oauth_denied', 'pinterest_denied', 'token_exchange_failed', 'workspace_not_found', 'save_failed', 'shopify_save_failed', 'connection_failed', 'config_error', 'invalid_state', 'invalid_session', 'callback_error'].includes(error) && (details || `An unexpected error occurred: ${error}`)}
+                            </p>
+                            {details && (
+                                <code className="block mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded text-xs text-red-600 dark:text-red-300 break-all">
+                                    {details}
+                                </code>
+                            )}
                         </div>
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
                     </div>
                 )}
 
                 {success && (
-                    <div className="group relative overflow-hidden p-6 rounded-[2rem] bg-green-500/10 dark:bg-green-500/5 border border-green-500/20 backdrop-blur-xl animate-in slide-in-from-top-4 duration-500">
-                        <div className="flex items-center gap-4 text-green-600 dark:text-green-400 relative z-10">
-                            <div className="w-10 h-10 rounded-2xl bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center shrink-0">
-                                <CheckCircle2 size={24} />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-sm font-black uppercase tracking-tight">
-                                    Operation Successful
-                                </p>
-                                <p className="text-xs font-bold opacity-80 leading-relaxed">
-                                    Your account synchronization has been completed successfully.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                            Account connected successfully!
+                        </p>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-8">
-                    {/* Workspace Info */}
-                    <section className="bg-white/40 dark:bg-gray-950/40 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden">
-                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                        <header className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                <AlertCircle size={24} />
+                {/* Workspace Section */}
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
-                                    Workspace Configuration
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    Workspace
                                 </h2>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global identity settings</p>
-                            </div>
-                        </header>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div className="p-5 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800/50">
-                                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Entity Name</p>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">{currentWorkspace?.name || 'Default Workspace'}</p>
-                            </div>
-                            <div className="p-5 bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800/50">
-                                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Administrative Access</p>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.email}</p>
+                                <p className="text-xs text-gray-500">Your account details</p>
                             </div>
                         </div>
-                    </section>
-
-                    {/* Connected Accounts */}
-                    <section className="bg-white/40 dark:bg-gray-950/40 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm hover:shadow-xl transition-all duration-500">
-                        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-10">
+                    </div>
+                    <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                            <User className="w-5 h-5 text-gray-400" />
                             <div>
-                                <div className="flex items-center gap-4 mb-2">
-                                    <div className="w-12 h-12 rounded-2xl bg-purple-500/10 dark:bg-purple-500/5 flex items-center justify-center text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                                        <CheckCircle2 size={24} />
-                                    </div>
-                                    <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
-                                        Channel Matrix
-                                    </h2>
-                                </div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-16">Active social media integrations</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Workspace Name</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {currentWorkspace?.name || 'Default Workspace'}
+                                </p>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3">
+                        </div>
+                        <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                            <Mail className="w-5 h-5 text-gray-400" />
+                            <div>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {user.email}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Social Accounts Section */}
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                    <Link2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Social Accounts
+                                    </h2>
+                                    <p className="text-xs text-gray-500">Connect your social media platforms</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
                                 <DemoAccountButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectInstagramButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectFacebookButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectPinterestButton workspaceId={currentWorkspace?.id || 'default'} />
                             </div>
                         </div>
-
+                    </div>
+                    <div className="p-6">
                         {socialAccounts && socialAccounts.length > 0 ? (
                             <ConnectedAccounts accounts={socialAccounts} />
                         ) : (
-                            <div className="text-center py-20 bg-gray-50/50 dark:bg-gray-900/20 rounded-[2.5rem] border-2 border-dashed border-gray-100 dark:border-gray-800">
-                                <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl text-3xl">
-                                    📱
+                            <div className="text-center py-12 px-4">
+                                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-3xl">📱</span>
                                 </div>
-                                <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">
-                                    Matrix Blank
+                                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                                    No accounts connected
                                 </h3>
-                                <p className="text-[10px] font-black text-gray-400 px-10 uppercase tracking-widest leading-relaxed max-w-sm mx-auto">
-                                    Initialize your first channel connection using the controls above to start deploying content.
+                                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                                    Connect your first social media account using the buttons above to start scheduling posts.
                                 </p>
                             </div>
                         )}
-                    </section>
+                    </div>
+                </div>
 
-                    {/* Shopify Integration */}
-                    <section className="bg-gray-900 text-white rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                            <AlertCircle size={150} />
-                        </div>
-
-                        <div className="relative z-10">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-10 mb-10">
+                {/* Shopify Section */}
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl overflow-hidden">
+                    <div className="p-6 sm:p-8">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
+                                    <ShoppingBag className="w-6 h-6 text-white" />
+                                </div>
                                 <div>
-                                    <div className="flex items-center gap-4 mb-3">
-                                        <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-green-400 border border-white/20 shadow-xl">
-                                            <div className="text-2xl">🛍️</div>
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-black uppercase tracking-tighter">
-                                                Commerce Link
-                                            </h2>
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Shopify store synchronization</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-sm font-bold text-gray-400 max-w-md leading-relaxed">
-                                        Connect your Shopify instance to propagate product intelligence directly into your content scheduling matrix.
+                                    <h2 className="text-xl font-bold text-white">
+                                        Shopify Integration
+                                    </h2>
+                                    <p className="text-sm text-white/80 mt-1 max-w-md">
+                                        Connect your Shopify store to create posts directly from your products.
                                     </p>
                                 </div>
-                                <div className="shrink-0">
-                                    <ConnectShopifyButton workspaceId={currentWorkspace?.id || 'default'} />
-                                </div>
                             </div>
-
-                            <div className="p-8 bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-inner">
-                                <ShopifyStatus />
-                            </div>
+                            <ConnectShopifyButton workspaceId={currentWorkspace?.id || 'default'} />
                         </div>
-
-                        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-green-500/10 rounded-full blur-[100px] pointer-events-none" />
-                    </section>
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-4 sm:p-6">
+                            <ShopifyStatus />
+                        </div>
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

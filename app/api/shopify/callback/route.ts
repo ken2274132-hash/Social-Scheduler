@@ -73,8 +73,9 @@ export async function GET(request: NextRequest) {
             .single()
 
         if (workspaceError || !workspace) {
+            console.error('Shopify workspace error:', workspaceError)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=workspace_not_found`
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=workspace_not_found&details=${encodeURIComponent(workspaceError?.message || 'No workspace found for this user.')}`
             )
         }
 
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
         if (upsertError) {
             console.error('Shopify save error:', upsertError)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=save_failed`
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=shopify_save_failed&details=${encodeURIComponent(upsertError.message)}`
             )
         }
 
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
         console.error('Shopify callback error:', error)
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=unknown`
+            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=callback_error&details=${encodeURIComponent(error.message)}`
         )
     }
 }
