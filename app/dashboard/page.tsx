@@ -1,5 +1,5 @@
 import React from 'react'
-import { Plus, AlertTriangle, ArrowUpRight, FileText, Calendar, Send, Clock, Zap, ChevronLeft, ChevronRight, Beaker } from 'lucide-react'
+import { Plus, AlertTriangle, ArrowUpRight, FileText, Calendar, Send, Clock, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import DashboardLayout from '@/components/DashboardLayout'
@@ -63,20 +63,20 @@ export default async function DashboardPage(props: {
 
     return (
         <DashboardLayout currentPage="dashboard">
-            <div className="space-y-10">
+            <div className="space-y-8">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+                        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
                             Welcome, {firstName}
                         </h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                        <p className="text-base text-slate-500 dark:text-slate-400 mt-1">
                             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </p>
                     </div>
                     <Link
                         href="/composer"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
                     >
                         <Plus size={16} />
                         Create Post
@@ -98,52 +98,9 @@ export default async function DashboardPage(props: {
                     </div>
                 )}
 
-                {/* Social Lab Card */}
-                <div className="bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent border border-indigo-100 dark:border-indigo-900/30 rounded-2xl p-6 mb-8 relative group overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Zap size={100} className="text-indigo-600" />
-                    </div>
-                    <div className="relative">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                                <Beaker size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Social Lab</h3>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">You're helping us build the future of AI automation.</p>
-                            </div>
-                        </div>
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <LabStatus
-                                label="Phase"
-                                value="Alpha 1.0"
-                                subValue="Next: Beta Expand"
-                            />
-                            <LabStatus
-                                label="Feedback"
-                                value="Active"
-                                subValue="Response time: < 2h"
-                            />
-                            <div>
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                                    <span>V1.0 Roadmap</span>
-                                    <span>85%</span>
-                                </div>
-                                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-indigo-600 w-[85%] rounded-full shadow-sm" />
-                                </div>
-                            </div>
-                            <div className="flex items-end">
-                                <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm shadow-indigo-600/20">
-                                    Send Feedback
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <StatCard
                         label="Total Posts"
                         value={totalPostsCount || 0}
@@ -172,7 +129,7 @@ export default async function DashboardPage(props: {
                 {/* Posts Section */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
                     <div className="px-6 py-4 flex items-center justify-between border-b border-slate-50 dark:border-slate-800/50">
-                        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Recent Activity</h2>
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Activity</h2>
                         <DashboardFilters />
                     </div>
 
@@ -188,7 +145,7 @@ export default async function DashboardPage(props: {
                                         className="group flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
                                     >
                                         {/* Thumbnail */}
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800">
+                                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800">
                                             {post.media_assets?.url ? (
                                                 <Image
                                                     src={post.media_assets.url}
@@ -206,14 +163,14 @@ export default async function DashboardPage(props: {
 
                                         {/* Content */}
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-slate-900 dark:text-white truncate font-medium">
+                                            <p className="text-base text-slate-900 dark:text-white truncate font-medium">
                                                 {post.caption?.slice(0, 60) || 'No caption'}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1 px-0.5">
                                                 <span className={`w-3 h-3 rounded-full ${platformBg} shrink-0`} />
-                                                <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{platform}</span>
+                                                <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{platform}</span>
                                                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                                                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                                     {post.scheduled_at
                                                         ? new Date(post.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
                                                         : 'Unscheduled'}
@@ -282,20 +239,20 @@ export default async function DashboardPage(props: {
                     )}
                 </div>
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     )
 }
 
 function StatCard({ label, value, icon, color }: { label: string, value: number | string, icon: React.ReactNode, color?: string }) {
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-5 shadow-sm shadow-slate-200/50 dark:shadow-none transition-all">
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
-                <div className={`w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/50 dark:shadow-none transition-all">
+            <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
+                <div className={`w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>
                     {icon}
                 </div>
             </div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
         </div>
     )
 }
@@ -308,7 +265,7 @@ function StatusPill({ status }: { status: string }) {
         draft: 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400 ring-slate-100 dark:ring-slate-700',
     }
     return (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium ring-1 shadow-sm ${styles[status] || styles.draft}`}>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ring-1 shadow-sm ${styles[status] || styles.draft}`}>
             <span className={`w-1 h-1 rounded-full ${status === 'published' ? 'bg-emerald-500' :
                 status === 'failed' ? 'bg-red-500' :
                     status === 'scheduled' ? 'bg-indigo-500' : 'bg-slate-400'
@@ -339,12 +296,3 @@ function PageBtn({ href, children, disabled, active }: { href: string; children:
     )
 }
 
-function LabStatus({ label, value, subValue }: { label: string; value: string; subValue: string }) {
-    return (
-        <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">{label}</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">{value}</p>
-            <p className="text-[10px] font-medium text-slate-400">{subValue}</p>
-        </div>
-    )
-}

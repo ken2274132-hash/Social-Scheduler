@@ -50,15 +50,15 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
             </header>
 
             {/* Sidebar */}
-            <aside className="fixed left-0 top-0 h-full w-[240px] bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/50 hidden lg:flex flex-col z-50">
-                <div className="px-6 py-8">
-                    <Link href="/dashboard" className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shadow-sm shadow-blue-600/20">SM</div>
-                        <span className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">Social Scheduler</span>
+            <aside className="fixed left-0 top-0 h-full w-[260px] bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/50 hidden lg:flex flex-col z-50">
+                <div className="px-6 py-16">
+                    <Link href="/dashboard" className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-blue-600/20">SM</div>
+                        <span className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">Social Scheduler</span>
                     </Link>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-1">
+                <nav className="flex-1 px-4 space-y-0.5">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = currentPage === item.key
@@ -66,39 +66,39 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] transition-all duration-200 ${isActive
                                     ? 'bg-slate-100 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-medium'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50'
                                     }`}
                             >
-                                <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
+                                <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
                                 <span>{item.label}</span>
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="px-4 pb-6 space-y-1">
+                <div className="px-4 pb-6 space-y-0.5">
                     <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all"
                     >
-                        {theme === 'dark' ? <Sun size={18} strokeWidth={1.5} /> : <Moon size={18} strokeWidth={1.5} />}
+                        {theme === 'dark' ? <Sun size={20} strokeWidth={1.5} /> : <Moon size={20} strokeWidth={1.5} />}
                         <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
                     </button>
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                     >
-                        <LogOut size={18} strokeWidth={1.5} />
+                        <LogOut size={20} strokeWidth={1.5} />
                         <span>Log out</span>
                     </button>
                 </div>
             </aside>
 
             {/* Main */}
-            <main className="lg:ml-[240px] min-h-screen pt-14 lg:pt-0">
-                <div className="p-4 sm:p-8 lg:p-12 max-w-6xl mx-auto">
+            <main className="lg:ml-[260px] min-h-screen pt-14 lg:pt-0">
+                <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto">
                     {children}
                 </div>
             </main>
@@ -116,7 +116,7 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                                 className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'
                                     }`}
                             >
-                                <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+                                <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
                                 <span className="text-[10px] font-medium tracking-tight">{item.label.split(' ')[0]}</span>
                             </Link>
                         )
