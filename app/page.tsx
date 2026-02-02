@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import FAQ from "@/components/FAQ";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Check, ArrowRight, Zap, Shield, Share2, Globe, Clock, BarChart } from "lucide-react";
+import { Check, ArrowRight, Zap, Shield, Share2, Globe, Clock, BarChart, AlertCircle } from "lucide-react";
 
 export default async function Home() {
     const supabase = await createClient();
@@ -57,6 +57,7 @@ export default async function Home() {
                     </div>
                 </section>
 
+
                 {/* Features Section */}
                 <section id="features" className="py-32 bg-white dark:bg-gray-950">
                     <div className="container mx-auto px-4">
@@ -109,37 +110,42 @@ export default async function Home() {
                 <section id="pricing" className="py-32 bg-gray-50 dark:bg-gray-900/30">
                     <div className="container mx-auto px-4">
                         <div className="text-center max-w-3xl mx-auto mb-20">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4">
+                                Alpha Early Access
+                            </div>
                             <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
-                                Simple, Honest Pricing
+                                Free During Testing
                             </h2>
                             <p className="text-lg text-gray-600 dark:text-gray-400">
-                                Choose the plan that's right for your growth stage.
+                                All our premium features are open and free of charge while we are in our alpha testing phase. Sign up now and help us build!
                             </p>
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                             <PricingCard
-                                tier="Free"
+                                tier="Free Forever"
                                 price="0"
-                                description="Perfect for testing the waters."
-                                features={["1 Workspace", "1 Social Account", "10 AI Generations/mo", "Basic Scheduling"]}
+                                description="Basic features for individual creators."
+                                features={["1 Workspace", "1 Social Account", "10 AI Generations/mo"]}
                             />
                             <PricingCard
-                                tier="Pro"
-                                price="29"
+                                tier="Pro Alpha"
+                                price="0"
                                 isPopular={true}
-                                description="For serious creators and brands."
-                                features={["3 Workspaces", "5 Social Accounts", "Unlimited AI", "Premium Support", "Priority Queue"]}
+                                description="Unlimited power, free during testing."
+                                features={["3 Workspaces", "5 Social Accounts", "Unlimited AI", "Premium Support", "Alpha Features Access"]}
                             />
                             <PricingCard
-                                tier="Agency"
-                                price="99"
+                                tier="Agency Alpha"
+                                price="0"
                                 description="For teams managing many clients."
                                 features={["Unlimited Workspaces", "Unlimited Accounts", "Team Collaboration", "White Label (Beta)", "Custom AI Models"]}
                             />
                         </div>
                     </div>
                 </section>
+
+
 
                 {/* FAQ Section */}
                 <FAQ />
@@ -161,6 +167,7 @@ function FeatureCard({ title, description, icon }: { title: string; description:
         </div>
     );
 }
+
 
 function PricingCard({ tier, price, description, features, isPopular }: { tier: string; price: string; description: string; features: string[]; isPopular?: boolean }) {
     return (

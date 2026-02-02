@@ -79,6 +79,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import TopBanner from "@/components/TopBanner";
 
 export default function RootLayout({
     children,
@@ -100,6 +101,7 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
+                    <TopBanner />
                     {children}
                     <Toaster
                         position="top-right"

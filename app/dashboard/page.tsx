@@ -1,5 +1,5 @@
 import React from 'react'
-import { Plus, AlertTriangle, ArrowUpRight, FileText, Calendar, Send, Clock, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, AlertTriangle, ArrowUpRight, FileText, Calendar, Send, Clock, Zap, ChevronLeft, ChevronRight, Beaker } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import DashboardLayout from '@/components/DashboardLayout'
@@ -97,6 +97,50 @@ export default async function DashboardPage(props: {
                         </Link>
                     </div>
                 )}
+
+                {/* Social Lab Card */}
+                <div className="bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent border border-indigo-100 dark:border-indigo-900/30 rounded-2xl p-6 mb-8 relative group overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Zap size={100} className="text-indigo-600" />
+                    </div>
+                    <div className="relative">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/20">
+                                <Beaker size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Social Lab</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">You're helping us build the future of AI automation.</p>
+                            </div>
+                        </div>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <LabStatus
+                                label="Phase"
+                                value="Alpha 1.0"
+                                subValue="Next: Beta Expand"
+                            />
+                            <LabStatus
+                                label="Feedback"
+                                value="Active"
+                                subValue="Response time: < 2h"
+                            />
+                            <div>
+                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                    <span>V1.0 Roadmap</span>
+                                    <span>85%</span>
+                                </div>
+                                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="h-full bg-indigo-600 w-[85%] rounded-full shadow-sm" />
+                                </div>
+                            </div>
+                            <div className="flex items-end">
+                                <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm shadow-indigo-600/20">
+                                    Send Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -292,5 +336,15 @@ function PageBtn({ href, children, disabled, active }: { href: string; children:
         >
             {children}
         </Link>
+    )
+}
+
+function LabStatus({ label, value, subValue }: { label: string; value: string; subValue: string }) {
+    return (
+        <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">{label}</p>
+            <p className="text-sm font-bold text-slate-900 dark:text-white leading-none mb-1">{value}</p>
+            <p className="text-[10px] font-medium text-slate-400">{subValue}</p>
+        </div>
     )
 }

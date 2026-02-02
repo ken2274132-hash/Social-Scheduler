@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { LayoutDashboard, PenSquare, Calendar as CalendarIcon, Settings, LogOut, GitBranch, Sun, Moon } from 'lucide-react'
+import { LayoutDashboard, PenSquare, Calendar as CalendarIcon, Settings, LogOut, GitBranch, Sun, Moon, BarChart } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -16,6 +16,7 @@ const navItems = [
     { href: '/composer', label: 'Create Post', icon: PenSquare, key: 'composer' },
     { href: '/workflow', label: 'Workflow', icon: GitBranch, key: 'workflow' },
     { href: '/calendar', label: 'Calendar', icon: CalendarIcon, key: 'calendar' },
+    { href: '#', label: 'Analytics', icon: BarChart, key: 'analytics' },
     { href: '/settings', label: 'Settings', icon: Settings, key: 'settings' },
 ]
 
