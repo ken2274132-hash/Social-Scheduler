@@ -25,9 +25,14 @@ const nextConfig: NextConfig = {
             }
         ],
     },
-    // Enable performance optimizations
+    // Performance optimizations
     poweredByHeader: false,
     compress: true,
+    reactStrictMode: true,
+    // Optimize package imports to reduce bundle size
+    experimental: {
+        optimizePackageImports: ['lucide-react'],
+    },
     // Force build to succeed even with lint/TS errors
     typescript: {
         ignoreBuildErrors: true,

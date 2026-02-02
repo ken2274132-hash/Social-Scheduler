@@ -34,11 +34,8 @@ export async function publishScheduledPosts() {
             .limit(10) // Process max 10 at a time
 
         if (fetchError || !posts || posts.length === 0) {
-            console.log('No posts to publish')
             return
         }
-
-        console.log(`Found ${posts.length} posts to publish`)
 
         for (const post of posts) {
             try {
@@ -100,7 +97,6 @@ export async function publishScheduledPosts() {
                         details: { platform_post_id: result.postId },
                     })
 
-                    console.log(`✅ Published post ${post.id}`)
                 } else {
                     throw new Error(result.error)
                 }
@@ -133,7 +129,7 @@ async function publishToInstagram(post: any, accessToken: string) {
     try {
         // Simulation Mode Check
         if (accessToken === 'demo_token_simulator') {
-            console.log('🚀 SIMULATION MODE: Publishing post...')
+            // Simulation mode
             await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate network delay
             return {
                 success: true,

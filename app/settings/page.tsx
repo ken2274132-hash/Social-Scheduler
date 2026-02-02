@@ -1,5 +1,3 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import ConnectInstagramButton from '@/components/ConnectInstagramButton'
 import ConnectFacebookButton from '@/components/ConnectFacebookButton'
 import ConnectPinterestButton from '@/components/ConnectPinterestButton'
@@ -8,7 +6,8 @@ import DemoAccountButton from '@/components/DemoAccountButton'
 import ConnectedAccounts from '@/components/ConnectedAccounts'
 import ShopifyStatus from '@/components/ShopifyStatus'
 import DashboardLayout from '@/components/DashboardLayout'
-import { AlertCircle, CheckCircle2, Settings, Link2, ShoppingBag, User, Mail, Building2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Link2, ShoppingBag, User, Mail, Building2 } from 'lucide-react'
+import { getWorkspace } from '@/lib/get-workspace'
 
 export default async function SettingsPage({
     searchParams,
@@ -19,33 +18,8 @@ export default async function SettingsPage({
     const error = params.error as string
     const details = params.details as string
     const success = params.success as string
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-        redirect('/login')
-    }
-
-    // Get user's workspaces
-    let { data: workspaces } = await supabase
-        .from('workspaces')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false })
-
-    // Create a workspace if none exists
-    let currentWorkspace = workspaces?.[0]
-    if (!currentWorkspace) {
-        const { data: newWorkspace } = await supabase
-            .from('workspaces')
-            .insert({
-                name: 'Default Workspace',
-                owner_id: user.id
-            })
-            .select()
-            .single()
-        currentWorkspace = newWorkspace
-    }
+    const { user, workspace: currentWorkspace, supabase } = await getWorkspace()
 
     // Get connected social accounts
     const { data: socialAccounts } = await supabase
@@ -62,18 +36,16 @@ export default async function SettingsPage({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                             Settings
                         </h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                             Manage your workspace and connected accounts
                         </p>
                     </div>
-                    <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                            {connectedCount} account{connectedCount !== 1 ? 's' : ''} connected
-                        </span>
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                        {connectedCount} connected
                     </div>
                 </div>
 
@@ -199,27 +171,25 @@ export default async function SettingsPage({
                 </div>
 
                 {/* Shopify Section */}
-                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl overflow-hidden">
-                    <div className="p-6 sm:p-8">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-6">
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
-                                    <ShoppingBag className="w-6 h-6 text-white" />
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                                    <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">
-                                        Shopify Integration
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Shopify
                                     </h2>
-                                    <p className="text-sm text-white/80 mt-1 max-w-md">
-                                        Connect your Shopify store to create posts directly from your products.
-                                    </p>
+                                    <p className="text-xs text-gray-500">Create posts from your products</p>
                                 </div>
                             </div>
                             <ConnectShopifyButton workspaceId={currentWorkspace?.id || 'default'} />
                         </div>
-                        <div className="bg-white/10 backdrop-blur rounded-xl p-4 sm:p-6">
-                            <ShopifyStatus />
-                        </div>
+                    </div>
+                    <div className="p-6">
+                        <ShopifyStatus />
                     </div>
                 </div>
             </div>

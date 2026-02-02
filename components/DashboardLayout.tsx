@@ -1,12 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { LayoutDashboard, FileText, Calendar as CalendarIcon, Settings, Menu, X, LogOut, GitBranch, Hexagon, ChevronRight, Search, Sun, Moon } from 'lucide-react'
+import { LayoutDashboard, PenSquare, Calendar as CalendarIcon, Settings, LogOut, GitBranch, Sun, Moon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { ThemeToggle } from './ThemeToggle'
 
 interface DashboardLayoutProps {
     children: React.ReactNode
@@ -15,86 +13,51 @@ interface DashboardLayoutProps {
 
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, key: 'dashboard' },
-    { href: '/composer', label: 'Create Post', icon: FileText, key: 'composer' },
+    { href: '/composer', label: 'Create Post', icon: PenSquare, key: 'composer' },
     { href: '/workflow', label: 'Workflow', icon: GitBranch, key: 'workflow' },
     { href: '/calendar', label: 'Calendar', icon: CalendarIcon, key: 'calendar' },
     { href: '/settings', label: 'Settings', icon: Settings, key: 'settings' },
 ]
 
 export default function DashboardLayout({ children, currentPage }: DashboardLayoutProps) {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-    const [user, setUser] = useState<any>(null)
     const { theme, setTheme } = useTheme()
     const router = useRouter()
-    const supabase = createClient()
-
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            setUser(user)
-        }
-        getUser()
-    }, [])
 
     const handleLogout = async () => {
+        const supabase = createClient()
         await supabase.auth.signOut()
         router.push('/login')
         router.refresh()
     }
 
-    // Cron Job Simulator for Local Development
-    useEffect(() => {
-        if (process.env.NODE_ENV === 'development') {
-            console.log('⏰ Starting local cron simulator...')
-            const runCron = async () => {
-                try {
-                    await fetch('/api/cron/publish')
-                    console.log('⏰ Cron tick executed')
-                } catch (e) {
-                    console.error('⏰ Cron tick failed', e)
-                }
-            }
-
-            // Run immediately on mount
-            runCron()
-
-            // Then run every 60 seconds
-            const interval = setInterval(runCron, 60 * 1000)
-            return () => clearInterval(interval)
-        }
-    }, [])
-
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-black">
+        <div className="min-h-screen bg-white dark:bg-slate-950">
             {/* Mobile Header */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-40 px-4 flex items-center justify-between">
-                <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
-                    <div className="w-8 h-8 bg-[#5932EA] rounded-lg flex items-center justify-center text-white text-sm font-bold">
-                        SM
-                    </div>
-                    <span className="tracking-tight">Social Scheduler</span>
+            <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 z-40 px-4 flex items-center justify-between">
+                <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[8px] font-bold">SM</div>
+                    <span>Social Scheduler</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <ThemeToggle />
+                    <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                    <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                        <LogOut size={18} />
+                    </button>
                 </div>
             </header>
 
+            {/* Sidebar */}
+            <aside className="fixed left-0 top-0 h-full w-[240px] bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/50 hidden lg:flex flex-col z-50">
+                <div className="px-6 py-8">
+                    <Link href="/dashboard" className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shadow-sm shadow-blue-600/20">SM</div>
+                        <span className="text-base font-semibold text-slate-900 dark:text-white tracking-tight">Social Scheduler</span>
+                    </Link>
+                </div>
 
-            {/* Side Navigation - Desktop always visible, Mobile slides in */}
-            <aside className={`
-                fixed left-0 top-0 h-full w-[280px] bg-white dark:bg-black border-r border-gray-100 dark:border-gray-800/50 p-7 z-50
-                flex flex-col hidden lg:flex
-            `}>
-                <Link href="/dashboard" className="flex items-center gap-3 text-2xl font-bold text-gray-900 dark:text-white mb-10 group">
-                    <div className="w-9 h-9 bg-[#5932EA] rounded-xl flex items-center justify-center text-white text-base font-bold shadow-lg shadow-[#5932EA]/20 group-hover:scale-110 transition-transform">
-                        SM
-                    </div>
-                    <div className="flex flex-col">
-                        <span className="tracking-tight leading-none text-xl">Social Scheduler</span>
-                    </div>
-                </Link>
-
-                <nav className="space-y-1">
+                <nav className="flex-1 px-4 space-y-1">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = currentPage === item.key
@@ -102,54 +65,45 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 relative group ${isActive
-                                    ? 'bg-[#5932EA] text-white shadow-lg shadow-[#5932EA]/20'
-                                    : 'text-[#9197B3] hover:bg-gray-50 dark:hover:bg-gray-900/40 hover:text-gray-900 dark:hover:text-white'
+                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${isActive
+                                    ? 'bg-slate-100 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-medium'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50'
                                     }`}
                             >
-                                <Icon size={20} className={`opacity-80 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                                <span className="font-medium text-[15px] flex-1">{item.label}</span>
-                                {!isActive && <ChevronRight size={16} className="opacity-0 group-hover:opacity-40 transition-opacity" />}
+                                <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
+                                <span>{item.label}</span>
                             </Link>
                         )
                     })}
                 </nav>
 
-                <div className="mt-auto space-y-3">
-                    {/* Theme Toggle Card */}
-                    <div
+                <div className="px-4 pb-6 space-y-1">
+                    <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="bg-[#F9FBFF] dark:bg-gray-900/50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all border border-gray-100 dark:border-gray-800/50 group"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all"
                     >
-                        <span className="text-[11px] font-bold text-[#9197B3] uppercase tracking-wider">Theme</span>
-                        {theme === 'dark' ? (
-                            <Sun size={20} className="text-yellow-500 transition-transform group-hover:rotate-12" />
-                        ) : (
-                            <Moon size={20} className="text-[#9197B3] transition-transform group-hover:-rotate-12" />
-                        )}
-                    </div>
-
-                    {/* Logout Card */}
-                    <div
+                        {theme === 'dark' ? <Sun size={18} strokeWidth={1.5} /> : <Moon size={18} strokeWidth={1.5} />}
+                        <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+                    </button>
+                    <button
                         onClick={handleLogout}
-                        className="bg-[#F9FBFF] dark:bg-gray-900/50 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/10 transition-all border border-gray-100 dark:border-gray-800/50 group"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                     >
-                        <span className="text-[11px] font-bold text-[#9197B3] group-hover:text-red-500 uppercase tracking-wider transition-colors">Logout</span>
-                        <LogOut size={20} className="text-[#9197B3] group-hover:text-red-500 group-hover:translate-x-1 transition-all" />
-                    </div>
+                        <LogOut size={18} strokeWidth={1.5} />
+                        <span>Log out</span>
+                    </button>
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="lg:ml-[280px] min-h-screen pt-16 lg:pt-0 pb-24 lg:pb-0 relative bg-[#FAFBFF] dark:bg-black">
-                <div className="p-4 sm:p-6 lg:p-10 max-w-[1400px] mx-auto">
+            {/* Main */}
+            <main className="lg:ml-[240px] min-h-screen pt-14 lg:pt-0">
+                <div className="p-4 sm:p-8 lg:p-12 max-w-6xl mx-auto">
                     {children}
                 </div>
             </main>
 
-            {/* Mobile Bottom Navigation */}
-            <nav className="lg:hidden fixed bottom-6 left-6 right-6 h-16 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl z-40 shadow-lg pb-safe">
+            {/* Mobile Bottom Nav */}
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800/50 z-40 pb-safe">
                 <div className="flex items-center justify-around h-full">
                     {navItems.map((item) => {
                         const Icon = item.icon
@@ -158,15 +112,11 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all relative ${isActive
-                                    ? 'text-[#5932EA]'
-                                    : 'text-gray-400'
+                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'
                                     }`}
                             >
-                                <Icon size={22} className={`transition-all duration-300 ${isActive ? 'scale-110' : ''}`} />
-                                <span className={`text-[10px] font-bold uppercase tracking-tighter ${isActive ? 'opacity-100' : 'opacity-60'}`}>
-                                    {item.label.split(' ')[0]}
-                                </span>
+                                <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+                                <span className="text-[10px] font-medium tracking-tight">{item.label.split(' ')[0]}</span>
                             </Link>
                         )
                     })}

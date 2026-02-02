@@ -8,8 +8,8 @@ export default function AppleIcon() {
         (
             <div
                 style={{
-                    fontSize: 100,
-                    background: 'linear-gradient(135deg, #5932EA, #7C5FF5)',
+                    fontSize: 80,
+                    background: '#2563EB',
                     width: '100%',
                     height: '100%',
                     display: 'flex',
@@ -21,7 +21,7 @@ export default function AppleIcon() {
                     fontFamily: 'sans-serif',
                 }}
             >
-                S
+                SM
             </div>
         ),
         { ...size }

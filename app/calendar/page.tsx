@@ -1,39 +1,12 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import CalendarView from '@/components/CalendarView'
 import DashboardLayout from '@/components/DashboardLayout'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
+import { getWorkspace } from '@/lib/get-workspace'
 
 export default async function CalendarPage() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        redirect('/login')
-    }
-
-    // Get user's workspace
-    let { data: workspaces } = await supabase
-        .from('workspaces')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-
-    let workspace = workspaces?.[0]
-
-    // Create workspace if none exists
-    if (!workspace) {
-        const { data: newWorkspace } = await supabase
-            .from('workspaces')
-            .insert({
-                name: 'Default Workspace',
-                owner_id: user.id
-            })
-            .select()
-            .single()
-        workspace = newWorkspace
-    }
+    const { workspace, supabase } = await getWorkspace()
 
     if (!workspace) {
         redirect('/dashboard')
@@ -49,27 +22,19 @@ export default async function CalendarPage() {
 
     return (
         <DashboardLayout currentPage="calendar">
-            <div className="max-w-7xl mx-auto">
-                <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-4">
-                            <div className="w-1.5 h-10 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]" />
-                            <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
-                                Calendar
-                            </h1>
-                        </div>
-                        <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-6">
-                            Visualize and manage your content timeline
-                        </p>
+            <div className="space-y-8 animate-in fade-in duration-500">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Content Calendar</h1>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and view your scheduled content</p>
                     </div>
                     <Link
                         href="/composer"
-                        className="group relative overflow-hidden px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-black uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95 shadow-xl"
+                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-sm shadow-indigo-600/20"
                     >
-                        <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <span className="relative">Create Post</span>
+                        <Plus size={16} /> New Post
                     </Link>
-                </header>
+                </div>
 
                 <CalendarView posts={posts || []} />
             </div>

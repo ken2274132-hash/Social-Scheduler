@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
         if (!code || !shop || !state) {
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=missing_params`
+                `${request.nextUrl.origin}/settings?error=missing_params`
             )
         }
 
@@ -24,7 +24,17 @@ export async function GET(request: NextRequest) {
             userId = decoded.userId
         } catch {
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=invalid_state`
+                `${request.nextUrl.origin}/settings?error=invalid_state`
+            )
+        }
+
+        const apiKey = process.env.SHOPIFY_API_KEY
+        const apiSecret = process.env.SHOPIFY_API_SECRET
+
+        if (!apiKey || !apiSecret) {
+            console.error('Missing Shopify configuration in callback')
+            return NextResponse.redirect(
+                `${request.nextUrl.origin}/settings?error=shopify_config_missing`
             )
         }
 
@@ -33,8 +43,8 @@ export async function GET(request: NextRequest) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                client_id: process.env.SHOPIFY_API_KEY,
-                client_secret: process.env.SHOPIFY_API_SECRET,
+                client_id: apiKey,
+                client_secret: apiSecret,
                 code: code,
             }),
         })
@@ -44,7 +54,7 @@ export async function GET(request: NextRequest) {
         if (tokenData.error) {
             console.error('Shopify token error:', tokenData)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=token_exchange_failed`
+                `${request.nextUrl.origin}/settings?error=token_exchange_failed`
             )
         }
 
@@ -75,7 +85,7 @@ export async function GET(request: NextRequest) {
         if (workspaceError || !workspace) {
             console.error('Shopify workspace error:', workspaceError)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=workspace_not_found&details=${encodeURIComponent(workspaceError?.message || 'No workspace found for this user.')}`
+                `${request.nextUrl.origin}/settings?error=workspace_not_found&details=${encodeURIComponent(workspaceError?.message || 'No workspace found for this user.')}`
             )
         }
 
@@ -95,17 +105,17 @@ export async function GET(request: NextRequest) {
         if (upsertError) {
             console.error('Shopify save error:', upsertError)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=shopify_save_failed&details=${encodeURIComponent(upsertError.message)}`
+                `${request.nextUrl.origin}/settings?error=shopify_save_failed&details=${encodeURIComponent(upsertError.message)}`
             )
         }
 
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=shopify_connected`
+            `${request.nextUrl.origin}/settings?success=shopify_connected`
         )
     } catch (error: any) {
         console.error('Shopify callback error:', error)
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=callback_error&details=${encodeURIComponent(error.message)}`
+            `${request.nextUrl.origin}/settings?error=callback_error&details=${encodeURIComponent(error.message)}`
         )
     }
 }

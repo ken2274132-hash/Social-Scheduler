@@ -27,7 +27,16 @@ export async function GET(request: NextRequest) {
 
         const apiKey = process.env.SHOPIFY_API_KEY
         const scopes = process.env.SHOPIFY_SCOPES || 'read_products'
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/shopify/callback`
+
+        // Use URL constructor to handle slashes correctly
+        const redirectUri = new URL('/api/shopify/callback', request.nextUrl.origin).toString()
+
+        if (!apiKey) {
+            console.error('Missing SHOPIFY_API_KEY environment variable')
+            return NextResponse.json({
+                error: 'Shopify configuration missing on server. Please ensure SHOPIFY_API_KEY is set in .env.local and restart the server.'
+            }, { status: 500 })
+        }
 
         // Generate a nonce for security (store user ID for callback)
         const state = Buffer.from(JSON.stringify({ userId: user.id })).toString('base64')

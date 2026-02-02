@@ -8,8 +8,8 @@ export default function Icon() {
         (
             <div
                 style={{
-                    fontSize: 18,
-                    background: 'linear-gradient(135deg, #5932EA, #7C5FF5)',
+                    fontSize: 14,
+                    background: '#2563EB',
                     width: '100%',
                     height: '100%',
                     display: 'flex',
@@ -21,7 +21,7 @@ export default function Icon() {
                     fontFamily: 'sans-serif',
                 }}
             >
-                S
+                SM
             </div>
         ),
         { ...size }

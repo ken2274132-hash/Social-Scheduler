@@ -137,80 +137,82 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
     const config = platformConfig[selectedPlatform] || platformConfig.instagram
 
     return (
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid lg:grid-cols-12 gap-10">
             {/* Left - Form */}
-            <div className="lg:col-span-3 space-y-6">
-                {/* Step 1: Media */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center text-sm font-bold">1</span>
-                        <h3 className="font-bold text-gray-900 dark:text-white">Upload Media</h3>
+            <div className="lg:col-span-7 space-y-6">
+                {/* Media */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
+                    <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
+                        <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Media</h3>
+                        {mediaPreview && (
+                            <button onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaId(null) }} className="text-[11px] font-medium text-red-500 hover:text-red-600 transition-colors">
+                                Remove
+                            </button>
+                        )}
                     </div>
-                    <div className="p-5">
+                    <div className="p-6">
                         {mediaPreview ? (
                             <div className="relative group">
-                                <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 relative">
+                                <div className="aspect-video rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 relative">
                                     <Image src={mediaPreview} alt="Preview" fill className="object-cover" unoptimized />
                                 </div>
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all rounded-2xl flex items-center justify-center gap-3">
-                                    <button onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaId(null) }} className="px-4 py-2.5 bg-white text-gray-900 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors">
-                                        <Trash2 size={16} /> Remove
-                                    </button>
-                                    <button onClick={() => setShowAIStudio(true)} className="px-4 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-purple-700 transition-colors">
-                                        <Wand2 size={16} /> AI Studio
+                                <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-all rounded-xl flex items-center justify-center">
+                                    <button onClick={() => setShowAIStudio(true)} className="px-4 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-xl">
+                                        <Wand2 size={14} /> Replace with AI
                                     </button>
                                 </div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
-                                <label className="aspect-video rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer flex flex-col items-center justify-center gap-2">
-                                    <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                        <Upload size={24} className="text-blue-600" />
+                                <label className="aspect-video rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Upload size={18} className="text-slate-400" />
                                     </div>
-                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Upload File</span>
-                                    <span className="text-xs text-gray-400">JPG, PNG, MP4</span>
+                                    <div className="text-center">
+                                        <span className="text-xs font-semibold text-slate-900 dark:text-white block">Upload media</span>
+                                        <span className="text-[10px] text-slate-400">JPG, PNG, MP4</span>
+                                    </div>
                                     <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
                                 </label>
-                                <button onClick={() => setShowAIStudio(true)} className="aspect-video rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all flex flex-col items-center justify-center gap-2">
-                                    <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                        <Wand2 size={24} className="text-purple-600" />
+                                <button onClick={() => setShowAIStudio(true)} className="aspect-video rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 hover:border-violet-400 hover:bg-violet-50/20 dark:hover:bg-violet-950/20 transition-all flex flex-col items-center justify-center gap-3 group">
+                                    <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Wand2 size={18} className="text-slate-400" />
                                     </div>
-                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">AI Generate</span>
-                                    <span className="text-xs text-gray-400">Create with AI</span>
+                                    <div className="text-center">
+                                        <span className="text-xs font-semibold text-slate-900 dark:text-white block">AI Generator</span>
+                                        <span className="text-[10px] text-slate-400">Create from prompt</span>
+                                    </div>
                                 </button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Step 2: Caption */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center text-sm font-bold">2</span>
-                            <h3 className="font-bold text-gray-900 dark:text-white">Write Caption</h3>
-                        </div>
-                        <button onClick={handleGenerateAI} disabled={loading || !userInput.trim()} className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-purple-700 disabled:opacity-50 transition-all">
-                            {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                            {loading ? 'Generating...' : 'AI Assist'}
+                {/* Content */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
+                    <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
+                        <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Caption</h3>
+                        <button onClick={handleGenerateAI} disabled={loading || !userInput.trim()} className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 hover:text-indigo-700 disabled:opacity-50 transition-all">
+                            {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                            {loading ? 'Thinking...' : 'AI Refine'}
                         </button>
                     </div>
-                    <div className="p-5 space-y-4">
+                    <div className="p-6 space-y-5">
                         <textarea
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
                             rows={2}
-                            placeholder="What's your post about? (e.g., New product launch, behind the scenes...)"
-                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl text-sm resize-none focus:ring-2 focus:ring-purple-500/20 outline-none transition-all placeholder:text-gray-400"
+                            placeholder="Briefly describe your post idea..."
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm resize-none focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/50 outline-none transition-all placeholder:text-slate-400"
                         />
 
                         {aiGeneration && (
-                            <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+                            <div className="flex gap-2 p-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                                 {(['short', 'medium', 'long'] as const).map((len) => (
                                     <button
                                         key={len}
                                         onClick={() => { setSelectedCaption(aiGeneration.captions[len]); setCaption(selectedHook + '\n\n' + aiGeneration.captions[len] + '\n\n' + aiGeneration.hashtags.join(' ')) }}
-                                        className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase transition-all ${selectedCaption === aiGeneration.captions[len] ? 'bg-white dark:bg-gray-700 text-purple-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                        className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${selectedCaption === aiGeneration.captions[len] ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                     >
                                         {len}
                                     </button>
@@ -221,60 +223,66 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                         <textarea
                             value={caption}
                             onChange={(e) => setCaption(e.target.value)}
-                            rows={5}
-                            placeholder="Your caption will appear here..."
-                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl text-sm resize-none focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                            rows={6}
+                            placeholder="The final caption will be displayed here..."
+                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm resize-none focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/50 outline-none transition-all"
                         />
                     </div>
                 </div>
 
-                {/* Step 3: Schedule */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center text-sm font-bold">3</span>
-                        <h3 className="font-bold text-gray-900 dark:text-white">Schedule Post</h3>
+                {/* Schedule */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
+                    <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50">
+                        <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Settings</h3>
                     </div>
-                    <div className="p-5 space-y-4">
+                    <div className="p-6 space-y-6">
                         {/* Account Selector */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase">Post to</label>
+                        <div className="space-y-3">
+                            <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Destination</label>
                             <div className="flex flex-wrap gap-2">
                                 {socialAccounts.map((account) => {
                                     const pConfig = platformConfig[account.platform?.toLowerCase()] || platformConfig.instagram
+                                    const isActive = selectedAccount === account.id
                                     return (
                                         <button
                                             key={account.id}
                                             onClick={() => setSelectedAccount(account.id)}
-                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all ${selectedAccount === account.id ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
+                                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-[13px] transition-all ${isActive ? 'border-indigo-500 bg-indigo-50/30 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400' : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
                                         >
-                                            <span className={`w-6 h-6 rounded-lg ${pConfig.bg} flex items-center justify-center text-white text-xs`}>{pConfig.icon}</span>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{account.account_name}</span>
+                                            <span className={`w-2.5 h-2.5 rounded-full ${pConfig.bg} shadow-sm`} />
+                                            <span className="font-medium">{account.account_name}</span>
                                         </button>
                                     )
                                 })}
                             </div>
                         </div>
 
-                        {/* Date/Time */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">Date</label>
-                                <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl text-sm font-medium focus:ring-2 focus:ring-orange-500/20 outline-none" />
+                        {/* Date & Time Picker */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                                <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Schedule Date</label>
+                                <div className="relative">
+                                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-indigo-500/30 outline-none transition-all" />
+                                    <Calendar size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase">Time</label>
-                                <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border-0 rounded-xl text-sm font-medium focus:ring-2 focus:ring-orange-500/20 outline-none" />
+                            <div className="space-y-3">
+                                <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Time</label>
+                                <div className="relative">
+                                    <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-indigo-500/30 outline-none transition-all" />
+                                    <Clock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-3 pt-2">
-                            <button onClick={handlePublishNow} disabled={loading} className="flex-1 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-all">
-                                <Send size={18} /> Publish Now
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button onClick={handleSchedulePost} disabled={loading || !scheduledDate || !scheduledTime} className="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-indigo-600/20">
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : <Calendar size={16} />}
+                                {loading ? 'Scheduling...' : 'Schedule Post'}
                             </button>
-                            <button onClick={handleSchedulePost} disabled={loading || !scheduledDate || !scheduledTime} className="flex-1 py-3.5 bg-orange-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-orange-600 disabled:opacity-50 transition-all shadow-lg shadow-orange-500/25">
-                                {loading ? <Loader2 size={18} className="animate-spin" /> : <Calendar size={18} />}
-                                {loading ? 'Processing...' : 'Schedule'}
+                            <button onClick={handlePublishNow} disabled={loading} className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                                <Send size={16} /> Publish Now
                             </button>
                         </div>
                     </div>
@@ -282,68 +290,60 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
             </div>
 
             {/* Right - Preview */}
-            <div className="lg:col-span-2">
-                <div className="sticky top-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-gray-500">Preview</span>
-                        <span className="flex items-center gap-1.5 text-xs font-bold text-green-600">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Live
-                        </span>
+            <div className="lg:col-span-5">
+                <div className="sticky top-10 space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Post Preview</label>
+                        <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{selectedPlatform}</span>
                     </div>
 
-                    {/* Phone Frame */}
-                    <div className="bg-white dark:bg-black rounded-[2.5rem] border border-gray-200 dark:border-gray-800 overflow-hidden shadow-2xl">
-                        {/* Header */}
-                        <div className="flex items-center gap-3 p-4 border-b border-gray-100 dark:border-gray-900">
-                            <div className={`w-10 h-10 rounded-full ${config.bg} flex items-center justify-center text-white text-lg`}>
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-xl shadow-slate-200/40 dark:shadow-none">
+                        {/* Preview Header */}
+                        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-50 dark:border-slate-800/50">
+                            <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center text-white text-[10px] shadow-sm`}>
                                 {config.icon}
                             </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">{socialAccounts.find(a => a.id === selectedAccount)?.account_name || 'account'}</p>
-                                <p className="text-xs text-gray-400">Original Audio</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{socialAccounts.find(a => a.id === selectedAccount)?.account_name || 'username'}</p>
                             </div>
-                            <span className="flex gap-0.5">
-                                <span className="w-1 h-1 rounded-full bg-gray-400" />
-                                <span className="w-1 h-1 rounded-full bg-gray-400" />
-                                <span className="w-1 h-1 rounded-full bg-gray-400" />
-                            </span>
+                            <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <ChevronDown size={14} />
+                            </button>
                         </div>
 
-                        {/* Media */}
-                        <div className="aspect-square bg-gray-100 dark:bg-gray-900 relative">
+                        {/* Preview Media */}
+                        <div className="aspect-square bg-slate-50 dark:bg-slate-800 relative">
                             {mediaPreview ? (
                                 <Image src={mediaPreview} alt="Preview" fill className="object-cover" unoptimized />
                             ) : (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                                    <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-                                        <Upload size={28} className="text-gray-400" />
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700/50 flex items-center justify-center">
+                                        <Upload size={20} className="text-slate-300" />
                                     </div>
-                                    <span className="text-sm font-bold text-gray-400">No media yet</span>
+                                    <span className="text-[11px] font-medium text-slate-400">Media will appear here</span>
                                 </div>
                             )}
                         </div>
 
-                        {/* Actions */}
+                        {/* Preview Actions */}
                         <div className="p-4 space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex gap-4">
-                                    <Heart size={24} className="text-gray-900 dark:text-white" />
-                                    <MessageCircle size={24} className="text-gray-900 dark:text-white" />
-                                    <Send size={24} className="text-gray-900 dark:text-white -rotate-12" />
+                                    <Heart size={22} className="text-slate-900 dark:text-slate-100" />
+                                    <MessageCircle size={22} className="text-slate-900 dark:text-slate-100" />
+                                    <Send size={22} className="text-slate-900 dark:text-slate-100 -rotate-12" />
                                 </div>
-                                <Bookmark size={24} className="text-gray-900 dark:text-white" />
+                                <Bookmark size={22} className="text-slate-900 dark:text-slate-100" />
                             </div>
-                            <div className="text-sm">
-                                <span className="font-bold text-gray-900 dark:text-white">{socialAccounts.find(a => a.id === selectedAccount)?.account_name?.toLowerCase().replace(/\s+/g, '_') || 'account'}</span>{' '}
-                                <span className="text-gray-600 dark:text-gray-400 line-clamp-3">{caption || 'Your caption here...'}</span>
+                            <div className="text-[13px] leading-relaxed">
+                                <span className="font-bold text-slate-900 dark:text-white mr-2">{socialAccounts.find(a => a.id === selectedAccount)?.account_name?.toLowerCase().replace(/\s+/g, '_') || 'username'}</span>
+                                <span className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{caption || 'Start typing or use AI to generate a caption...'}</span>
                             </div>
-                            <p className="text-xs text-gray-400">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-xs text-blue-600 dark:text-blue-400">
-                        <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                        <span>Preview approximates how your post will appear. Actual appearance may vary.</span>
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 leading-relaxed italic">
+                        Preview is an approximation. Actual post layout may vary by platform.
                     </div>
                 </div>
             </div>
@@ -351,23 +351,18 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
             {/* AI Studio Modal */}
             {showAIStudio && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAIStudio(false)} />
-                    <div className="relative w-full max-w-4xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95">
-                        <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                    <Sparkles size={20} className="text-purple-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-900 dark:text-white">AI Image Studio</h3>
-                                    <p className="text-xs text-gray-500">Generate images with AI</p>
-                                </div>
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowAIStudio(false)} />
+                    <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col animate-in zoom-in-95 duration-300 max-h-[90vh]">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 z-10">
+                            <div>
+                                <h3 className="text-base font-semibold text-slate-900 dark:text-white">AI Image Studio</h3>
+                                <p className="text-xs text-slate-500 mt-0.5">Generate high-quality visuals for your brand</p>
                             </div>
-                            <button onClick={() => setShowAIStudio(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
-                                <X size={20} />
+                            <button onClick={() => setShowAIStudio(false)} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                <X size={20} className="text-slate-400" />
                             </button>
                         </div>
-                        <div className="p-6">
+                        <div className="p-6 overflow-y-auto">
                             <AIImageStudio workspaceId={workspaceId} onSelect={handleSelectAIImage} onClose={() => setShowAIStudio(false)} />
                         </div>
                     </div>

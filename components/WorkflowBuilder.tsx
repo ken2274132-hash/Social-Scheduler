@@ -246,32 +246,46 @@ export default function WorkflowBuilder({
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start pb-20">
-            {/* Left: Configuration */}
-            <div className="lg:col-span-1 space-y-8">
-                <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.08] transition-transform duration-700 group-hover:scale-110 -rotate-12 translate-x-4 -translate-y-4">
-                        <Calendar size={120} />
-                    </div>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Auto Workflow</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Automate your content schedule with AI assistance</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowItemPicker(true)}
+                        className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm"
+                    >
+                        <Plus size={16} /> Add Content
+                    </button>
+                    <button
+                        onClick={createWorkflow}
+                        disabled={creating || scheduledItems.length === 0}
+                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-indigo-600/20"
+                    >
+                        {creating ? <Clock size={16} className="animate-spin" /> : <Share2 size={16} />}
+                        {creating ? 'Processing...' : `Schedule ${scheduledItems.length} Posts`}
+                    </button>
+                </div>
+            </div>
 
-                    <header className="relative mb-8">
-                        <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-600 rounded-full shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
-                        <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-wider">
-                            Sync Settings
-                        </h2>
-                    </header>
-
-                    <div className="space-y-6 relative z-10">
-                        {/* Social Account */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                Target Channel
-                            </label>
-                            <div className="relative">
+            <div className="grid lg:grid-cols-12 gap-8">
+                {/* Left - Config */}
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm">
+                        <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50">
+                            <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Workflow Settings</h3>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            {/* Destination */}
+                            <div className="space-y-3">
+                                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Destination</label>
                                 <select
                                     value={selectedAccount}
                                     onChange={(e) => setSelectedAccount(e.target.value)}
-                                    className="w-full appearance-none px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all cursor-pointer focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
                                 >
                                     <option value="">Select account...</option>
                                     {socialAccounts.map((account) => (
@@ -280,335 +294,234 @@ export default function WorkflowBuilder({
                                         </option>
                                     ))}
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                    <Share2 size={16} />
+                            </div>
+
+                            {/* Schedule */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Post Time</label>
+                                    <input
+                                        type="time"
+                                        value={postTime}
+                                        onChange={(e) => setPostTime(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Frequency */}
+                            <div className="space-y-3">
+                                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Frequency</label>
+                                <div className="space-y-2">
+                                    {(['daily', 'every2days', 'weekly'] as const).map((opt) => (
+                                        <button
+                                            key={opt}
+                                            onClick={() => setInterval(opt)}
+                                            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${interval === opt
+                                                ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-medium'
+                                                : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                                }`}
+                                        >
+                                            <span className="text-xs">
+                                                {opt === 'daily' ? 'Every Day' : opt === 'every2days' ? 'Every 2 Days' : 'Every Week'}
+                                            </span>
+                                            {interval === opt && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
-
-                        {/* Date & Time */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                    Launch Date
-                                </label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                    Preferred Time
-                                </label>
-                                <input
-                                    type="time"
-                                    value={postTime}
-                                    onChange={(e) => setPostTime(e.target.value)}
-                                    className="w-full px-6 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-bold text-gray-900 dark:text-white outline-none transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Interval */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
-                                Frequency
-                            </label>
-                            <div className="grid grid-cols-1 gap-2">
-                                {(['daily', 'every2days', 'weekly'] as const).map((opt) => (
-                                    <button
-                                        key={opt}
-                                        onClick={() => setInterval(opt)}
-                                        className={`flex items-center justify-between px-6 py-4 rounded-2xl border transition-all ${interval === opt
-                                            ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-500 text-blue-600 dark:text-blue-400'
-                                            : 'bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                            }`}
-                                    >
-                                        <span className="text-xs font-bold uppercase tracking-widest">
-                                            {opt === 'daily' ? 'Every Day' : opt === 'every2days' ? 'Every 2 Days' : 'Every Week'}
-                                        </span>
-                                        {interval === opt && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(37,99,235,0.6)]" />}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
                     </div>
-                </div>
 
-                <button
-                    onClick={createWorkflow}
-                    disabled={creating || scheduledItems.length === 0}
-                    className="w-full relative group overflow-hidden bg-gray-900 dark:bg-white text-white dark:text-gray-900 p-6 rounded-[2rem] font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-xl"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative flex items-center justify-center gap-3">
-                        {creating ? <Clock className="animate-spin" size={20} /> : <Share2 size={20} />}
-                        <span>{creating ? 'Propagating...' : `Deploy ${scheduledItems.length} Posts`}</span>
-                    </div>
-                </button>
-            </div>
-
-            {/* Right: Content Queue */}
-            <div className="lg:col-span-2 space-y-8">
-                <div className="group relative bg-white/50 dark:bg-gray-950/50 backdrop-blur-3xl rounded-[2.5rem] border border-gray-200/50 dark:border-gray-800/50 p-8 shadow-sm">
-                    <header className="relative mb-8 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-8 bg-green-500 rounded-full shadow-[0_0_12px_rgba(34,197,94,0.6)]" />
-                            <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-wider">
-                                Content Queue
-                            </h2>
+                    <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-600/20 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Sparkles size={80} />
                         </div>
-                        <button
-                            onClick={() => setShowItemPicker(true)}
-                            className="group flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-600 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-500/20"
-                        >
-                            <Plus size={16} className="group-hover:rotate-90 transition-transform" />
-                            <span>Add Content</span>
-                        </button>
-                    </header>
-
-                    {scheduledItems.length === 0 ? (
-                        <div className="text-center py-24 border-2 border-dashed border-gray-100 dark:border-gray-900 rounded-[2.5rem] bg-gray-50/30 dark:bg-gray-900/10">
-                            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Calendar className="w-10 h-10 text-gray-300" />
-                            </div>
-                            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">
-                                Queue remains empty. Use the Library to populate.
+                        <div className="relative z-10">
+                            <h4 className="text-sm font-bold mb-3">Pro Tip</h4>
+                            <p className="text-xs text-indigo-100 leading-relaxed">
+                                Use the Content Library to bulk-add images. Our AI will automatically space them out based on your frequency settings.
                             </p>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {scheduledItems.map((scheduled, index) => (
-                                <div
-                                    key={index}
-                                    className="group/item flex items-center gap-6 p-5 bg-white/30 dark:bg-gray-900/30 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-3xl hover:border-blue-500/50 transition-all duration-500"
-                                >
-                                    <div className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-lg shrink-0">
-                                        {scheduled.item.image ? (
-                                            <Image
-                                                src={scheduled.item.image}
-                                                alt={scheduled.item.title}
-                                                fill
-                                                className="object-cover transition-transform duration-700 group-hover/item:scale-110"
-                                                unoptimized
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
-                                                <ImageIcon size={24} className="text-gray-300" />
-                                            </div>
-                                        )}
+                    </div>
+                </div>
+
+                {/* Right - Queue */}
+                <div className="lg:col-span-8 space-y-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm">
+                        <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
+                            <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Content Queue</h3>
+                            {scheduledItems.length > 0 && (
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    {scheduledItems.length} items queued
+                                </span>
+                            )}
+                        </div>
+                        <div className="p-6">
+                            {scheduledItems.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+                                        <Calendar size={24} />
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-base font-black text-gray-900 dark:text-white truncate mb-2">
-                                            {scheduled.item.title}
-                                        </p>
-                                        <div className="flex flex-wrap items-center gap-4">
-                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100/50 dark:border-blue-900/30">
-                                                <Calendar size={12} className="text-blue-600" />
-                                                <input
-                                                    type="date"
-                                                    value={scheduled.date}
-                                                    onChange={(e) => updateItemDate(index, e.target.value)}
-                                                    className="bg-transparent border-none p-0 text-[10px] font-black text-blue-600 dark:text-blue-400 focus:ring-0 outline-none w-24"
-                                                />
-                                            </div>
-                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                                                <Clock size={12} className="text-gray-400" />
-                                                <span className="text-[10px] font-black text-gray-500 uppercase">
-                                                    {scheduled.time}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => removeItem(index)}
-                                        className="p-4 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all"
-                                    >
-                                        <Trash2 size={20} />
+                                    <p className="text-sm font-medium text-slate-900 dark:text-white">Queue is empty</p>
+                                    <p className="text-xs text-slate-500 mt-1 mb-6">Add items from the library to populate your schedule</p>
+                                    <button onClick={() => setShowItemPicker(true)} className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all">
+                                        Open Library
                                     </button>
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="space-y-3">
+                                    {scheduledItems.map((scheduled, index) => (
+                                        <div key={index} className="flex items-center gap-4 p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100/50 dark:border-slate-800/50 group">
+                                            <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700">
+                                                {scheduled.item.image ? (
+                                                    <Image src={scheduled.item.image} alt={scheduled.item.title} fill className="object-cover" unoptimized />
+                                                ) : (
+                                                    <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                                        <ImageIcon size={18} className="text-slate-400" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{scheduled.item.title}</p>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    <div className="flex items-center gap-1.5 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
+                                                        <Calendar size={12} />
+                                                        <span>{new Date(scheduled.date).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+                                                        <Clock size={12} />
+                                                        <span>{scheduled.time}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => removeItem(index)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
 
-            {/* Content Picker Modal */}
+            {/* Item Picker Modal */}
             {showItemPicker && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-                    <div className="bg-white dark:bg-gray-950 rounded-[3.5rem] p-10 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20 dark:border-gray-800/50 animate-in zoom-in-95 duration-300">
-                        <header className="flex items-center justify-between mb-8">
-                            <div>
-                                <h3 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">
-                                    Content Library
-                                </h3>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Source assets for your bulk schedule</p>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowItemPicker(false)} />
+                    <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col animate-in zoom-in-95 duration-300 max-h-[85vh]">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <h3 className="text-base font-semibold text-slate-900 dark:text-white">Content Library</h3>
+                                <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
+                                    <button onClick={() => setActiveTab('upload')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Upload</button>
+                                    {shopifyConnected && <button onClick={() => setActiveTab('shopify')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'shopify' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Shopify</button>}
+                                    <button onClick={() => setActiveTab('ai')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>AI Studio</button>
+                                </div>
                             </div>
-                            <button
-                                onClick={() => setShowItemPicker(false)}
-                                className="w-14 h-14 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-3xl text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all font-bold"
-                            >
-                                <X size={24} />
-                            </button>
-                        </header>
-
-                        {/* Tabs */}
-                        <div className="flex gap-2 mb-10 p-1.5 bg-gray-100 dark:bg-gray-900/50 rounded-2xl w-fit">
-                            <button
-                                onClick={() => setActiveTab('upload')}
-                                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-gray-800 text-blue-600 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-900'}`}
-                            >
-                                Custom Asset
-                            </button>
-                            {shopifyConnected && (
-                                <button
-                                    onClick={() => setActiveTab('shopify')}
-                                    className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'shopify' ? 'bg-white dark:bg-gray-800 text-green-600 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-900'}`}
-                                >
-                                    Shopify
-                                </button>
-                            )}
-                            <button
-                                onClick={() => setActiveTab('ai')}
-                                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-gray-800 text-purple-600 shadow-sm scale-[1.02]' : 'text-gray-500 hover:text-gray-900'}`}
-                            >
-                                AI Studio
+                            <button onClick={() => setShowItemPicker(false)} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                <X size={20} className="text-slate-400" />
                             </button>
                         </div>
 
-                        {activeTab === 'upload' && (
-                            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-500">
-                                {/* Upload Form Toggle */}
-                                {!showManualForm && (
-                                    <button
-                                        onClick={() => setShowManualForm(true)}
-                                        className="w-full group relative py-12 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[2.5rem] hover:border-blue-500 dark:hover:border-blue-500 transition-all flex flex-col items-center justify-center gap-4 bg-gray-50/50 dark:bg-gray-900/30"
-                                    >
-                                        <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-3xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform text-blue-600">
-                                            <Plus size={28} />
-                                        </div>
-                                        <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Construct Custom Asset</span>
-                                    </button>
-                                )}
-
-                                {showManualForm && (
-                                    <div className="p-8 bg-blue-50/30 dark:bg-blue-900/10 rounded-[2.5rem] border border-blue-100 dark:border-blue-900/20 space-y-6">
-                                        <div className="grid grid-cols-2 gap-8">
-                                            <div className="space-y-6">
-                                                <div className="space-y-3">
-                                                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Title</label>
-                                                    <input
-                                                        type="text"
-                                                        value={manualTitle}
-                                                        onChange={(e) => setManualTitle(e.target.value)}
-                                                        placeholder="Summer Collection Lookbook..."
-                                                        className="w-full px-6 py-4 bg-white dark:bg-gray-950 border border-transparent focus:border-blue-500 rounded-2xl text-sm font-bold outline-none transition-all shadow-sm"
-                                                    />
-                                                </div>
-                                                <div className="space-y-3">
-                                                    <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Caption</label>
-                                                    <textarea
-                                                        value={manualCaption}
-                                                        onChange={(e) => setManualCaption(e.target.value)}
-                                                        placeholder="Write your story..."
-                                                        rows={4}
-                                                        className="w-full px-6 py-4 bg-white dark:bg-gray-950 border border-transparent focus:border-blue-500 rounded-2xl text-sm font-medium outline-none transition-all resize-none shadow-sm"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Featured Visual</label>
-                                                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-
-                                                {manualImage ? (
-                                                    <div className="relative aspect-square w-full group/img">
-                                                        <Image src={manualImage} alt="Preview" fill className="object-cover rounded-[2rem] shadow-xl" unoptimized />
-                                                        <button onClick={() => setManualImage(null)} className="absolute top-4 right-4 bg-red-600 text-white rounded-xl p-3 shadow-lg hover:scale-110 transition-transform">
-                                                            <Trash2 size={20} />
-                                                        </button>
+                        <div className="p-6 overflow-y-auto">
+                            {activeTab === 'upload' && (
+                                <div className="space-y-6">
+                                    {!showManualForm ? (
+                                        <button onClick={() => setShowManualForm(true)} className="w-full py-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 transition-all bg-slate-50/50 dark:bg-slate-800/20">
+                                            <Plus size={24} />
+                                            <span className="text-xs font-semibold uppercase tracking-wider">Create Custom Entry</span>
+                                        </button>
+                                    ) : (
+                                        <div className="p-6 bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+                                            <div className="grid sm:grid-cols-2 gap-6">
+                                                <div className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[11px] font-semibold text-slate-400 uppercase">Title</label>
+                                                        <input type="text" value={manualTitle} onChange={(e) => setManualTitle(e.target.value)} placeholder="Post title..." className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500/30" />
                                                     </div>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                        disabled={uploading}
-                                                        className="w-full aspect-square flex flex-col items-center justify-center gap-3 bg-white dark:bg-gray-950 rounded-[2rem] border-2 border-dashed border-blue-200 dark:border-blue-800 text-blue-600 hover:bg-white transition-all shadow-sm"
-                                                    >
-                                                        <Upload size={32} />
-                                                        <span className="text-xs font-black uppercase tracking-widest">{uploading ? 'Synthesizing...' : 'Upload File'}</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-4 pt-4">
-                                            <button onClick={() => setShowManualForm(false)} className="flex-1 py-5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-3xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-200 transition-all">Cancel</button>
-                                            <button onClick={addManualItem} className="flex-[2] py-5 bg-blue-600 text-white rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02]">Save to Library</button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {manualItems.length > 0 && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                                        {manualItems.map((item) => (
-                                            <button key={item.id} onClick={() => addItemToSchedule(item)} className="group/asset text-left p-3 bg-gray-50/50 dark:bg-gray-900/50 rounded-[2.5rem] border border-transparent hover:border-blue-500/50 hover:bg-white dark:hover:bg-gray-900 transition-all duration-500">
-                                                <div className="relative aspect-square mb-4 overflow-hidden rounded-[1.8rem] shadow-md">
-                                                    {item.image ? (
-                                                        <Image src={item.image} alt={item.title} fill className="object-cover transition-transform duration-700 group-hover/asset:scale-110" unoptimized />
-                                                    ) : (
-                                                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
-                                                            <ImageIcon size={32} className="text-gray-300" />
+                                                    <div className="space-y-2">
+                                                        <label className="text-[11px] font-semibold text-slate-400 uppercase">Caption</label>
+                                                        <textarea value={manualCaption} onChange={(e) => setManualCaption(e.target.value)} placeholder="Post caption..." rows={3} className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 resize-none" />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[11px] font-semibold text-slate-400 uppercase">Image</label>
+                                                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                                    {manualImage ? (
+                                                        <div className="relative aspect-square rounded-xl overflow-hidden group">
+                                                            <Image src={manualImage} alt="Preview" fill className="object-cover" unoptimized />
+                                                            <button onClick={() => setManualImage(null)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={14} /></button>
                                                         </div>
+                                                    ) : (
+                                                        <button onClick={() => fileInputRef.current?.click()} className="w-full aspect-square border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:bg-white dark:hover:bg-slate-900 transition-all">
+                                                            {uploading ? <Clock className="animate-spin" size={20} /> : <Upload size={20} />}
+                                                            <span className="text-[10px] font-bold uppercase">{uploading ? 'Uploading...' : 'Upload'}</span>
+                                                        </button>
                                                     )}
                                                 </div>
-                                                <div className="px-3 pb-2">
-                                                    <p className="text-xs font-black text-gray-900 dark:text-white truncate">{item.title}</p>
-                                                    <p className="text-[10px] font-bold text-blue-600 uppercase mt-1">Add to Queue</p>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'shopify' && shopifyConnected && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
-                                {products.map((product) => (
-                                    <button key={product.id} onClick={() => addProductToSchedule(product)} className="group/product text-left p-3 bg-gray-50/50 dark:bg-gray-900/50 rounded-[2.5rem] border border-transparent hover:border-green-500/50 hover:bg-white dark:hover:bg-gray-900 transition-all duration-500">
-                                        <div className="relative aspect-square mb-4 overflow-hidden rounded-[1.8rem] shadow-md">
-                                            {product.image ? (
-                                                <Image src={product.image} alt={product.title} fill className="object-cover transition-transform duration-700 group-hover/product:scale-110" unoptimized />
-                                            ) : (
-                                                <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><Package size={32} className="text-gray-300" /></div>
-                                            )}
+                                            </div>
+                                            <div className="flex gap-3 pt-2">
+                                                <button onClick={() => setShowManualForm(false)} className="flex-1 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">Cancel</button>
+                                                <button onClick={addManualItem} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">Save to Library</button>
+                                            </div>
                                         </div>
-                                        <div className="px-3 pb-2">
-                                            <p className="text-xs font-black text-gray-900 dark:text-white truncate">{product.title}</p>
-                                            <p className="text-[10px] font-bold text-green-600 uppercase mt-1">Import Post</p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                                    )}
 
-                        {activeTab === 'ai' && (
-                            <div className="animate-in fade-in duration-500">
+                                    {manualItems.length > 0 && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                            {manualItems.map((item) => (
+                                                <button key={item.id} onClick={() => addItemToSchedule(item)} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                                                    {item.image ? <Image src={item.image} alt={item.title} fill className="object-cover group-hover:scale-105 transition-transform" unoptimized /> : <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><ImageIcon className="text-slate-300" /></div>}
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">Add to Queue</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'shopify' && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    {products.map((product) => (
+                                        <button key={product.id} onClick={() => addProductToSchedule(product)} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                                            {product.image ? <Image src={product.image} alt={product.title} fill className="object-cover group-hover:scale-105 transition-transform" unoptimized /> : <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"><Package className="text-slate-300" /></div>}
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Import Product</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {activeTab === 'ai' && (
                                 <AIImageStudio
                                     workspaceId={workspaceId}
                                     onSelect={(url) => {
                                         addItemToSchedule({
                                             id: `ai-${Date.now()}`,
-                                            title: 'AI Synthesis ' + new Date().toLocaleTimeString(),
+                                            title: 'AI Gen ' + new Date().toLocaleTimeString(),
                                             image: url,
-                                            caption: 'Generated via AI Social Architect'
+                                            caption: 'Generated via AI Studio'
                                         })
                                     }}
                                     onClose={() => setShowItemPicker(false)}
                                 />
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
