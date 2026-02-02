@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { getWorkspace } from '@/lib/get-workspace'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CalendarPage() {
     const { workspace, supabase } = await getWorkspace()
 
@@ -25,8 +27,8 @@ export default async function CalendarPage() {
             <div className="space-y-8 animate-in fade-in duration-500">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Content Calendar</h1>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and view your scheduled content</p>
+                        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">Content Calendar</h1>
+                        <p className="text-base text-slate-500 dark:text-slate-400 mt-1">Manage and view your scheduled content</p>
                     </div>
                     <Link
                         href="/composer"

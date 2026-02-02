@@ -9,6 +9,8 @@ import DashboardLayout from '@/components/DashboardLayout'
 import { AlertCircle, CheckCircle2, Link2, ShoppingBag, User, Mail, Building2 } from 'lucide-react'
 import { getWorkspace } from '@/lib/get-workspace'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SettingsPage({
     searchParams,
 }: {

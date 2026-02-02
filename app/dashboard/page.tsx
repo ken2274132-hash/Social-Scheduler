@@ -13,6 +13,8 @@ const platformStyles: Record<string, string> = {
     twitter: 'bg-sky-500',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage(props: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
@@ -127,8 +129,8 @@ export default async function DashboardPage(props: {
                 </div>
 
                 {/* Posts Section */}
-                <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
-                    <div className="px-6 py-4 flex items-center justify-between border-b border-slate-50 dark:border-slate-800/50">
+                <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl overflow-hidden shadow-sm shadow-slate-200/30 dark:shadow-none">
+                    <div className="px-6 py-5 flex items-center justify-between border-b border-slate-50 dark:border-slate-800/50">
                         <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Activity</h2>
                         <DashboardFilters />
                     </div>
@@ -142,7 +144,7 @@ export default async function DashboardPage(props: {
                                     <Link
                                         key={post.id}
                                         href={`/composer?edit=${post.id}`}
-                                        className="group flex items-center gap-4 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
+                                        className="group flex items-center gap-4 px-6 py-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
                                     >
                                         {/* Thumbnail */}
                                         <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800">
@@ -245,7 +247,7 @@ export default async function DashboardPage(props: {
 
 function StatCard({ label, value, icon, color }: { label: string, value: number | string, icon: React.ReactNode, color?: string }) {
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/50 dark:shadow-none transition-all">
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/30 dark:shadow-none transition-all">
             <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
                 <div className={`w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>

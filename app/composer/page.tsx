@@ -3,6 +3,8 @@ import ComposerForm from '@/components/ComposerForm'
 import DashboardLayout from '@/components/DashboardLayout'
 import { getWorkspace } from '@/lib/get-workspace'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ComposerPage({
     searchParams
 }: {
