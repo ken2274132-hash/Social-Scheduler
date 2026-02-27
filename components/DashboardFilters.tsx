@@ -91,8 +91,8 @@ export default function DashboardFilters() {
                                     key={option}
                                     onClick={() => handleSortChange(option)}
                                     className={`w-full text-left px-4 py-2 text-[12px] font-medium transition-colors hover:bg-[#5932EA]/5 hover:text-[#5932EA] dark:hover:bg-gray-800 ${currentSort === option
-                                            ? 'text-[#5932EA] bg-[#5932EA]/5 dark:text-blue-400'
-                                            : 'text-gray-600 dark:text-gray-400'
+                                        ? 'text-[#5932EA] bg-[#5932EA]/5 dark:text-blue-400'
+                                        : 'text-gray-600 dark:text-gray-400'
                                         }`}
                                 >
                                     <span className="capitalize">{option}</span>

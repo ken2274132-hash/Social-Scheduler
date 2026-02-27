@@ -2,7 +2,6 @@ import ConnectInstagramButton from '@/components/ConnectInstagramButton'
 import ConnectFacebookButton from '@/components/ConnectFacebookButton'
 import ConnectPinterestButton from '@/components/ConnectPinterestButton'
 import ConnectShopifyButton from '@/components/ConnectShopifyButton'
-import DemoAccountButton from '@/components/DemoAccountButton'
 import ConnectedAccounts from '@/components/ConnectedAccounts'
 import ShopifyStatus from '@/components/ShopifyStatus'
 import DashboardLayout from '@/components/DashboardLayout'
@@ -146,7 +145,6 @@ export default async function SettingsPage({
                                 </div>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <DemoAccountButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectInstagramButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectFacebookButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectPinterestButton workspaceId={currentWorkspace?.id || 'default'} />

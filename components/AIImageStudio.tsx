@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Wand2, X, Loader2, Image as ImageIcon, Sparkles, AlertCircle } from 'lucide-react'
-import Image from 'next/image'
+import { useState, useRef } from 'react'
+import { Wand2, Loader2, Image as ImageIcon, Sparkles, AlertCircle, RefreshCw } from 'lucide-react'
 
 interface AIImageStudioProps {
     onSelect: (imageUrl: string) => void
@@ -12,13 +11,23 @@ interface AIImageStudioProps {
 
 export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImageStudioProps) {
     const [prompt, setPrompt] = useState('')
-    const [generating, setGenerating] = useState(false)
+    const [loading, setLoading] = useState(false)
     const [resultUrl, setResultUrl] = useState<string | null>(null)
-    const [isMock, setIsMock] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [imageReady, setImageReady] = useState(false)
+    const [provider, setProvider] = useState<string | null>(null)
+    const retryCount = useRef(0)
+    const maxRetries = 3
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return
-        setGenerating(true)
+        setLoading(true)
+        setError(null)
+        setResultUrl(null)
+        setImageReady(false)
+        setProvider(null)
+        retryCount.current = 0
+
         try {
             const res = await fetch('/api/ai/image/generate', {
                 method: 'POST',
@@ -26,14 +35,53 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                 body: JSON.stringify({ prompt, workspaceId })
             })
             const data = await res.json()
-            if (data.imageUrl) {
-                setResultUrl(data.imageUrl)
-                setIsMock(!!data.isPlaceholder)
+
+            if (data.error) {
+                setError(data.error)
+                setLoading(false)
+                return
             }
-        } catch (error) {
-            console.error('AI Image generation failed:', error)
-        } finally {
-            setGenerating(false)
+
+            if (data.imageUrl) {
+                console.log('Got image data URL (base64), provider:', data.provider)
+                // Image is already fetched by the server as base64
+                setResultUrl(data.imageUrl)
+                setProvider(data.provider || 'ai')
+                setImageReady(true)
+                setLoading(false)
+            } else {
+                setError('No image received')
+                setLoading(false)
+            }
+        } catch (err) {
+            console.error('AI Image generation failed:', err)
+            setError('Failed to generate image. Please try again.')
+            setLoading(false)
+        }
+    }
+
+    const handleImageLoad = () => {
+        console.log('Image element loaded!')
+        setImageReady(true)
+        setLoading(false)
+        retryCount.current = 0
+    }
+
+    const handleImageError = () => {
+        retryCount.current++
+        console.log(`Image failed to load, attempt ${retryCount.current}/${maxRetries}`)
+
+        if (retryCount.current < maxRetries && resultUrl) {
+            // Retry with a new seed after a delay
+            setTimeout(() => {
+                const newUrl = resultUrl.replace(/seed=\d+/, `seed=${Math.floor(Math.random() * 1000000)}`)
+                console.log('Retrying with new URL:', newUrl)
+                setResultUrl(newUrl)
+            }, 2000)
+        } else {
+            setError('Image generation failed. The AI service may be busy. Please try again.')
+            setResultUrl(null)
+            setLoading(false)
         }
     }
 
@@ -49,76 +97,113 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="A professional flat-lay photograph of tech accessories on a dark wooden desk, moody lighting, high contrast..."
-                            rows={5}
-                            className="w-full px-6 py-5 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl text-sm font-medium text-gray-900 dark:text-white outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all resize-none"
+                            placeholder="A horse running in a green meadow, sunset, golden hour lighting..."
+                            rows={4}
+                            className="w-full px-5 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-medium text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
                         />
                     </div>
 
                     <button
                         onClick={handleGenerate}
-                        disabled={generating || !prompt.trim()}
-                        className="w-full relative group overflow-hidden bg-purple-600 text-white p-6 rounded-[2rem] font-black uppercase tracking-widest text-xs transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-xl shadow-purple-500/20"
+                        disabled={loading || !prompt.trim()}
+                        className="w-full relative group overflow-hidden bg-purple-600 text-white p-5 rounded-2xl font-bold uppercase tracking-wider text-xs transition-all hover:bg-purple-700 active:scale-98 disabled:opacity-50 shadow-lg"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative flex items-center justify-center gap-3">
-                            {generating ? <Loader2 className="animate-spin" size={20} /> : <Wand2 size={20} />}
-                            <span>{generating ? 'Dreaming...' : 'Generate Magic'}</span>
+                        <div className="flex items-center justify-center gap-3">
+                            {loading ? <Loader2 className="animate-spin" size={18} /> : <Wand2 size={18} />}
+                            <span>{loading ? 'Generating... (10-30s)' : 'Generate Image'}</span>
                         </div>
                     </button>
 
-                    <div className="p-6 bg-purple-50/50 dark:bg-purple-900/10 rounded-3xl border border-purple-100/50 dark:border-purple-900/20">
-                        <h5 className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <div className="p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl border border-purple-100/50 dark:border-purple-900/20">
+                        <h5 className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1 flex items-center gap-2">
                             <Sparkles size={12} />
-                            Pro Tip
+                            Tips
                         </h5>
-                        <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 leading-relaxed uppercase tracking-tight">
-                            Be specific about lighting, style, and composition for the best results. The more detail, the more stunning the asset.
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Use descriptive words like: "professional photo", "high quality", "detailed", "realistic"
                         </p>
                     </div>
                 </div>
 
                 {/* Preview */}
-                <div className="relative aspect-square bg-gray-50 dark:bg-gray-900 rounded-[3rem] border-2 border-dashed border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col items-center justify-center group/preview">
-                    {resultUrl ? (
+                <div className="relative aspect-square bg-gray-100 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col items-center justify-center">
+                    {error ? (
+                        <div className="flex flex-col items-center gap-4 px-6 text-center">
+                            <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                                <AlertCircle size={28} className="text-red-500" />
+                            </div>
+                            <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+                            <button
+                                onClick={() => { setError(null); handleGenerate(); }}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-200 transition-colors"
+                            >
+                                <RefreshCw size={14} />
+                                Try Again
+                            </button>
+                        </div>
+                    ) : loading && !resultUrl ? (
+                        <div className="flex flex-col items-center gap-4">
+                            <Loader2 size={40} className="animate-spin text-purple-500" />
+                            <p className="text-xs font-medium text-gray-400 text-center px-8">
+                                AI is creating your image...
+                                <br />
+                                <span className="text-gray-300">(This takes 10-30 seconds)</span>
+                            </p>
+                        </div>
+                    ) : resultUrl ? (
                         <>
-                            {isMock && (
-                                <div className="absolute top-6 left-6 right-6 p-4 bg-orange-500/90 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl animate-in slide-in-from-top-4 duration-500">
-                                    <div className="flex items-center gap-3">
-                                        <AlertCircle size={18} className="text-white shrink-0" />
-                                        <p className="text-[10px] font-black text-white uppercase tracking-widest leading-tight">
-                                            Demo Mode: Add OPENAI_API_KEY to .env.local for real results
-                                        </p>
-                                    </div>
+                            {/* Hidden img to preload */}
+                            <img
+                                src={resultUrl}
+                                alt="AI Generated"
+                                onLoad={handleImageLoad}
+                                onError={handleImageError}
+                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${imageReady ? 'opacity-100' : 'opacity-0'}`}
+                            />
+
+                            {/* Loading overlay while image loads */}
+                            {!imageReady && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900">
+                                    <Loader2 size={40} className="animate-spin text-purple-500" />
+                                    <p className="text-xs text-gray-400 mt-4">Loading image...</p>
                                 </div>
                             )}
-                            <Image
-                                src={resultUrl}
-                                alt="AI Generation"
-                                fill
-                                className="object-cover animate-in fade-in zoom-in-95 duration-700"
-                                unoptimized
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity backdrop-blur-sm flex items-center justify-center flex-col gap-4">
-                                <button
-                                    onClick={() => onSelect(resultUrl)}
-                                    className="px-8 py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-110 active:scale-95 transition-all shadow-2xl"
-                                >
-                                    Use This Asset
-                                </button>
-                                <button
-                                    onClick={() => setResultUrl(null)}
-                                    className="text-white/60 hover:text-white text-[10px] font-black uppercase tracking-widest transition-all"
-                                >
-                                    Dismiss
-                                </button>
-                            </div>
+
+                            {/* Provider badge */}
+                            {imageReady && provider === 'picsum' && (
+                                <div className="absolute top-2 left-2 px-2 py-1 bg-amber-500/90 text-white text-[10px] font-semibold rounded-lg">
+                                    Stock Photo (AI unavailable)
+                                </div>
+                            )}
+                            {imageReady && provider === 'huggingface' && (
+                                <div className="absolute top-2 left-2 px-2 py-1 bg-purple-500/90 text-white text-[10px] font-semibold rounded-lg">
+                                    AI Generated (Stable Diffusion)
+                                </div>
+                            )}
+
+                            {/* Hover overlay */}
+                            {imageReady && (
+                                <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center flex-col gap-3">
+                                    <button
+                                        onClick={() => onSelect(resultUrl)}
+                                        className="px-6 py-3 bg-white text-gray-900 rounded-xl font-bold uppercase tracking-wider text-xs hover:scale-105 transition-transform shadow-xl"
+                                    >
+                                        Use This Image
+                                    </button>
+                                    <button
+                                        onClick={() => { setResultUrl(null); setImageReady(false); setProvider(null); }}
+                                        className="text-white/70 hover:text-white text-xs font-medium"
+                                    >
+                                        Generate New
+                                    </button>
+                                </div>
+                            )}
                         </>
                     ) : (
-                        <div className="flex flex-col items-center gap-4 animate-pulse">
-                            <ImageIcon size={64} className="text-gray-200 dark:text-gray-800" />
-                            <p className="text-[10px] font-black text-gray-300 dark:text-gray-700 uppercase tracking-widest text-center px-10">
-                                {generating ? 'Asset is being synthesized in the cloud...' : 'Generation preview will appear here'}
+                        <div className="flex flex-col items-center gap-3">
+                            <ImageIcon size={48} className="text-gray-300 dark:text-gray-700" />
+                            <p className="text-xs font-medium text-gray-400 text-center">
+                                Your AI-generated image<br />will appear here
                             </p>
                         </div>
                     )}

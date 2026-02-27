@@ -8,7 +8,7 @@ import { useTheme } from 'next-themes'
 
 interface DashboardLayoutProps {
     children: React.ReactNode
-    currentPage: 'dashboard' | 'composer' | 'calendar' | 'settings' | 'workflow'
+    currentPage: 'dashboard' | 'composer' | 'calendar' | 'settings' | 'workflow' | 'analytics'
 }
 
 const navItems = [
@@ -16,7 +16,7 @@ const navItems = [
     { href: '/composer', label: 'Create Post', icon: PenSquare, key: 'composer' },
     { href: '/workflow', label: 'Workflow', icon: GitBranch, key: 'workflow' },
     { href: '/calendar', label: 'Calendar', icon: CalendarIcon, key: 'calendar' },
-    { href: '#', label: 'Analytics', icon: BarChart, key: 'analytics' },
+    { href: '/analytics', label: 'Analytics', icon: BarChart, key: 'analytics' },
     { href: '/settings', label: 'Settings', icon: Settings, key: 'settings' },
 ]
 
@@ -51,14 +51,14 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
 
             {/* Sidebar */}
             <aside className="fixed left-0 top-0 h-full w-[260px] bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/50 hidden lg:flex flex-col z-50">
-                <div className="px-6 py-16">
+                <div className="px-6 py-6">
                     <Link href="/dashboard" className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-blue-600/20">SM</div>
-                        <span className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">Social Scheduler</span>
+                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xs font-bold">SM</div>
+                        <span className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">Social Scheduler</span>
                     </Link>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-0.5">
+                <nav className="flex-1 px-4 space-y-1">
                     {navItems.map((item) => {
                         const Icon = item.icon
                         const isActive = currentPage === item.key
@@ -78,7 +78,7 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                     })}
                 </nav>
 
-                <div className="px-4 pb-6 space-y-0.5">
+                <div className="px-4 pb-10 space-y-1">
                     <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-all"
@@ -97,8 +97,8 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
             </aside>
 
             {/* Main */}
-            <main className="lg:ml-[260px] min-h-screen pt-14 lg:pt-0">
-                <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto">
+            <main className="lg:ml-[260px] min-h-screen pt-14 lg:pt-12">
+                <div className="px-6 sm:px-10 lg:px-12 max-w-6xl mx-auto">
                     {children}
                 </div>
             </main>

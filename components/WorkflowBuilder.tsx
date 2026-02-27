@@ -247,11 +247,40 @@ export default function WorkflowBuilder({
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
+            {/* How It Works - Step Indicator */}
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-900/50">
+                <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-4">How It Works</h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0">
+                    {[
+                        { step: 1, title: 'Configure', desc: 'Choose account & schedule' },
+                        { step: 2, title: 'Add Content', desc: 'Upload or import items' },
+                        { step: 3, title: 'Schedule', desc: 'Auto-post at set times' },
+                    ].map((item, i) => (
+                        <div key={item.step} className="flex items-center gap-3 sm:flex-1">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                                (item.step === 1 && selectedAccount) ||
+                                (item.step === 2 && scheduledItems.length > 0) ||
+                                (item.step === 3 && scheduledItems.length > 0 && selectedAccount)
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700'
+                            }`}>
+                                {item.step}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-xs font-semibold text-slate-900 dark:text-white">{item.title}</p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400">{item.desc}</p>
+                            </div>
+                            {i < 2 && <ChevronRight size={16} className="text-slate-300 dark:text-slate-600 hidden sm:block ml-auto mr-4" />}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Auto Workflow</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Automate your content schedule with AI assistance</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Batch schedule posts with automatic date spacing</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -262,7 +291,7 @@ export default function WorkflowBuilder({
                     </button>
                     <button
                         onClick={createWorkflow}
-                        disabled={creating || scheduledItems.length === 0}
+                        disabled={creating || scheduledItems.length === 0 || !selectedAccount}
                         className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-indigo-600/20"
                     >
                         {creating ? <Clock size={16} className="animate-spin" /> : <Share2 size={16} />}
@@ -280,8 +309,9 @@ export default function WorkflowBuilder({
                         </div>
                         <div className="p-6 space-y-6">
                             {/* Destination */}
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Destination</label>
+                                <p className="text-[10px] text-slate-400 -mt-1">Where to post your content</p>
                                 <select
                                     value={selectedAccount}
                                     onChange={(e) => setSelectedAccount(e.target.value)}
@@ -298,8 +328,9 @@ export default function WorkflowBuilder({
 
                             {/* Schedule */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Start Date</label>
+                                    <p className="text-[10px] text-slate-400 -mt-1">First post date</p>
                                     <input
                                         type="date"
                                         value={startDate}
@@ -307,8 +338,9 @@ export default function WorkflowBuilder({
                                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
                                     />
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Post Time</label>
+                                    <p className="text-[10px] text-slate-400 -mt-1">Daily time</p>
                                     <input
                                         type="time"
                                         value={postTime}
@@ -319,8 +351,9 @@ export default function WorkflowBuilder({
                             </div>
 
                             {/* Frequency */}
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Frequency</label>
+                                <p className="text-[10px] text-slate-400 -mt-1">Days between each post</p>
                                 <div className="space-y-2">
                                     {(['daily', 'every2days', 'weekly'] as const).map((opt) => (
                                         <button
@@ -342,15 +375,20 @@ export default function WorkflowBuilder({
                         </div>
                     </div>
 
-                    <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-600/20 relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-600/20 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Sparkles size={80} />
+                            <Sparkles size={60} />
                         </div>
                         <div className="relative z-10">
-                            <h4 className="text-sm font-bold mb-3">Pro Tip</h4>
-                            <p className="text-xs text-indigo-100 leading-relaxed">
-                                Use the Content Library to bulk-add images. Our AI will automatically space them out based on your frequency settings.
-                            </p>
+                            <h4 className="text-xs font-bold mb-2 flex items-center gap-1.5">
+                                <Wand2 size={12} /> Quick Guide
+                            </h4>
+                            <ol className="text-[11px] text-indigo-100 leading-relaxed space-y-1.5">
+                                <li>1. Select your social account above</li>
+                                <li>2. Set start date and posting frequency</li>
+                                <li>3. Click "Add Content" to add items</li>
+                                <li>4. Hit "Schedule" to create all posts</li>
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -368,15 +406,30 @@ export default function WorkflowBuilder({
                         </div>
                         <div className="p-6">
                             {scheduledItems.length === 0 ? (
-                                <div className="text-center py-16">
+                                <div className="text-center py-12">
                                     <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-4 text-slate-300">
                                         <Calendar size={24} />
                                     </div>
-                                    <p className="text-sm font-medium text-slate-900 dark:text-white">Queue is empty</p>
-                                    <p className="text-xs text-slate-500 mt-1 mb-6">Add items from the library to populate your schedule</p>
-                                    <button onClick={() => setShowItemPicker(true)} className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all">
-                                        Open Library
+                                    <p className="text-sm font-medium text-slate-900 dark:text-white">No content in queue yet</p>
+                                    <p className="text-xs text-slate-500 mt-1 mb-6 max-w-xs mx-auto">
+                                        Add images or products. Each item will be scheduled based on your frequency settings.
+                                    </p>
+                                    <button onClick={() => setShowItemPicker(true)} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
+                                        <Plus size={14} className="inline mr-1.5 -mt-0.5" />
+                                        Add First Item
                                     </button>
+
+                                    {/* Quick example */}
+                                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                        <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-3">Example with 3 items & "Every 2 Days"</p>
+                                        <div className="flex justify-center gap-2 text-[10px]">
+                                            <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md">Feb 7</span>
+                                            <span className="text-slate-300">→</span>
+                                            <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md">Feb 9</span>
+                                            <span className="text-slate-300">→</span>
+                                            <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md">Feb 11</span>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-3">

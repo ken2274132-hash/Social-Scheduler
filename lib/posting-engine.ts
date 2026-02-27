@@ -305,14 +305,26 @@ async function publishToPinterest(post: any, accessToken: string) {
         // For now, we'll create a Pin without specifying a board (goes to profile)
         // In a full implementation, you'd let users select a board
 
+        // Build Pinterest payload - link is optional and must be a valid public URL
+        const productUrl = post.media_assets?.product_url
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL
+        const isValidLink = (url: string | undefined) =>
+            url && !url.includes('localhost') && (url.startsWith('https://') || url.startsWith('http://'))
+
         const pinPayload: any = {
             title: caption.substring(0, 100), // Pinterest title max 100 chars
             description: caption,
-            link: post.media_assets?.product_url || process.env.NEXT_PUBLIC_APP_URL,
             media_source: {
                 source_type: 'image_url',
                 url: mediaUrl,
             },
+        }
+
+        // Only add link if it's a valid public URL (not localhost)
+        if (isValidLink(productUrl)) {
+            pinPayload.link = productUrl
+        } else if (isValidLink(appUrl)) {
+            pinPayload.link = appUrl
         }
 
         // If we have a board_id stored in post metadata, use it
@@ -320,7 +332,8 @@ async function publishToPinterest(post: any, accessToken: string) {
             pinPayload.board_id = post.pinterest_board_id
         }
 
-        const apiBaseUrl = process.env.PINTEREST_API_BASE_URL || 'https://api.pinterest.com'
+        // Use sandbox for trial apps, production for approved apps
+        const apiBaseUrl = process.env.PINTEREST_API_BASE_URL || 'https://api-sandbox.pinterest.com'
         const pinResponse = await fetch(`${apiBaseUrl}/v5/pins`, {
             method: 'POST',
             headers: {

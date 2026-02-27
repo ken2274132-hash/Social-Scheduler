@@ -1,7 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createServiceClient } from '@supabase/supabase-js'
+
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY
+
+async function generateWithHuggingFace(prompt: string): Promise<ArrayBuffer> {
+    // Using a fast, reliable model
+    const model = 'stabilityai/stable-diffusion-xl-base-1.0'
+    const url = `https://router.huggingface.co/hf-inference/models/${model}`
+
+    console.log('Generating with Hugging Face:', model)
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            inputs: prompt,
+            parameters: {
+                num_inference_steps: 25,
+                guidance_scale: 7.5,
+            }
+        }),
+    })
+
+    if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Hugging Face error:', response.status, errorText)
+
+        // Check if model is loading
+        if (response.status === 503) {
+            const errorData = JSON.parse(errorText)
+            if (errorData.estimated_time) {
+                throw new Error(`Model loading, wait ${Math.ceil(errorData.estimated_time)}s`)
+            }
+        }
+        throw new Error(`Hugging Face API error: ${response.status}`)
+    }
+
+    return response.arrayBuffer()
+}
+
+async function generateWithPollinations(prompt: string, width: number, height: number): Promise<ArrayBuffer> {
+    const encodedPrompt = encodeURIComponent(prompt)
+    const seed = Math.floor(Math.random() * 1000000)
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`
+
+    console.log('Fetching from Pollinations:', url)
+
+    const response = await fetch(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+    })
+
+    if (!response.ok) {
+        throw new Error(`Pollinations error: ${response.status}`)
+    }
+
+    return response.arrayBuffer()
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -19,47 +78,75 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        const apiKey = process.env.OPENAI_API_KEY
+        // Clean the prompt
+        const cleanPrompt = prompt
+            .replace(/[\n\r]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
 
-        // IF NO API KEY, RETURN MOCK IMAGE FOR DEMO PURPOSES
-        if (!apiKey || apiKey === 'your-openai-api-key') {
-            console.warn('OPENAI_API_KEY is missing. Returning placeholder image.')
-            const keywords = prompt.split(' ').slice(0, 3).join(',')
+        // Parse size
+        const [width, height] = size.split('x').map(Number)
+        const finalWidth = Math.min(width || 512, 512)
+        const finalHeight = Math.min(height || 512, 512)
+
+        // Try Hugging Face first (reliable + free tier)
+        if (HUGGINGFACE_API_KEY) {
+            try {
+                const imageBuffer = await generateWithHuggingFace(cleanPrompt)
+                const base64Image = Buffer.from(imageBuffer).toString('base64')
+                const dataUrl = `data:image/png;base64,${base64Image}`
+
+                console.log('Hugging Face image generated, size:', imageBuffer.byteLength)
+
+                return NextResponse.json({
+                    success: true,
+                    imageUrl: dataUrl,
+                    provider: 'huggingface'
+                })
+            } catch (hfError: any) {
+                console.log('Hugging Face failed:', hfError.message)
+                // Continue to fallback
+            }
+        }
+
+        // Fallback to Pollinations
+        try {
+            const imageBuffer = await generateWithPollinations(cleanPrompt, finalWidth, finalHeight)
+            const base64Image = Buffer.from(imageBuffer).toString('base64')
+            const dataUrl = `data:image/jpeg;base64,${base64Image}`
+
+            console.log('Pollinations image generated, size:', imageBuffer.byteLength)
+
             return NextResponse.json({
                 success: true,
-                imageUrl: `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1024&auto=format&fit=crop&keywords=${encodeURIComponent(keywords)}`,
-                isPlaceholder: true,
-                message: 'OPENAI_API_KEY not configured. Showing example image based on keywords.'
+                imageUrl: dataUrl,
+                provider: 'pollinations'
             })
+        } catch (pollinationsError) {
+            console.log('Pollinations failed:', pollinationsError)
         }
 
-        const openai = new OpenAI({
-            apiKey: apiKey,
-        })
+        // Final fallback to Picsum (stock photos)
+        const promptHash = cleanPrompt.split('').reduce((a: number, b: string) => ((a << 5) - a) + b.charCodeAt(0), 0)
+        const picsumUrl = `https://picsum.photos/seed/${Math.abs(promptHash)}/${finalWidth}/${finalHeight}`
 
-        // Generate Image using DALL-E 3
-        const response = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: prompt,
-            n: 1,
-            size: size as any,
-            quality: "standard",
-            response_format: "url"
-        })
+        console.log('Fetching from Picsum:', picsumUrl)
 
-        const imageUrl = response.data?.[0]?.url
+        const picsumResponse = await fetch(picsumUrl)
 
-        if (!imageUrl) {
-            throw new Error('Failed to generate image URL')
+        if (!picsumResponse.ok) {
+            throw new Error('All image services failed')
         }
 
-        // Ideally, we'd download the image and upload it to Supabase storage
-        // But for now, we'll return the OpenAI URL (which expires in 1 hour)
-        // and handle the transfer in the frontend or a separate function
+        const imageBuffer = await picsumResponse.arrayBuffer()
+        const base64Image = Buffer.from(imageBuffer).toString('base64')
+        const dataUrl = `data:image/jpeg;base64,${base64Image}`
 
         return NextResponse.json({
             success: true,
-            imageUrl,
+            imageUrl: dataUrl,
+            provider: 'picsum',
+            note: 'AI generation unavailable, showing placeholder photo'
         })
 
     } catch (error: any) {
