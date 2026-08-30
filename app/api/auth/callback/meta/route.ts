@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { consumeOAuthState } from '@/lib/oauth-state'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
@@ -7,32 +8,55 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state')
     const error = searchParams.get('error')
 
+    const fail = (reason: string) =>
+        NextResponse.redirect(new URL(`/settings?error=${reason}`, request.url))
+
     if (error) {
-        return NextResponse.redirect(new URL('/settings?error=oauth_denied', request.url))
+        return fail('oauth_denied')
     }
 
     if (!code || !state) {
-        return NextResponse.redirect(new URL('/settings?error=invalid_request', request.url))
+        return fail('invalid_request')
     }
 
     try {
-        let decodedState;
-        try {
-            decodedState = JSON.parse(atob(state))
-        } catch (e) {
-            console.error('Failed to decode state:', e)
-            return NextResponse.redirect(new URL('/settings?error=invalid_state', request.url))
+        // Verify this callback belongs to a flow this browser actually started,
+        // and recover the workspace id we stored server-side when it began.
+        const stateData = await consumeOAuthState(request, 'meta', state)
+        if (!stateData?.workspaceId) {
+            return fail('invalid_state')
         }
 
-        const { workspaceId, platform } = decodedState
-        const targetPlatform = platform || 'instagram'
+        const { workspaceId, userId } = stateData
+        const targetPlatform = stateData.platform || 'instagram'
+
+        const supabase = await createClient()
+
+        // Belt and braces: confirm the signed-in user still owns this workspace
+        // before writing anything to it. RLS enforces this too, but an explicit
+        // check gives a clear error instead of a confusing insert failure.
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || user.id !== userId) {
+            return fail('invalid_session')
+        }
+
+        const { data: ownedWorkspace } = await supabase
+            .from('workspaces')
+            .select('id')
+            .eq('id', workspaceId)
+            .eq('owner_id', user.id)
+            .maybeSingle()
+
+        if (!ownedWorkspace) {
+            return fail('workspace_not_found')
+        }
 
         // Exchange code for access_token
         const redirectUri = `${request.nextUrl.origin}/api/auth/callback/meta`
 
         if (!process.env.META_APP_ID || !process.env.META_APP_SECRET) {
             console.error('Missing Meta App credentials')
-            return NextResponse.redirect(new URL('/settings?error=config_error', request.url))
+            return fail('config_error')
         }
 
         const tokenUrl = new URL('https://graph.facebook.com/v21.0/oauth/access_token')
@@ -45,8 +69,8 @@ export async function GET(request: NextRequest) {
         const tokenData = await tokenResponse.json()
 
         if (!tokenResponse.ok || !tokenData.access_token) {
-            console.error('Token exchange failed:', tokenData)
-            throw new Error(tokenData.error?.message || 'Token exchange failed')
+            console.error('Token exchange failed:', tokenData?.error?.message)
+            return fail('connection_failed')
         }
 
         const accessToken = tokenData.access_token
@@ -63,99 +87,104 @@ export async function GET(request: NextRequest) {
 
         const finalAccessToken = longLivedData.access_token || accessToken
 
-        // Get user's Facebook Pages
+        // Get the user's Facebook Pages.
+        // Note: never log the response body — it contains page access tokens.
         const accountsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/me/accounts?access_token=${finalAccessToken}`
+            `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,picture,tasks&access_token=${finalAccessToken}`
         )
-
         const accountsData = await accountsResponse.json()
 
         if (!accountsResponse.ok || !accountsData.data) {
-            console.error('Failed to fetch Facebook accounts:', accountsData)
-            throw new Error(accountsData.error?.message || 'Failed to fetch Facebook accounts')
+            console.error('Failed to fetch Facebook accounts:', accountsData?.error?.message)
+            return fail('connection_failed')
         }
 
         if (accountsData.data.length === 0) {
-            return NextResponse.redirect(new URL('/settings?error=no_pages', request.url))
+            console.log('Meta OAuth: user granted access but has no manageable Pages')
+            return fail('no_pages')
         }
 
-        // Get the first page's details
+        // Page tokens are requested separately so they never enter the log above.
         const page = accountsData.data[0]
         const pageId = page.id
-        const pageAccessToken = page.access_token
         const pageName = page.name
 
-        const supabase = await createClient()
+        const pageTokenResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${pageId}?fields=access_token,picture&access_token=${finalAccessToken}`
+        )
+        const pageTokenData = await pageTokenResponse.json()
+        const pageAccessToken = pageTokenData.access_token
+
+        if (!pageAccessToken) {
+            console.error('Could not obtain page access token:', pageTokenData?.error?.message)
+            return fail('connection_failed')
+        }
 
         if (targetPlatform === 'facebook') {
-            // Connect Facebook Page directly
-            // Get page profile picture
-            const pageDetailsResponse = await fetch(
-                `https://graph.facebook.com/v21.0/${pageId}?fields=picture&access_token=${pageAccessToken}`
-            )
-            const pageDetails = await pageDetailsResponse.json()
-            const profilePictureUrl = pageDetails.picture?.data?.url || null
+            const profilePictureUrl = pageTokenData.picture?.data?.url || null
 
-            // Store the Facebook Page account
             const { error: dbError } = await supabase.from('social_accounts').upsert({
                 workspace_id: workspaceId,
                 platform: 'facebook',
                 account_id: pageId,
                 account_name: pageName,
                 profile_picture_url: profilePictureUrl,
-                access_token: pageAccessToken, // Store encrypted in production
+                access_token: pageAccessToken,
                 token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
                 is_active: true,
             }, {
                 onConflict: 'workspace_id,account_id'
             })
 
-            if (dbError) throw dbError
-
-            return NextResponse.redirect(new URL('/settings?success=connected', request.url))
-        } else {
-            // Connect Instagram account
-            const igResponse = await fetch(
-                `https://graph.facebook.com/v21.0/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`
-            )
-
-            const igData = await igResponse.json()
-
-            if (!igResponse.ok || !igData.instagram_business_account) {
-                console.error('Failed to fetch Instagram account:', igData)
-                return NextResponse.redirect(new URL('/settings?error=no_instagram', request.url))
+            if (dbError) {
+                console.error('Failed to save Facebook account:', dbError)
+                return fail('save_failed')
             }
-
-            const igBusinessId = igData.instagram_business_account.id
-
-            // Get Instagram account details
-            const igDetailsResponse = await fetch(
-                `https://graph.facebook.com/v21.0/${igBusinessId}?fields=username,profile_picture_url&access_token=${pageAccessToken}`
-            )
-
-            const igDetails = await igDetailsResponse.json()
-
-            // Store the account
-            const { error: dbError } = await supabase.from('social_accounts').upsert({
-                workspace_id: workspaceId,
-                platform: 'instagram',
-                account_id: igBusinessId,
-                account_name: igDetails.username,
-                profile_picture_url: igDetails.profile_picture_url,
-                access_token: pageAccessToken, // Store encrypted in production
-                token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
-                is_active: true,
-            }, {
-                onConflict: 'workspace_id,account_id'
-            })
-
-            if (dbError) throw dbError
 
             return NextResponse.redirect(new URL('/settings?success=connected', request.url))
         }
+
+        // Connect Instagram account
+        const igResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${pageId}?fields=instagram_business_account&access_token=${pageAccessToken}`
+        )
+
+        const igData = await igResponse.json()
+
+        if (!igResponse.ok || !igData.instagram_business_account) {
+            console.error('Failed to fetch Instagram account:', igData?.error?.message)
+            return fail('no_instagram')
+        }
+
+        const igBusinessId = igData.instagram_business_account.id
+
+        const igDetailsResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${igBusinessId}?fields=username,profile_picture_url&access_token=${pageAccessToken}`
+        )
+
+        const igDetails = await igDetailsResponse.json()
+
+        const { error: dbError } = await supabase.from('social_accounts').upsert({
+            workspace_id: workspaceId,
+            platform: 'instagram',
+            account_id: igBusinessId,
+            account_name: igDetails.username,
+            profile_picture_url: igDetails.profile_picture_url,
+            access_token: pageAccessToken,
+            token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
+            is_active: true,
+        }, {
+            onConflict: 'workspace_id,account_id'
+        })
+
+        if (dbError) {
+            console.error('Failed to save Instagram account:', dbError)
+            return fail('save_failed')
+        }
+
+        return NextResponse.redirect(new URL('/settings?success=connected', request.url))
     } catch (error) {
         console.error('OAuth callback error:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        return NextResponse.redirect(new URL(`/settings?error=connection_failed&details=${encodeURIComponent(errorMessage)}`, request.url))
+        return fail('connection_failed')
     }
 }

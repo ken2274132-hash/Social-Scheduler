@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import ComposerForm from '@/components/ComposerForm'
 import DashboardLayout from '@/components/DashboardLayout'
 import { getWorkspace } from '@/lib/get-workspace'
+import { SOCIAL_ACCOUNT_PUBLIC_COLUMNS } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export default async function ComposerPage({
     // Run social accounts and optional post edit query in parallel
     const socialAccountsPromise = supabase
         .from('social_accounts')
-        .select('*')
+        .select(SOCIAL_ACCOUNT_PUBLIC_COLUMNS)
         .eq('workspace_id', workspace.id)
         .eq('is_active', true)
 

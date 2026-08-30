@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { errorResponse, clientError } from '@/lib/api'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 /**
@@ -98,8 +99,7 @@ export async function GET(request: NextRequest) {
             shopName: shopifyAccount.shop_name,
             connected: true,
         })
-    } catch (error: any) {
-        console.error('Shopify products error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'shopify/products')
     }
 }

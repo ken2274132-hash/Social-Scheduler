@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/AdminLayout'
 import { Settings, Bell, Globe, Mail, Shield, Save } from 'lucide-react'
@@ -9,10 +10,8 @@ export default async function AdminSettings() {
     const supabase = await createClient()
 
     // Get session
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-        redirect('/login')
-    }
+    // Verifies the JWT and the super_admin role (and honours the dev bypass).
+    await requireSuperAdmin()
 
     // In a real app, these would come from a config table in Supabase
     const settings = [

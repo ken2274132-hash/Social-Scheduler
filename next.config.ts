@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    // Lets a production build be made without clobbering the dev server's .next
+    distDir: process.env.NEXT_DIST_DIR || '.next',
     images: {
         remotePatterns: [
             {
@@ -41,12 +43,23 @@ const nextConfig: NextConfig = {
     experimental: {
         optimizePackageImports: ['lucide-react'],
     },
-    // Force build to succeed even with lint/TS errors
-    typescript: {
-        ignoreBuildErrors: true,
-    },
-    eslint: {
-        ignoreDuringBuilds: true,
+    // M4: baseline security headers
+    async headers() {
+        return [
+            {
+                source: '/:path*',
+                headers: [
+                    { key: 'X-Frame-Options', value: 'DENY' },
+                    { key: 'X-Content-Type-Options', value: 'nosniff' },
+                    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+                    { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+                    {
+                        key: 'Strict-Transport-Security',
+                        value: 'max-age=63072000; includeSubDomains; preload',
+                    },
+                ],
+            },
+        ]
     },
 };
 

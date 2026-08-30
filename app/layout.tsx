@@ -44,20 +44,11 @@ export const metadata: Metadata = {
         siteName: "Social Media Scheduler",
         title: "Social Media Scheduler - AI-Powered Auto Posting",
         description: "Automate your social media presence with AI-powered content generation and scheduling. Upload once, post everywhere.",
-        images: [
-            {
-                url: "/og-image.png",
-                width: 1200,
-                height: 630,
-                alt: "Social Media Scheduler",
-            },
-        ],
     },
     twitter: {
         card: "summary_large_image",
         title: "Social Media Scheduler - AI-Powered Auto Posting",
         description: "Automate your social media presence with AI-powered content generation and scheduling.",
-        images: ["/og-image.png"],
         creator: "@socialmediascheduler",
     },
     robots: {

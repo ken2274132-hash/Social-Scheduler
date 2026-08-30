@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { errorResponse, clientError } from '@/lib/api'
 
 /**
  * API Route to create a simulation/demo Instagram account
@@ -7,6 +8,11 @@ import { createClient } from '@/lib/supabase/server'
  */
 export async function POST(request: NextRequest) {
     try {
+        // Simulator accounts are a development aid, not a product feature.
+        if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_ACCOUNTS !== 'true') {
+            return clientError('Demo accounts are not available.', 404)
+        }
+
         const supabase = await createClient()
 
         // Safely parse request body
@@ -23,7 +29,7 @@ export async function POST(request: NextRequest) {
 
         // Verify ownership
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!user) return clientError('Unauthorized', 401)
 
         // Get user's workspace (create if doesn't exist)
         let { data: workspace } = await supabase
@@ -50,6 +56,20 @@ export async function POST(request: NextRequest) {
 
         const actualWorkspaceId = workspace.id
 
+        // One simulator account per workspace: this used to insert a new row on
+        // every call, with no cap.
+        const { data: existingDemo } = await supabase
+            .from('social_accounts')
+            .select('id')
+            .eq('workspace_id', actualWorkspaceId)
+            .eq('access_token', 'demo_token_simulator')
+            .limit(1)
+            .maybeSingle()
+
+        if (existingDemo) {
+            return clientError('This workspace already has a demo account.', 409)
+        }
+
         // Create Demo Account
         const demoId = `demo_${Math.random().toString(36).substring(7)}`
         const { data: account, error: accountError } = await supabase
@@ -69,8 +89,7 @@ export async function POST(request: NextRequest) {
         if (accountError) throw accountError
 
         return NextResponse.json({ success: true, account })
-    } catch (error: any) {
-        console.error('Demo account creation error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'social/demo')
     }
 }

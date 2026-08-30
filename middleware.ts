@@ -1,10 +1,25 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Development-only auth bypass. Mirrors the check in lib/auth.ts.
+ *
+ * NODE_ENV is always 'production' in a deployed build, so this can never be
+ * switched on for the live site by setting an environment variable.
+ */
+const DEV_AUTH_BYPASS =
+    process.env.NODE_ENV === 'development' &&
+    process.env.DEV_BYPASS_AUTH === 'true'
+
 export async function middleware(request: NextRequest) {
     // Skip middleware if Supabase env vars are not configured
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
         return NextResponse.next()
+    }
+
+    // Local development without signing in: let every route through.
+    if (DEV_AUTH_BYPASS) {
+        return NextResponse.next({ request })
     }
 
     let supabaseResponse = NextResponse.next({
@@ -20,7 +35,7 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
                     supabaseResponse = NextResponse.next({
                         request,
                     })
@@ -32,14 +47,15 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // Refresh session if needed
-    const { data: { session } } = await supabase.auth.getSession()
+    // getUser() revalidates the JWT with the auth server. getSession() only
+    // decodes the cookie, which is not safe to authorize on.
+    const { data: { user } } = await supabase.auth.getUser()
 
     // Protected routes
-    const protectedPaths = ['/dashboard', '/composer', '/calendar', '/settings']
+    const protectedPaths = ['/dashboard', '/composer', '/calendar', '/settings', '/analytics', '/workflow', '/admin']
     const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-    if (isProtectedPath && !session) {
+    if (isProtectedPath && !user) {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/login'
         redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
@@ -50,7 +66,7 @@ export async function middleware(request: NextRequest) {
     const authPaths = ['/login', '/signup']
     const isAuthPath = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-    if (isAuthPath && session) {
+    if (isAuthPath && user) {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/dashboard'
         return NextResponse.redirect(redirectUrl)
@@ -58,11 +74,11 @@ export async function middleware(request: NextRequest) {
 
     // Admin route protection
     const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
-    if (isAdminPath && session) {
+    if (isAdminPath && user) {
         const { data: userData } = await supabase
             .from('users')
             .select('role, status')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .single()
 
         // Block banned users
@@ -87,6 +103,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        // API routes authorize themselves, so skip them here rather than
+        // paying an extra session round-trip on every request.
+        '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

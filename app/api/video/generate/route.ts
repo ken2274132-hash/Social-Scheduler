@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { errorResponse, clientError } from '@/lib/api'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 /**
@@ -92,9 +93,8 @@ export async function POST(request: NextRequest) {
             // Instructions for generating actual video (would need FFmpeg setup)
             note: 'For MP4 output, configure FFmpeg on your server or use Cloudinary/Remotion'
         })
-    } catch (error: any) {
-        console.error('Video generation error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'video/generate')
     }
 }
 
@@ -130,8 +130,7 @@ export async function GET(request: NextRequest) {
         if (error) throw error
 
         return NextResponse.json({ templates })
-    } catch (error: any) {
-        console.error('Get templates error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'video/generate')
     }
 }

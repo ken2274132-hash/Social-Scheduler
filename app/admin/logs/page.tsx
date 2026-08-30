@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/AdminLayout'
 import { AlertTriangle, RefreshCw, Instagram, Facebook } from 'lucide-react'
@@ -10,10 +11,8 @@ export default async function AdminLogsPage() {
     const supabase = await createClient()
 
     // Get session
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-        redirect('/login')
-    }
+    // Verifies the JWT and the super_admin role (and honours the dev bypass).
+    await requireSuperAdmin()
 
     // Fetch failed posts with related data
     const { data: failedPosts, error } = await supabase

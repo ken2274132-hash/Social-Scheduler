@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth'
+import { createOAuthState } from '@/lib/oauth-state'
+import { errorResponse, clientError } from '@/lib/api'
 
 /**
  * Pinterest OAuth - Step 1: Initiate
@@ -7,33 +9,32 @@ import { createClient } from '@/lib/supabase/server'
  */
 export async function GET(request: NextRequest) {
     try {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+        const { user } = await requireAuth()
 
         const clientId = process.env.PINTEREST_APP_ID
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || ''
+        if (!clientId) {
+            console.error('Missing PINTEREST_APP_ID')
+            return clientError('Pinterest is not configured.', 500)
+        }
+
+        const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin).replace(/\/$/, '')
         const redirectUri = `${baseUrl}/api/auth/callback/pinterest`
 
         // Pinterest scopes for reading/writing pins and boards
         const scopes = 'boards:read,boards:write,pins:read,pins:write,user_accounts:read'
 
-        // Encode user ID in state for callback
-        const state = Buffer.from(JSON.stringify({ userId: user.id })).toString('base64')
+        // Random nonce held in an httpOnly cookie, not a client-readable blob.
+        const nonce = await createOAuthState('pinterest', { userId: user.id })
 
-        const authUrl = `https://www.pinterest.com/oauth/?` +
-            `client_id=${clientId}&` +
-            `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-            `response_type=code&` +
-            `scope=${encodeURIComponent(scopes)}&` +
-            `state=${state}`
+        const authUrl = new URL('https://www.pinterest.com/oauth/')
+        authUrl.searchParams.set('client_id', clientId)
+        authUrl.searchParams.set('redirect_uri', redirectUri)
+        authUrl.searchParams.set('response_type', 'code')
+        authUrl.searchParams.set('scope', scopes)
+        authUrl.searchParams.set('state', nonce)
 
-        return NextResponse.redirect(authUrl)
-    } catch (error: any) {
-        console.error('Pinterest auth error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.redirect(authUrl.toString())
+    } catch (error) {
+        return errorResponse(error, 'pinterest/auth')
     }
 }

@@ -1,34 +1,26 @@
 'use client'
 
 import { Facebook } from 'lucide-react'
+import { useState } from 'react'
 
 export default function ConnectFacebookButton({ workspaceId }: { workspaceId: string }) {
+    const [loading, setLoading] = useState(false)
+
+    // The OAuth flow starts on the server so it can issue a CSRF nonce and
+    // resolve the workspace itself, rather than trusting the browser.
     const handleConnect = () => {
-        const metaAppId = process.env.NEXT_PUBLIC_META_APP_ID
-        const redirectUri = `${window.location.origin}/api/auth/callback/meta`
-
-        const scope = [
-            'pages_show_list',
-            'pages_read_engagement',
-            'pages_manage_posts',
-            'pages_read_user_content'
-        ].join(',')
-
-        // Include platform type in state for callback to differentiate
-        const state = btoa(JSON.stringify({ workspaceId, platform: 'facebook' }))
-
-        const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${metaAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`
-
-        window.location.href = authUrl
+        setLoading(true)
+        window.location.href = '/api/meta/auth?platform=facebook'
     }
 
     return (
         <button
             onClick={handleConnect}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#166FE5] transition-all font-medium"
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#166FE5] transition-all font-medium disabled:opacity-50"
         >
             <Facebook size={20} />
-            Connect Facebook
+            {loading ? 'Connecting...' : 'Connect Facebook'}
         </button>
     )
 }

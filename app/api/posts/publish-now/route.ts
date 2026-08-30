@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth'
 import { publishScheduledPosts } from '@/lib/posting-engine'
+import { errorResponse, clientError } from '@/lib/api'
+
+export const maxDuration = 60
 
 /**
  * Handle immediate publishing of a post
@@ -8,77 +11,73 @@ import { publishScheduledPosts } from '@/lib/posting-engine'
  */
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient()
+        const { user, db } = await requireAuth()
+
         const body = await request.json()
         const { postId, workspaceId } = body
 
         if (!postId || !workspaceId) {
-            return NextResponse.json({ error: 'Missing postId or workspaceId' }, { status: 400 })
+            return clientError('Missing postId or workspaceId', 400)
         }
 
         // 1. Verify user owns the workspace and the post
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const { data: workspace } = await supabase
+        const { data: workspace } = await db
             .from('workspaces')
             .select('id')
             .eq('id', workspaceId)
             .eq('owner_id', user.id)
-            .single()
+            .maybeSingle()
 
         if (!workspace) {
-            return NextResponse.json({ error: 'Workspace not found or access denied' }, { status: 403 })
+            return clientError('Workspace not found or access denied', 403)
         }
 
-        const { data: post, error: postError } = await supabase
+        const { data: post } = await db
             .from('posts')
-            .select('*')
+            .select('id')
             .eq('id', postId)
             .eq('workspace_id', workspaceId)
-            .single()
+            .maybeSingle()
 
-        if (postError || !post) {
-            return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+        if (!post) {
+            return clientError('Post not found', 404)
         }
 
-        // 2. Set post status to scheduled for NOW so the engine picks it up
-        // or just call the engine directly for this specific post.
-        // Let's modify the engine to optionally take a specific post ID.
-
-        // For now, we'll update the scheduled_at to the past and status to 'scheduled'
-        // and then trigger the engine.
-        await supabase
+        // 2. Mark it due so the engine picks it up
+        await db
             .from('posts')
             .update({
                 scheduled_at: new Date().toISOString(),
-                status: 'scheduled'
+                status: 'scheduled',
             })
             .eq('id', postId)
 
-        // Trigger the publishing logic
-        // We can import the same function used by the cron
-        await publishScheduledPosts()
+        // Publish only this post. Without the id the engine would process every
+        // due post across every workspace on this one request.
+        await publishScheduledPosts(postId)
 
-        // Check the final status of the post
-        const { data: finalPost } = await supabase
+        const { data: finalPost } = await db
             .from('posts')
             .select('status, error_message, platform_post_id')
             .eq('id', postId)
-            .single()
+            .maybeSingle()
 
         if (finalPost?.status === 'published') {
             return NextResponse.json({ success: true, platformPostId: finalPost.platform_post_id })
-        } else if (finalPost?.status === 'failed') {
-            return NextResponse.json({ success: false, error: finalPost.error_message }, { status: 500 })
-        } else {
-            return NextResponse.json({ success: true, message: 'Publishing started...' })
         }
 
-    } catch (error: any) {
-        console.error('Publish now error:', error)
-        return NextResponse.json({ error: error.message || 'Failed to publish now' }, { status: 500 })
+        if (finalPost?.status === 'failed') {
+            // This message comes from the social platform and is the actionable
+            // part for the user ("token expired", "image too small"), so it is
+            // deliberately passed through.
+            return NextResponse.json(
+                { success: false, error: finalPost.error_message || 'Publishing failed.' },
+                { status: 502 }
+            )
+        }
+
+        return NextResponse.json({ success: true, message: 'Publishing started...' })
+    } catch (error) {
+        return errorResponse(error, 'posts/publish-now')
     }
 }

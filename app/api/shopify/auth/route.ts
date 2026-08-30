@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '@/lib/auth'
+import { createOAuthState } from '@/lib/oauth-state'
+import { errorResponse, clientError } from '@/lib/api'
 
 /**
  * Shopify OAuth - Step 1: Initiate
@@ -7,22 +9,17 @@ import { createClient } from '@/lib/supabase/server'
  */
 export async function GET(request: NextRequest) {
     try {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+        const { user } = await requireAuth()
 
         const shopDomain = request.nextUrl.searchParams.get('shop')
         if (!shopDomain) {
-            return NextResponse.json({ error: 'Shop domain is required' }, { status: 400 })
+            return clientError('Shop domain is required', 400)
         }
 
         // Validate shop domain format
         const shopRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/
         if (!shopRegex.test(shopDomain)) {
-            return NextResponse.json({ error: 'Invalid shop domain format' }, { status: 400 })
+            return clientError('Invalid shop domain format', 400)
         }
 
         const apiKey = process.env.SHOPIFY_API_KEY
@@ -38,8 +35,8 @@ export async function GET(request: NextRequest) {
             }, { status: 500 })
         }
 
-        // Generate a nonce for security (store user ID for callback)
-        const state = Buffer.from(JSON.stringify({ userId: user.id })).toString('base64')
+        // Random nonce in an httpOnly cookie; Shopify only ever sees the nonce.
+        const state = await createOAuthState('shopify', { userId: user.id })
 
         const authUrl = `https://${shopDomain}/admin/oauth/authorize?` +
             `client_id=${apiKey}&` +
@@ -48,8 +45,7 @@ export async function GET(request: NextRequest) {
             `state=${state}`
 
         return NextResponse.redirect(authUrl)
-    } catch (error: any) {
-        console.error('Shopify auth error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'shopify/auth')
     }
 }

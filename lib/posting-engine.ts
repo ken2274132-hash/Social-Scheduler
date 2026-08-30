@@ -19,19 +19,32 @@ function getSupabaseClient() {
     )
 }
 
-export async function publishScheduledPosts() {
+/**
+ * Publishes due posts.
+ *
+ * Pass `onlyPostId` to publish exactly one post — the "publish now" endpoint
+ * uses this so a single user's click cannot publish other workspaces' posts.
+ */
+export async function publishScheduledPosts(onlyPostId?: string) {
     const supabase = getSupabaseClient()
     try {
         // Get posts that are scheduled for now or earlier
         const now = new Date().toISOString()
 
-        const { data: posts, error: fetchError } = await supabase
+        let query = supabase
             .from('posts')
             .select('*, social_accounts(*), media_assets(*)')
             .eq('status', 'scheduled')
-            .lte('scheduled_at', now)
+
+        if (onlyPostId) {
+            query = query.eq('id', onlyPostId)
+        } else {
+            query = query.lte('scheduled_at', now)
+        }
+
+        const { data: posts, error: fetchError } = await query
             .order('scheduled_at', { ascending: true })
-            .limit(10) // Process max 10 at a time
+            .limit(onlyPostId ? 1 : 25)
 
         if (fetchError || !posts || posts.length === 0) {
             return

@@ -71,7 +71,8 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
         } finally { setUploading(false) }
     }
 
-    const handleSelectAIImage = (imageUrl: string) => { setMediaPreview(imageUrl); setMediaFile(null); setMediaId(null); setShowAIStudio(false) }
+    // AI images arrive already stored, with a media_assets row id.
+    const handleSelectAIImage = (imageUrl: string, aiMediaId: string | null) => { setMediaPreview(imageUrl); setMediaFile(null); setMediaId(aiMediaId); setShowAIStudio(false) }
 
     const handleGenerateAI = async () => {
         if (!userInput.trim()) { toast.error('Please enter some content first'); return }
@@ -93,12 +94,6 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
         try {
             let currentMediaId = mediaId
             if (!currentMediaId && mediaFile) currentMediaId = await uploadMedia(mediaFile)
-            if (!currentMediaId && mediaPreview?.startsWith('http') && !mediaFile) {
-                const supabase = createClient()
-                const { data: asset, error: assetError } = await supabase.from('media_assets').insert({ workspace_id: workspaceId, url: mediaPreview, type: 'image', storage_path: 'ai-generated/' + Math.random().toString(36).substring(7) }).select().single()
-                if (assetError) throw assetError
-                currentMediaId = asset.id
-            }
             if (!currentMediaId) throw new Error('Media asset not ready')
             const scheduleResponse = await fetch('/api/posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId, socialAccountId: selectedAccount, caption, scheduledAt: new Date().toISOString(), mediaId: currentMediaId }) })
             const scheduleData = await scheduleResponse.json()
@@ -118,12 +113,6 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
         try {
             let currentMediaId = mediaId
             if (!currentMediaId && mediaFile) currentMediaId = await uploadMedia(mediaFile)
-            if (!currentMediaId && mediaPreview?.startsWith('http') && !mediaFile) {
-                const supabase = createClient()
-                const { data: asset, error: assetError } = await supabase.from('media_assets').insert({ workspace_id: workspaceId, url: mediaPreview, type: 'image', storage_path: 'ai-generated/' + Math.random().toString(36).substring(7) }).select().single()
-                if (assetError) throw assetError
-                currentMediaId = asset.id
-            }
             if (!currentMediaId) throw new Error('Media preparation failed')
             const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`)
             const response = await fetch('/api/posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId, socialAccountId: selectedAccount, caption, scheduledAt: scheduledAt.toISOString(), mediaId: currentMediaId }) })

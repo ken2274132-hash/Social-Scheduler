@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { consumeOAuthState } from '@/lib/oauth-state'
 
 /**
  * Pinterest OAuth - Step 2: Callback
@@ -24,16 +25,14 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // Decode state to get user ID
-        let userId: string
-        try {
-            const decoded = JSON.parse(Buffer.from(state, 'base64').toString())
-            userId = decoded.userId
-        } catch {
+        // Verify the nonce we issued when the flow started.
+        const stateData = await consumeOAuthState(request, 'pinterest', state)
+        if (!stateData) {
             return NextResponse.redirect(
                 `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=invalid_state`
             )
         }
+        const userId = stateData.userId
 
         const clientId = process.env.PINTEREST_APP_ID
         const clientSecret = process.env.PINTEREST_APP_SECRET
@@ -62,7 +61,7 @@ export async function GET(request: NextRequest) {
         if (tokenData.error || !tokenData.access_token) {
             console.error('Pinterest token exchange failed:', tokenData)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=token_exchange_failed&details=${encodeURIComponent(JSON.stringify(tokenData))}`
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=token_exchange_failed`
             )
         }
 
@@ -104,7 +103,9 @@ export async function GET(request: NextRequest) {
             .from('workspaces')
             .select('id')
             .eq('owner_id', authUser.id)
-            .single()
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
 
         if (workspaceError || !workspace) {
             return NextResponse.redirect(
@@ -131,15 +132,9 @@ export async function GET(request: NextRequest) {
             })
 
         if (upsertError) {
-            console.error('Pinterest save error - FULL DETAILS:', {
-                code: upsertError.code,
-                message: upsertError.message,
-                details: upsertError.details,
-                hint: upsertError.hint,
-                fullError: JSON.stringify(upsertError, null, 2)
-            })
+            console.error('Pinterest save error:', upsertError)
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=save_failed&msg=${encodeURIComponent(upsertError.message)}`
+                `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=save_failed`
             )
         }
 
@@ -149,7 +144,7 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
         console.error('Pinterest callback critical error:', error)
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=callback_error&details=${encodeURIComponent(error.message)}`
+            `${process.env.NEXT_PUBLIC_APP_URL}/settings?error=callback_error`
         )
     }
 }

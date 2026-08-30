@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdmin } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import AdminLayout from '@/components/AdminLayout'
 import { Users, FileText, AlertTriangle, HardDrive } from 'lucide-react'
@@ -10,10 +11,8 @@ export default async function AdminDashboard() {
     const supabase = await createClient()
 
     // Get session
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-        redirect('/login')
-    }
+    // Verifies the JWT and the super_admin role (and honours the dev bypass).
+    await requireSuperAdmin()
 
     // ... stats will use service role in API route
     // For now, fetch basic counts

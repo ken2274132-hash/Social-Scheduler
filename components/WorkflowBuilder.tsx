@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2, X, Sparkles, Wand2 } from 'lucide-react'
 import Image from 'next/image'
 import AIImageStudio from './AIImageStudio'
+import { createClient } from '@/lib/supabase/client'
 
 type Product = {
     id: string
@@ -92,22 +93,22 @@ export default function WorkflowBuilder({
 
         setUploading(true)
         try {
-            // Ideally, we'd use the same Supabase upload logic as ComposerForm
-            // For now, staying consistent with the existing helper API if it exists
-            const formData = new FormData()
-            formData.append('file', file)
+            const supabase = createClient()
+            const fileExt = file.name.split('.').pop()
+            // First path segment must be the workspace id for the storage policy.
+            const filePath = `${workspaceId}/workflow/${crypto.randomUUID()}.${fileExt}`
 
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            })
+            const { error: uploadError } = await supabase.storage
+                .from('media')
+                .upload(filePath, file)
 
-            if (res.ok) {
-                const data = await res.json()
-                setManualImage(data.url)
-            }
-        } catch (error) {
+            if (uploadError) throw uploadError
+
+            const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath)
+            setManualImage(publicUrl)
+        } catch (error: any) {
             console.error('Upload failed:', error)
+            alert('Could not upload that image: ' + (error?.message || 'please try again'))
         } finally {
             setUploading(false)
         }
@@ -182,6 +183,11 @@ export default function WorkflowBuilder({
             alert('Please add at least one item')
             return
         }
+        const missingImage = scheduledItems.find(s => !s.item.image)
+        if (missingImage) {
+            alert(`"${missingImage.item.title}" has no image. Every post needs one.`)
+            return
+        }
 
         setCreating(true)
         try {
@@ -201,7 +207,8 @@ export default function WorkflowBuilder({
                 })
 
                 if (!res.ok) {
-                    throw new Error('Failed to create post')
+                    const data = await res.json().catch(() => ({}))
+                    throw new Error(data.error || `Failed to schedule "${scheduled.item.title}"`)
                 }
             }
 

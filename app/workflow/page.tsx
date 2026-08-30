@@ -1,6 +1,7 @@
 import DashboardLayout from '@/components/DashboardLayout'
 import WorkflowBuilder from '@/components/WorkflowBuilder'
 import { getWorkspace } from '@/lib/get-workspace'
+import { SOCIAL_ACCOUNT_PUBLIC_COLUMNS } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +11,7 @@ export default async function WorkflowPage() {
     // Get connected social accounts
     const { data: socialAccounts } = await supabase
         .from('social_accounts')
-        .select('*')
+        .select(SOCIAL_ACCOUNT_PUBLIC_COLUMNS)
         .eq('workspace_id', workspace?.id || '')
         .eq('is_active', true)
 

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import DashboardLayout from '@/components/DashboardLayout'
 import DashboardFilters from '@/components/DashboardFilters'
 import { getWorkspace } from '@/lib/get-workspace'
+import { SOCIAL_ACCOUNT_EMBED } from '@/lib/api'
 
 const platformStyles: Record<string, string> = {
     instagram: 'bg-gradient-to-br from-purple-500 to-pink-500',
@@ -32,7 +33,7 @@ export default async function DashboardPage(props: {
     // Build posts query
     let postsQuery = supabase
         .from('posts')
-        .select('*, social_accounts(*), media_assets(*)', { count: 'exact' })
+        .select(`*, ${SOCIAL_ACCOUNT_EMBED}, media_assets(*)`, { count: 'exact' })
         .eq('workspace_id', wid)
 
     if (search) {

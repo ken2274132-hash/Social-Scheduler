@@ -1,8 +1,6 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '@/components/AdminLayout'
 import { Shield, Ban, Eye, Save, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -17,11 +15,7 @@ export default function AdminUsersPage() {
     const supabase = createClient()
     const router = useRouter()
 
-    useEffect(() => {
-        fetchUsers()
-    }, [])
-
-    async function fetchUsers() {
+    const fetchUsers = useCallback(async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession()
             if (!session) {
@@ -50,7 +44,7 @@ export default function AdminUsersPage() {
                 }
             })
 
-            setUsers(userData?.map(u => ({
+            setUsers(userData?.map((u: any) => ({
                 ...u,
                 usage: usageMap[u.id] || 0
             })) || [])
@@ -59,7 +53,11 @@ export default function AdminUsersPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [router, supabase])
+
+    useEffect(() => {
+        fetchUsers()
+    }, [fetchUsers])
 
     async function updateStatusAndRole(userId: string, updates: { status?: string, role?: string }) {
         setUpdating(userId)

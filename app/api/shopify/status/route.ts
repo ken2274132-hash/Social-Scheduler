@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { errorResponse, clientError } from '@/lib/api'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 /**
@@ -45,9 +46,8 @@ export async function GET() {
             shopDomain: shopifyAccount.shop_domain,
             connectedAt: shopifyAccount.created_at,
         })
-    } catch (error: any) {
-        console.error('Shopify status error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'shopify/status')
     }
 }
 
@@ -88,8 +88,7 @@ export async function DELETE() {
         }
 
         return NextResponse.json({ success: true })
-    } catch (error: any) {
-        console.error('Shopify disconnect error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error) {
+        return errorResponse(error, 'shopify/status')
     }
 }

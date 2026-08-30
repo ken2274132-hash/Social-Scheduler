@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { Wand2, Loader2, Image as ImageIcon, Sparkles, AlertCircle, RefreshCw } from 'lucide-react'
 
 interface AIImageStudioProps {
-    onSelect: (imageUrl: string) => void
+    onSelect: (imageUrl: string, mediaId: string | null) => void
     onClose: () => void
     workspaceId: string
 }
@@ -16,6 +17,7 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
     const [error, setError] = useState<string | null>(null)
     const [imageReady, setImageReady] = useState(false)
     const [provider, setProvider] = useState<string | null>(null)
+    const [mediaId, setMediaId] = useState<string | null>(null)
     const retryCount = useRef(0)
     const maxRetries = 3
 
@@ -26,6 +28,7 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
         setResultUrl(null)
         setImageReady(false)
         setProvider(null)
+        setMediaId(null)
         retryCount.current = 0
 
         try {
@@ -43,9 +46,10 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
             }
 
             if (data.imageUrl) {
-                console.log('Got image data URL (base64), provider:', data.provider)
-                // Image is already fetched by the server as base64
+                // The API stores the image and returns a public URL plus the
+                // media_assets row id, so it can be scheduled directly.
                 setResultUrl(data.imageUrl)
+                setMediaId(data.mediaId ?? null)
                 setProvider(data.provider || 'ai')
                 setImageReady(true)
                 setLoading(false)
@@ -152,13 +156,14 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                         </div>
                     ) : resultUrl ? (
                         <>
-                            {/* Hidden img to preload */}
-                            <img
+                            <Image
                                 src={resultUrl}
-                                alt="AI Generated"
+                                alt="AI generated image"
+                                fill
+                                unoptimized
                                 onLoad={handleImageLoad}
                                 onError={handleImageError}
-                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${imageReady ? 'opacity-100' : 'opacity-0'}`}
+                                className={`object-cover transition-opacity duration-500 ${imageReady ? 'opacity-100' : 'opacity-0'}`}
                             />
 
                             {/* Loading overlay while image loads */}
@@ -185,7 +190,7 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                             {imageReady && (
                                 <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center flex-col gap-3">
                                     <button
-                                        onClick={() => onSelect(resultUrl)}
+                                        onClick={() => onSelect(resultUrl, mediaId)}
                                         className="px-6 py-3 bg-white text-gray-900 rounded-xl font-bold uppercase tracking-wider text-xs hover:scale-105 transition-transform shadow-xl"
                                     >
                                         Use This Image

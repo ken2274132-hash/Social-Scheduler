@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/DashboardLayout'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { getWorkspace } from '@/lib/get-workspace'
+import { SOCIAL_ACCOUNT_EMBED } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export default async function CalendarPage() {
     // Get posts for this workspace
     const { data: posts } = await supabase
         .from('posts')
-        .select('*, social_accounts(*), media_assets(*)')
+        .select(`*, ${SOCIAL_ACCOUNT_EMBED}, media_assets(*)`)
         .eq('workspace_id', workspace.id)
         .gte('scheduled_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
         .order('scheduled_at', { ascending: true })
