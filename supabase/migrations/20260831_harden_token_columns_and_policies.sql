@@ -14,8 +14,41 @@
 -- the tokens to publish) bypasses these grants entirely and is unaffected.
 -- =============================================================
 
-REVOKE SELECT (access_token, refresh_token) ON public.social_accounts FROM anon, authenticated;
-REVOKE SELECT (access_token) ON public.shopify_accounts FROM anon, authenticated;
+-- NOTE (corrected 2026-09-01): a column-level REVOKE is silently useless while
+-- the role still holds table-level SELECT — Postgres takes the union of the
+-- two, so the statement succeeds and changes nothing. Supabase grants
+-- `ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated` by default, so
+-- that was exactly the situation here. The table-level grant has to go first,
+-- and SELECT is then handed back column by column.
+--
+-- Done dynamically so the column list cannot drift out of sync with the table.
+-- Consequence to remember: a column added later is NOT readable by anon or
+-- authenticated until this block is re-run. That fails safe, but it fails.
+
+DO $$
+DECLARE
+    cols text;
+BEGIN
+    SELECT string_agg(quote_ident(column_name), ', ')
+      INTO cols
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'social_accounts'
+       AND column_name NOT IN ('access_token', 'refresh_token');
+
+    EXECUTE 'REVOKE SELECT ON public.social_accounts FROM anon, authenticated';
+    EXECUTE format('GRANT SELECT (%s) ON public.social_accounts TO anon, authenticated', cols);
+
+    SELECT string_agg(quote_ident(column_name), ', ')
+      INTO cols
+      FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'shopify_accounts'
+       AND column_name <> 'access_token';
+
+    EXECUTE 'REVOKE SELECT ON public.shopify_accounts FROM anon, authenticated';
+    EXECUTE format('GRANT SELECT (%s) ON public.shopify_accounts TO anon, authenticated', cols);
+END $$;
 
 -- The OAuth callbacks still need to WRITE tokens as the signed-in user.
 -- Those are separate privileges and stay in place.

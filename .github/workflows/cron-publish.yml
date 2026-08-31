@@ -1,0 +1,60 @@
+name: Publish scheduled posts
+
+# Calls /api/cron/publish, which publishes any post whose scheduled time has
+# passed. Vercel's Hobby plan only runs its own cron roughly once a day, which
+# is useless for a scheduler, so the trigger lives here instead.
+#
+# Setup — repository Settings → Secrets and variables → Actions:
+#   CRON_SECRET  same value as the CRON_SECRET env var in Vercel
+#   APP_URL      https://your-domain.com   (no trailing slash)
+#
+# Caveat worth knowing: GitHub's scheduled workflows are best-effort. They are
+# regularly delayed by 5-15 minutes under load, occasionally skipped, and are
+# disabled automatically after 60 days without repository activity. For a
+# product whose whole promise is posting on time, treat this as the backup and
+# point a dedicated cron service (cron-job.org, for one) at the same URL as the
+# primary trigger. Publishing is idempotent per post, so both running is fine.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+# A slow run should never stack up behind the next tick.
+concurrency:
+  group: publish-cron
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger the publish run
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CRON_SECRET:-}" ] || [ -z "${APP_URL:-}" ]; then
+            echo "::error::CRON_SECRET and APP_URL must both be set as repository secrets."
+            exit 1
+          fi
+
+          status=$(curl --silent --show-error --location \
+            --max-time 120 \
+            --output response.txt \
+            --write-out '%{http_code}' \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL}/api/cron/publish")
+
+          echo "HTTP ${status}"
+          echo "--- response ---"
+          cat response.txt || true
+          echo
+
+          if [ "${status}" != "200" ]; then
+            echo "::error::Publish cron returned ${status}. 401 means CRON_SECRET does not match Vercel."
+            exit 1
+          fi
