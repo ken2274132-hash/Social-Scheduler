@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2, X, Sparkles, Wand2 } from 'lucide-react'
+import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2, X, Sparkles, Wand2, FileText } from 'lucide-react'
 import Image from 'next/image'
 import AIImageStudio from './AIImageStudio'
 import { createClient } from '@/lib/supabase/client'
@@ -19,6 +19,15 @@ type ContentItem = {
     title: string
     image: string | null
     caption: string
+}
+
+type BlogPost = {
+    id: string
+    title: string
+    excerpt: string
+    url: string
+    date: string
+    image: string | null
 }
 
 type ScheduledItem = {
@@ -44,6 +53,8 @@ export default function WorkflowBuilder({
     const [manualItems, setManualItems] = useState<ContentItem[]>([])
     const [loading, setLoading] = useState(true)
     const [shopifyConnected, setShopifyConnected] = useState(false)
+    const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
+    const [wordpressConnected, setWordpressConnected] = useState(false)
     const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([])
     const [selectedAccount, setSelectedAccount] = useState<string>('')
     const [startDate, setStartDate] = useState(() => {
@@ -55,7 +66,7 @@ export default function WorkflowBuilder({
     const [interval, setInterval] = useState<'daily' | 'every2days' | 'weekly'>('daily')
     const [creating, setCreating] = useState(false)
     const [showItemPicker, setShowItemPicker] = useState(false)
-    const [activeTab, setActiveTab] = useState<'upload' | 'shopify' | 'ai'>('upload')
+    const [activeTab, setActiveTab] = useState<'upload' | 'shopify' | 'wordpress' | 'ai'>('upload')
     const [showManualForm, setShowManualForm] = useState(false)
     const [manualTitle, setManualTitle] = useState('')
     const [manualCaption, setManualCaption] = useState('')
@@ -67,6 +78,7 @@ export default function WorkflowBuilder({
 
     useEffect(() => {
         fetchProducts()
+        fetchBlogPosts()
     }, [])
 
     const fetchProducts = async () => {
@@ -84,6 +96,22 @@ export default function WorkflowBuilder({
             console.error('Failed to fetch products:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchBlogPosts = async () => {
+        try {
+            const res = await fetch('/api/wordpress/posts')
+            const data = await res.json()
+
+            if (data.connected && Array.isArray(data.posts)) {
+                setWordpressConnected(true)
+                setBlogPosts(data.posts)
+            } else {
+                setWordpressConnected(false)
+            }
+        } catch (error) {
+            console.error('Failed to fetch blog posts:', error)
         }
     }
 
@@ -160,6 +188,27 @@ export default function WorkflowBuilder({
             title: product.title,
             image: product.image,
             caption: `${product.title}\n\n🛒 Shop now: ${product.url}\n\n#shopify #product #sale`
+        }
+        addItemToSchedule(contentItem)
+    }
+
+    /**
+     * A blog post becomes a social post: the headline leads, the excerpt gives
+     * the hook, and the link sends people to the article. Trimmed to something
+     * that survives Instagram's caption limit; the AI step can rewrite it.
+     */
+    const addBlogPostToSchedule = (post: BlogPost) => {
+        const hook = post.excerpt.length > 180
+            ? `${post.excerpt.slice(0, 180).trimEnd()}…`
+            : post.excerpt
+
+        const contentItem: ContentItem = {
+            id: `wp-${post.id}`,
+            title: post.title,
+            image: post.image,
+            caption: [post.title, hook, `Read more: ${post.url}`]
+                .filter(Boolean)
+                .join('\n\n')
         }
         addItemToSchedule(contentItem)
     }
@@ -487,6 +536,7 @@ export default function WorkflowBuilder({
                                 <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
                                     <button onClick={() => setActiveTab('upload')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Upload</button>
                                     {shopifyConnected && <button onClick={() => setActiveTab('shopify')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'shopify' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Shopify</button>}
+                                    {wordpressConnected && <button onClick={() => setActiveTab('wordpress')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'wordpress' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Blog</button>}
                                     <button onClick={() => setActiveTab('ai')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>AI Studio</button>
                                 </div>
                             </div>
@@ -562,6 +612,43 @@ export default function WorkflowBuilder({
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">Import Product</span>
                                             </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {activeTab === 'wordpress' && (
+                                <div className="flex flex-col gap-2">
+                                    {blogPosts.length === 0 && (
+                                        <p className="text-sm text-slate-500 py-8 text-center">
+                                            No published posts found on your site yet.
+                                        </p>
+                                    )}
+                                    {blogPosts.map((post) => (
+                                        <button
+                                            key={post.id}
+                                            onClick={() => addBlogPostToSchedule(post)}
+                                            className="group flex items-center gap-4 p-3 text-left rounded-xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all"
+                                        >
+                                            <div className="relative w-16 h-16 flex-none rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
+                                                {post.image ? (
+                                                    <Image src={post.image} alt="" fill className="object-cover" unoptimized />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <FileText size={20} className="text-slate-300" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{post.title}</p>
+                                                <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{post.excerpt}</p>
+                                                <p className="text-[10px] text-slate-400 mt-1">
+                                                    {new Date(post.date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex-none">
+                                                Repurpose
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
