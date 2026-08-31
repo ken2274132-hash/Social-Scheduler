@@ -14,6 +14,7 @@ const platformConfig: Record<string, { bg: string; icon: string }> = {
     facebook: { bg: 'bg-blue-600', icon: '👤' },
     pinterest: { bg: 'bg-red-600', icon: '📌' },
     twitter: { bg: 'bg-sky-500', icon: '🐦' },
+    wordpress: { bg: 'bg-[#21759B]', icon: '📝' },
 }
 
 type SocialAccount = { id: string; platform: string; account_name: string | null }

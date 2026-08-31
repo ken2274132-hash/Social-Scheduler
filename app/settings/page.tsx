@@ -1,6 +1,7 @@
 import ConnectInstagramButton from '@/components/ConnectInstagramButton'
 import ConnectFacebookButton from '@/components/ConnectFacebookButton'
 import ConnectPinterestButton from '@/components/ConnectPinterestButton'
+import ConnectWordPressButton from '@/components/ConnectWordPressButton'
 import ConnectShopifyButton from '@/components/ConnectShopifyButton'
 import ConnectedAccounts from '@/components/ConnectedAccounts'
 import ShopifyStatus from '@/components/ShopifyStatus'
@@ -149,6 +150,7 @@ export default async function SettingsPage({
                                 <ConnectInstagramButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectFacebookButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectPinterestButton workspaceId={currentWorkspace?.id || 'default'} />
+                                <ConnectWordPressButton workspaceId={currentWorkspace?.id || 'default'} />
                             </div>
                         </div>
                     </div>

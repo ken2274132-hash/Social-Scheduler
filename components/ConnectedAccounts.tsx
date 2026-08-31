@@ -1,6 +1,6 @@
 'use client'
 
-import { Instagram, Facebook, Trash2 } from 'lucide-react'
+import { Instagram, Facebook, Globe, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
@@ -53,6 +53,13 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
                 </div>
             )
         }
+        if (platform === 'wordpress') {
+            return (
+                <div className="w-12 h-12 rounded-full bg-[#21759B] flex items-center justify-center text-white">
+                    <Globe size={24} />
+                </div>
+            )
+        }
         return (
             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white">
                 <Instagram size={24} />
@@ -63,6 +70,7 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
     const getPlatformLabel = (platform: string) => {
         if (platform === 'facebook') return 'Facebook Page'
         if (platform === 'pinterest') return 'Pinterest Account'
+        if (platform === 'wordpress') return 'WordPress Site'
         return 'Instagram Account'
     }
 
