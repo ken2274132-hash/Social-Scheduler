@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { requireAuth } from '@/lib/auth'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY
 
@@ -58,6 +59,9 @@ async function generateWithPollinations(prompt: string, width: number, height: n
 export async function POST(request: NextRequest) {
     try {
         const { user, db } = await requireAuth()
+
+        const limited = await enforceRateLimit(request, 'ai', user.id)
+        if (limited) return limited
 
         const body = await request.json()
         const { prompt, workspaceId, size = '1024x1024' } = body

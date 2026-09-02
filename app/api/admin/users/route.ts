@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 const ALLOWED_STATUSES = ['active', 'banned', 'suspended']
 const ALLOWED_ROLES = ['user', 'super_admin']
@@ -10,6 +11,9 @@ export async function PATCH(request: Request) {
         // getUser() revalidates the JWT. getSession() only decodes the cookie,
         // which is not safe to base an admin check on.
         const { user, db } = await requireAuth()
+
+        const limited = await enforceRateLimit(request, 'read', user.id)
+        if (limited) return limited
 
         const { data: adminUser } = await db
             .from('users')

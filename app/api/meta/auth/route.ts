@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { createOAuthState } from '@/lib/oauth-state'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 /**
  * Meta OAuth - Step 1: Initiate
@@ -29,6 +30,9 @@ const SCOPES: Record<string, string[]> = {
 
 export async function GET(request: NextRequest) {
     try {
+        const limited = await enforceRateLimit(request, 'oauth')
+        if (limited) return limited
+
         const { user, db } = await requireAuth()
 
         const platform = request.nextUrl.searchParams.get('platform') || 'instagram'

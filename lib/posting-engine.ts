@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { ensureFreshToken, RECONNECT_REQUIRED } from './token-refresh'
+import { pinterestApiBaseUrl } from './pinterest'
 
 /**
  * Instagram Auto-Posting Function
@@ -65,36 +67,27 @@ export async function publishScheduledPosts(onlyPostId?: string) {
                     details: { timestamp: new Date().toISOString() },
                 })
 
-                // Check if token is expired
-                if (post.social_accounts.token_expires_at) {
-                    const expiresAt = new Date(post.social_accounts.token_expires_at)
-                    if (expiresAt < new Date()) {
-                        throw new Error('Social account token expired. Please reconnect.')
-                    }
+                // Renew the token if it is at or near expiry. A refresh that
+                // cannot be recovered marks the account inactive and returns
+                // null — that fails this post only, the run continues.
+                const accessToken = await ensureFreshToken(post.social_accounts)
+
+                if (!accessToken) {
+                    throw new Error(
+                        `${post.social_accounts.platform} authorisation could not be renewed. ${RECONNECT_REQUIRED}.`
+                    )
                 }
 
                 // Route by platform
                 let result;
                 if (post.social_accounts.platform === 'facebook') {
-                    result = await publishToFacebook(
-                        post,
-                        post.social_accounts.access_token
-                    )
+                    result = await publishToFacebook(post, accessToken)
                 } else if (post.social_accounts.platform === 'pinterest') {
-                    result = await publishToPinterest(
-                        post,
-                        post.social_accounts.access_token
-                    )
+                    result = await publishToPinterest(post, accessToken)
                 } else if (post.social_accounts.platform === 'wordpress') {
-                    result = await publishToWordPress(
-                        post,
-                        post.social_accounts.access_token
-                    )
+                    result = await publishToWordPress(post, accessToken)
                 } else {
-                    result = await publishToInstagram(
-                        post,
-                        post.social_accounts.access_token
-                    )
+                    result = await publishToInstagram(post, accessToken)
                 }
 
                 if (result.success) {
@@ -350,8 +343,7 @@ async function publishToPinterest(post: any, accessToken: string) {
             pinPayload.board_id = post.pinterest_board_id
         }
 
-        // Use sandbox for trial apps, production for approved apps
-        const apiBaseUrl = process.env.PINTEREST_API_BASE_URL || 'https://api-sandbox.pinterest.com'
+        const apiBaseUrl = pinterestApiBaseUrl()
         const pinResponse = await fetch(`${apiBaseUrl}/v5/pins`, {
             method: 'POST',
             headers: {

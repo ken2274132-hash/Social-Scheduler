@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { errorResponse } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { wpHeaders } from '@/lib/wordpress'
 
@@ -35,6 +36,9 @@ function toPlainText(html: string): string {
 export async function GET(request: NextRequest) {
     try {
         const { user, db } = await requireAuth()
+
+        const limited = await enforceRateLimit(request, 'read', user.id)
+        if (limited) return limited
 
         const { data: workspace } = await db
             .from('workspaces')

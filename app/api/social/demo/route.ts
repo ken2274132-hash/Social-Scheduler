@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 /**
  * API Route to create a simulation/demo Instagram account
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
         // Verify ownership
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return clientError('Unauthorized', 401)
+
+        const limited = await enforceRateLimit(request, 'read', user.id)
+        if (limited) return limited
 
         // Get user's workspace (create if doesn't exist)
         let { data: workspace } = await supabase

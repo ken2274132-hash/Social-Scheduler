@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { consumeOAuthState } from '@/lib/oauth-state'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 /**
  * Shopify OAuth - Step 2: Callback
@@ -38,6 +39,9 @@ export async function GET(request: NextRequest) {
         NextResponse.redirect(`${request.nextUrl.origin}/settings?error=${reason}`)
 
     try {
+        const limited = await enforceRateLimit(request, 'oauth')
+        if (limited) return limited
+
         const code = request.nextUrl.searchParams.get('code')
         const shop = request.nextUrl.searchParams.get('shop')
         const state = request.nextUrl.searchParams.get('state')

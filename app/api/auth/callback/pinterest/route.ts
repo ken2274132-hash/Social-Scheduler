@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { consumeOAuthState } from '@/lib/oauth-state'
+import { enforceRateLimit } from '@/lib/rate-limit'
+import { pinterestApiBaseUrl } from '@/lib/pinterest'
 
 /**
  * Pinterest OAuth - Step 2: Callback
@@ -8,6 +10,9 @@ import { consumeOAuthState } from '@/lib/oauth-state'
  */
 export async function GET(request: NextRequest) {
     try {
+        const limited = await enforceRateLimit(request, 'oauth')
+        if (limited) return limited
+
         const code = request.nextUrl.searchParams.get('code')
         const state = request.nextUrl.searchParams.get('state')
         const error = request.nextUrl.searchParams.get('error')
@@ -41,7 +46,7 @@ export async function GET(request: NextRequest) {
 
         // Exchange code for access token
         const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
-        const apiBaseUrl = process.env.PINTEREST_API_BASE_URL || 'https://api.pinterest.com'
+        const apiBaseUrl = pinterestApiBaseUrl()
 
         const tokenResponse = await fetch(`${apiBaseUrl}/v5/oauth/token`, {
             method: 'POST',

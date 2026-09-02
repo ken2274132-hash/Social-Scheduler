@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 import {
     WordPressError,
     resolveSiteUrl,
@@ -21,6 +22,10 @@ const TIMEOUT_MS = 10_000
 
 export async function POST(request: NextRequest) {
     try {
+        // Credential-checking route: limit by IP, same as the OAuth flows.
+        const limited = await enforceRateLimit(request, 'oauth')
+        if (limited) return limited
+
         const { user, db } = await requireAuth()
 
         const body = await request.json().catch(() => null)

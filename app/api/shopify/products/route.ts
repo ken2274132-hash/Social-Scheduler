@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 /**
@@ -14,6 +15,9 @@ export async function GET(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+
+        const limited = await enforceRateLimit(request, 'read', user.id)
+        if (limited) return limited
 
         // Get user's workspace
         const { data: workspace } = await supabase

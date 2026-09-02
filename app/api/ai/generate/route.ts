@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { requireAuth } from '@/lib/auth'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 /**
  * Models are tried in order. Groq retires models with little notice, so a
@@ -20,6 +21,9 @@ const MAX_INPUT_CHARS = 4000
 export async function POST(request: NextRequest) {
     try {
         const { user, db } = await requireAuth()
+
+        const limited = await enforceRateLimit(request, 'ai', user.id)
+        if (limited) return limited
 
         const body = await request.json()
         const { userInput, workspaceId } = body

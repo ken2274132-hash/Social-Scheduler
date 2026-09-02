@@ -7,3 +7,15 @@ node_modules
 *.tsbuildinfo
 next-env.d.ts
 .next-prod
+
+# Local database dumps (see docs/BACKUPS.md) -- never commit these
+backups/
+
+# Cloudflare / OpenNext build output
+.open-next/
+.wrangler/
+cloudflare-env.d.ts
+
+# Wrangler local secrets — never commit
+.dev.vars
+.dev.vars.*

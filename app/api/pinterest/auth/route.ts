@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { createOAuthState } from '@/lib/oauth-state'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 
 /**
  * Pinterest OAuth - Step 1: Initiate
@@ -9,6 +10,9 @@ import { errorResponse, clientError } from '@/lib/api'
  */
 export async function GET(request: NextRequest) {
     try {
+        const limited = await enforceRateLimit(request, 'oauth')
+        if (limited) return limited
+
         const { user } = await requireAuth()
 
         const clientId = process.env.PINTEREST_APP_ID

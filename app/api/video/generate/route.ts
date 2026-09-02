@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { errorResponse, clientError } from '@/lib/api'
+import { enforceRateLimit } from '@/lib/rate-limit'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 /**
@@ -16,6 +17,9 @@ export async function POST(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+
+        const limited = await enforceRateLimit(request, 'ai', user.id)
+        if (limited) return limited
 
         const body = await request.json()
         const {
@@ -109,6 +113,10 @@ export async function GET(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+
+        // Listing templates is a plain read, not a generation.
+        const limited = await enforceRateLimit(request, 'read', user.id)
+        if (limited) return limited
 
         const { data: workspace } = await supabase
             .from('workspaces')
