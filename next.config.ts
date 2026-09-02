@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
     // Lets a production build be made without clobbering the dev server's .next
     distDir: process.env.NEXT_DIST_DIR || '.next',
     images: {
+        // Cloudflare Workers cannot run Next's own image optimizer. Serving
+        // the originals keeps the deploy on the free plan; the alternative is
+        // a Cloudflare Images binding, which is billed. remotePatterns is
+        // still required — it is what allows these hosts at all.
+        unoptimized: true,
         remotePatterns: [
             {
                 protocol: 'https',

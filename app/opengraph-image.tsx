@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og'
 
-export const runtime = 'edge'
+// No `runtime = 'edge'`: OpenNext cannot bundle edge-runtime routes into the
+// main Worker, and next/og works fine on the default runtime here — icon.tsx
+// and apple-icon.tsx have always rendered this way.
 export const alt = 'Social Media Scheduler — AI-powered auto posting for Instagram, Facebook and Pinterest'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
