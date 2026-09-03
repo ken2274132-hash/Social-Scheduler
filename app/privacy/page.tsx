@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-    title: 'Privacy Policy | Social Scheduler',
-    description: 'Privacy Policy for Social Scheduler App',
+    title: 'Privacy Policy | Feedquill',
+    description: 'Privacy Policy for Feedquill App',
 }
 
 export default function PrivacyPolicyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">1. Introduction</h2>
                         <p>
-                            Welcome to Social Scheduler ("we," "our," or "us"). We are committed to protecting your privacy
+                            Welcome to Feedquill ("we," "our," or "us"). We are committed to protecting your privacy
                             and personal information. This Privacy Policy explains how we collect, use, disclose, and
                             safeguard your information when you use our social media scheduling application.
                         </p>

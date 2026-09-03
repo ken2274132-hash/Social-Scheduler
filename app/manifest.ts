@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Social Media Scheduler',
+        name: 'Feedquill',
         short_name: 'SMS',
         description: 'AI-Powered Social Media Auto Posting',
         start_url: '/',

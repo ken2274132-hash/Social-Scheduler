@@ -1,6 +1,6 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "social-scheduler",
+    "name": "feedquill",
     // Custom entry point: re-exports the adapter's fetch handler and adds the
     // scheduled handler that drives the publish cron. See worker.ts.
     "main": "worker.ts",

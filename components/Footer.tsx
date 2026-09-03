@@ -13,7 +13,7 @@ export default function Footer() {
                             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">
                                 SM
                             </div>
-                            Social Scheduler
+                            Feedquill
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             Automate your social media presence with AI-powered content generation and scheduling.
@@ -90,7 +90,7 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                        <p>&copy; {currentYear} Social Media Scheduler. All rights reserved.</p>
+                        <p>&copy; {currentYear} Feedquill. All rights reserved.</p>
                         <div className="flex gap-6">
                             <a
                                 href="https://twitter.com"

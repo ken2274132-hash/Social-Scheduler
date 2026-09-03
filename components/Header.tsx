@@ -18,7 +18,7 @@ export default function Header({ user }: { user: User | null }) {
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">
                             SM
                         </div>
-                        Social Scheduler
+                        Feedquill
                     </Link>
 
                     {/* Desktop Navigation */}

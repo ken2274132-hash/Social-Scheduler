@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-    title: 'Data Deletion | Social Scheduler',
-    description: 'How to delete your data from Social Scheduler',
+    title: 'Data Deletion | Feedquill',
+    description: 'How to delete your data from Feedquill',
 }
 
 export default function DataDeletionPage() {
@@ -26,7 +26,7 @@ export default function DataDeletionPage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">How to Delete Your Data</h2>
                         <p>
-                            At Social Scheduler, we respect your right to control your personal data.
+                            At Feedquill, we respect your right to control your personal data.
                             You can request deletion of your data at any time using the methods described below.
                         </p>
                     </section>
@@ -34,7 +34,7 @@ export default function DataDeletionPage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Option 1: Delete from Your Account Settings</h2>
                         <ol className="list-decimal pl-6 space-y-3">
-                            <li>Log in to your Social Scheduler account</li>
+                            <li>Log in to your Feedquill account</li>
                             <li>Navigate to <strong>Settings</strong></li>
                             <li>Scroll down to the <strong>Account</strong> section</li>
                             <li>Click on <strong>"Delete Account"</strong></li>
@@ -50,7 +50,7 @@ export default function DataDeletionPage() {
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Option 2: Disconnect Social Media Accounts</h2>
                         <p>If you only want to remove your connected social media accounts:</p>
                         <ol className="list-decimal pl-6 space-y-3 mt-2">
-                            <li>Log in to your Social Scheduler account</li>
+                            <li>Log in to your Feedquill account</li>
                             <li>Go to <strong>Settings</strong> → <strong>Connected Accounts</strong></li>
                             <li>Click the <strong>disconnect</strong> button next to each account</li>
                             <li>Your social media tokens and profile data will be immediately deleted</li>
@@ -107,7 +107,7 @@ export default function DataDeletionPage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Facebook/Instagram Data</h2>
                         <p>
-                            When you disconnect your Facebook or Instagram account from Social Scheduler:
+                            When you disconnect your Facebook or Instagram account from Feedquill:
                         </p>
                         <ul className="list-disc pl-6 space-y-2 mt-2">
                             <li>We immediately delete the access tokens associated with your account</li>
@@ -120,7 +120,7 @@ export default function DataDeletionPage() {
                         <ol className="list-decimal pl-6 space-y-2 mt-2">
                             <li>Go to Facebook Settings → Security and Login</li>
                             <li>Click on "Apps and Websites"</li>
-                            <li>Find "Social Scheduler App" and click "Remove"</li>
+                            <li>Find "Feedquill App" and click "Remove"</li>
                         </ol>
                     </section>
 

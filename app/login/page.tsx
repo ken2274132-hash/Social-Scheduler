@@ -52,7 +52,7 @@ export default function LoginPage() {
                         <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
                             SM
                         </div>
-                        Social Scheduler
+                        Feedquill
                     </Link>
                     <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
                         Welcome back

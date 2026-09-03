@@ -19,7 +19,7 @@ export default async function AdminSettings() {
             group: 'General',
             icon: Globe,
             items: [
-                { label: 'Site Name', value: 'Social Media Scheduler', type: 'text' },
+                { label: 'Site Name', value: 'Feedquill', type: 'text' },
                 { label: 'Support Email', value: 'support@example.com', type: 'email' },
                 { label: 'Maintenance Mode', value: false, type: 'toggle' },
             ]

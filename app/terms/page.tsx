@@ -1,8 +1,8 @@
 import Link from 'next/link'
 
 export const metadata = {
-    title: 'Terms of Service | Social Scheduler',
-    description: 'Terms of Service for Social Scheduler App',
+    title: 'Terms of Service | Feedquill',
+    description: 'Terms of Service for Feedquill App',
 }
 
 export default function TermsOfServicePage() {
@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">1. Acceptance of Terms</h2>
                         <p>
-                            By accessing or using Social Scheduler ("Service"), you agree to be bound by these Terms of Service.
+                            By accessing or using Feedquill ("Service"), you agree to be bound by these Terms of Service.
                             If you do not agree to these terms, please do not use our Service.
                         </p>
                     </section>
@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">2. Description of Service</h2>
                         <p>
-                            Social Scheduler is a social media management tool that allows you to:
+                            Feedquill is a social media management tool that allows you to:
                         </p>
                         <ul className="list-disc pl-6 space-y-2 mt-2">
                             <li>Schedule and publish content to connected social media accounts</li>
@@ -97,7 +97,7 @@ export default function TermsOfServicePage() {
                     <section>
                         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">8. Limitation of Liability</h2>
                         <p>
-                            To the maximum extent permitted by law, Social Scheduler shall not be liable for
+                            To the maximum extent permitted by law, Feedquill shall not be liable for
                             any indirect, incidental, special, consequential, or punitive damages, including
                             but not limited to loss of profits, data, or business opportunities.
                         </p>

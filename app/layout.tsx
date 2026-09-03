@@ -12,8 +12,8 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
     title: {
-        default: "Social Media Scheduler - AI-Powered Auto Posting for Instagram & Facebook",
-        template: "%s | Social Media Scheduler"
+        default: "Feedquill - AI-Powered Auto Posting for Instagram & Facebook",
+        template: "%s | Feedquill"
     },
     description: "Automate your social media presence with AI-powered content generation and scheduling. Upload once, post everywhere. Schedule Instagram and Facebook posts with smart captions, hooks, and hashtags.",
     keywords: [
@@ -28,9 +28,9 @@ export const metadata: Metadata = {
         "AI captions",
         "social media management"
     ],
-    authors: [{ name: "Social Media Scheduler" }],
-    creator: "Social Media Scheduler",
-    publisher: "Social Media Scheduler",
+    authors: [{ name: "Feedquill" }],
+    creator: "Feedquill",
+    publisher: "Feedquill",
     formatDetection: {
         email: false,
         address: false,
@@ -41,15 +41,15 @@ export const metadata: Metadata = {
         type: "website",
         locale: "en_US",
         url: "/",
-        siteName: "Social Media Scheduler",
-        title: "Social Media Scheduler - AI-Powered Auto Posting",
+        siteName: "Feedquill",
+        title: "Feedquill - AI-Powered Auto Posting",
         description: "Automate your social media presence with AI-powered content generation and scheduling. Upload once, post everywhere.",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Social Media Scheduler - AI-Powered Auto Posting",
+        title: "Feedquill - AI-Powered Auto Posting",
         description: "Automate your social media presence with AI-powered content generation and scheduling.",
-        creator: "@socialmediascheduler",
+        creator: "@feedquill",
     },
     robots: {
         index: process.env.NODE_ENV === 'production',
