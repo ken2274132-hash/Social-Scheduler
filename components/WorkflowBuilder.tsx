@@ -273,7 +273,7 @@ export default function WorkflowBuilder({
     if (loading) {
         return (
             <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-blue-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-orange-500"></div>
             </div>
         )
     }
@@ -292,7 +292,7 @@ export default function WorkflowBuilder({
                 </p>
                 <a
                     href="/settings"
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-blue-500/20"
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-500/20"
                 >
                     Enable Accounts
                     <ChevronRight size={18} />

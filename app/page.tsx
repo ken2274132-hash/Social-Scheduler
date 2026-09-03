@@ -10,7 +10,7 @@ export default async function Home() {
     const { data: { user } } = await supabase.auth.getUser();
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-950 selection:bg-blue-100 dark:selection:bg-blue-900">
+        <div className="min-h-screen bg-white dark:bg-gray-950 selection:bg-orange-100 dark:selection:bg-orange-900">
             <Header user={user} />
 
             <main>
@@ -18,18 +18,18 @@ export default async function Home() {
                 <section className="relative flex items-center justify-center min-h-[calc(100vh-80px)] overflow-hidden">
                     {/* Background Gradients */}
                     <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-blue-50/50 dark:from-blue-950/20 to-transparent pointer-events-none" />
-                    <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-100/50 dark:bg-blue-900/10 rounded-full blur-3xl" />
+                    <div className="absolute -top-24 -right-24 w-96 h-96 bg-orange-100/50 dark:bg-orange-900/10 rounded-full blur-3xl" />
                     <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-100/50 dark:bg-purple-900/10 rounded-full blur-3xl" />
 
                     <div className="container mx-auto px-4 relative z-10 py-20 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-sm font-semibold mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                             <Zap size={14} />
                             <span>AI-Powered Automation for Instagram & Facebook</span>
                         </div>
 
                         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-gray-900 dark:text-white tracking-tight leading-[1.1] mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
                             Post Everywhere. <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-[length:200%_auto] animate-gradient">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-purple-600 to-orange-600 bg-[length:200%_auto] animate-gradient">
                                 Zero Effort.
                             </span>
                         </h1>
@@ -42,7 +42,7 @@ export default async function Home() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-16 duration-1000">
                             <Link
                                 href={user ? "/dashboard" : "/signup"}
-                                className="group px-8 py-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all font-bold text-lg shadow-lg shadow-blue-500/25 flex items-center gap-2"
+                                className="group px-8 py-4 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-all font-bold text-lg shadow-lg shadow-orange-500/25 flex items-center gap-2"
                             >
                                 {user ? "Go to Dashboard" : "Start Growing Free"}
                                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -73,7 +73,7 @@ export default async function Home() {
 
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <FeatureCard
-                                icon={<Zap className="text-blue-600" />}
+                                icon={<Zap className="text-orange-600" />}
                                 title="AI Content Engine"
                                 description="Tailored hooks, captions, and hashtags that actually resonate with your audience."
                             />
@@ -158,8 +158,8 @@ export default async function Home() {
 
 function FeatureCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
     return (
-        <div className="group p-8 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-            <div className="w-12 h-12 bg-gray-50 dark:bg-blue-900/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        <div className="group p-8 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
+            <div className="w-12 h-12 bg-gray-50 dark:bg-orange-900/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 {icon}
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
@@ -171,9 +171,9 @@ function FeatureCard({ title, description, icon }: { title: string; description:
 
 function PricingCard({ tier, price, description, features, isPopular }: { tier: string; price: string; description: string; features: string[]; isPopular?: boolean }) {
     return (
-        <div className={`relative p-8 rounded-3xl border ${isPopular ? 'border-blue-600 bg-blue-600/5' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950'} shadow-sm flex flex-col`}>
+        <div className={`relative p-8 rounded-3xl border ${isPopular ? 'border-orange-600 bg-orange-600/5' : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950'} shadow-sm flex flex-col`}>
             {isPopular && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-blue-600 text-white text-xs font-bold rounded-full uppercase tracking-widest">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1 bg-orange-600 text-white text-xs font-bold rounded-full uppercase tracking-widest">
                     Most Popular
                 </div>
             )}
@@ -188,7 +188,7 @@ function PricingCard({ tier, price, description, features, isPopular }: { tier: 
             <ul className="space-y-4 mb-10 flex-1">
                 {features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400">
-                        <div className="mt-1 shrink-0 w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600">
+                        <div className="mt-1 shrink-0 w-4 h-4 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center text-orange-600">
                             <Check size={10} strokeWidth={4} />
                         </div>
                         {feature}
@@ -197,7 +197,7 @@ function PricingCard({ tier, price, description, features, isPopular }: { tier: 
             </ul>
             <Link
                 href="/signup"
-                className={`w-full py-4 rounded-xl font-bold text-center transition-all ${isPopular ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/25' : 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800'}`}
+                className={`w-full py-4 rounded-xl font-bold text-center transition-all ${isPopular ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-lg shadow-orange-500/25' : 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800'}`}
             >
                 Get Started
             </Link>

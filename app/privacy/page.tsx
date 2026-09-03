@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
             <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <Link
                     href="/"
-                    className="text-blue-600 hover:underline mb-8 inline-block"
+                    className="text-orange-600 hover:underline mb-8 inline-block"
                 >
                     ← Back to Home
                 </Link>

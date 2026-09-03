@@ -79,11 +79,11 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
             {accounts.map((account) => (
                 <div
                     key={account.id}
-                    className="group relative flex items-center justify-between p-6 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border border-gray-100 dark:border-gray-800/60 rounded-[2rem] hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 overflow-hidden"
+                    className="group relative flex items-center justify-between p-6 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border border-gray-100 dark:border-gray-800/60 rounded-[2rem] hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/5 transition-all duration-500 overflow-hidden"
                 >
                     <div className="flex items-center gap-5 relative z-10">
                         {account.profile_picture_url ? (
-                            <div className="relative w-16 h-16 p-1 rounded-full bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 shadow-lg group-hover:scale-105 transition-transform duration-500">
+                            <div className="relative w-16 h-16 p-1 rounded-full bg-gradient-to-tr from-orange-500 via-purple-500 to-pink-500 shadow-lg group-hover:scale-105 transition-transform duration-500">
                                 <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white dark:border-gray-900">
                                     <Image
                                         src={account.profile_picture_url}
@@ -129,7 +129,7 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
                     </button>
 
                     {/* Subtle Background Accent */}
-                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/5 dark:bg-blue-400/5 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/10 transition-colors" />
+                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/5 dark:bg-orange-400/5 rounded-full blur-3xl pointer-events-none group-hover:bg-orange-500/10 transition-colors" />
                 </div>
             ))}
         </div>

@@ -35,7 +35,7 @@ export default async function OpengraphImage() {
                             width: '56px',
                             height: '56px',
                             borderRadius: '16px',
-                            background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
+                            background: 'linear-gradient(135deg, #EA580C 0%, #F59E0B 100%)',
                         }}
                     />
                     <div style={{ fontSize: 28, color: '#94a3b8', letterSpacing: '0.08em' }}>

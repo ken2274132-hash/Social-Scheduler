@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
                                                     </div>
                                                     <div className="w-full bg-gray-900 rounded-full h-1.5 overflow-hidden">
                                                         <div
-                                                            className={`h-full transition-all duration-500 ${usagePercent > 90 ? 'bg-red-500' : usagePercent > 70 ? 'bg-orange-500' : 'bg-blue-500'}`}
+                                                            className={`h-full transition-all duration-500 ${usagePercent > 90 ? 'bg-red-500' : usagePercent > 70 ? 'bg-orange-500' : 'bg-orange-500'}`}
                                                             style={{ width: `${usagePercent}%` }}
                                                         />
                                                     </div>

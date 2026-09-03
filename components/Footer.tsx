@@ -10,7 +10,7 @@ export default function Footer() {
                     {/* Brand */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
-                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">
+                            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white text-sm">
                                 FQ
                             </div>
                             Feedquill
