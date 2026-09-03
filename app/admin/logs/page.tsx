@@ -88,7 +88,7 @@ export default async function AdminLogsPage() {
                                     </div>
 
                                     <button
-                                        className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors whitespace-nowrap"
+                                        className="flex items-center gap-2 px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors whitespace-nowrap"
                                     >
                                         <RefreshCw size={16} />
                                         Retry

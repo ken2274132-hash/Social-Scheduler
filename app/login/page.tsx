@@ -49,7 +49,7 @@ export default function LoginPage() {
                 {/* Logo */}
                 <div className="text-center">
                     <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
-                        <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white">
+                        <div className="w-10 h-10 bg-orange-700 rounded-lg flex items-center justify-center text-white">
                             FQ
                         </div>
                         Feedquill
@@ -110,14 +110,14 @@ export default function LoginPage() {
                                 id="remember-me"
                                 name="remember-me"
                                 type="checkbox"
-                                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-orange-700 focus:ring-orange-500 border-gray-300 rounded"
                             />
                             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-400">
                                 Remember me
                             </label>
                         </div>
 
-                        <Link href="/forgot-password" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+                        <Link href="/forgot-password" className="text-sm text-orange-700 hover:text-orange-800 font-medium">
                             Forgot password?
                         </Link>
                     </div>
@@ -125,14 +125,14 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 px-4 bg-orange-700 hover:bg-orange-800 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? 'Signing in...' : 'Sign in'}
                     </button>
 
                     <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                         Don't have an account?{' '}
-                        <Link href="/signup" className="text-orange-600 hover:text-orange-700 font-medium">
+                        <Link href="/signup" className="text-orange-700 hover:text-orange-800 font-medium">
                             Create one now
                         </Link>
                     </p>

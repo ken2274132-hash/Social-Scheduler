@@ -45,7 +45,7 @@ export default function FAQ() {
                                     {faq.question}
                                 </span>
                                 {openIndex === index ? (
-                                    <ChevronUp className="text-orange-600" size={20} />
+                                    <ChevronUp className="text-orange-700" size={20} />
                                 ) : (
                                     <ChevronDown className="text-gray-400" size={20} />
                                 )}

@@ -292,7 +292,7 @@ export default function WorkflowBuilder({
                 </p>
                 <a
                     href="/settings"
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-700 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-500/20"
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-orange-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-800 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-500/20"
                 >
                     Enable Accounts
                     <ChevronRight size={18} />

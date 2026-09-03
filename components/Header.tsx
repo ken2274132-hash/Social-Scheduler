@@ -15,7 +15,7 @@ export default function Header({ user }: { user: User | null }) {
                 <div className="flex items-center justify-between">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
-                        <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white text-sm">
+                        <div className="w-8 h-8 bg-orange-700 rounded-lg flex items-center justify-center text-white text-sm">
                             FQ
                         </div>
                         Feedquill
@@ -39,7 +39,7 @@ export default function Header({ user }: { user: User | null }) {
                         {user ? (
                             <Link
                                 href="/dashboard"
-                                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                                className="flex items-center gap-2 px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors font-medium"
                             >
                                 <LayoutDashboard size={18} />
                                 Dashboard
@@ -48,13 +48,13 @@ export default function Header({ user }: { user: User | null }) {
                             <>
                                 <Link
                                     href="/login"
-                                    className="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                                    className="text-gray-900 dark:text-white hover:text-orange-700 dark:hover:text-orange-400 transition-colors"
                                 >
                                     Log in
                                 </Link>
                                 <Link
                                     href="/signup"
-                                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                                    className="px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors font-medium"
                                 >
                                     Get Started
                                 </Link>
@@ -104,7 +104,7 @@ export default function Header({ user }: { user: User | null }) {
                             {user ? (
                                 <Link
                                     href="/dashboard"
-                                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors font-medium"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     <LayoutDashboard size={18} />
@@ -121,7 +121,7 @@ export default function Header({ user }: { user: User | null }) {
                                     </Link>
                                     <Link
                                         href="/signup"
-                                        className="block w-full text-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                                        className="block w-full text-center px-4 py-2 bg-orange-700 text-white rounded-lg hover:bg-orange-800 transition-colors font-medium"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
                                         Get Started

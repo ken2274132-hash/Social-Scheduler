@@ -104,7 +104,7 @@ export default function ResetPasswordPage() {
                         </p>
                         <Link
                             href="/forgot-password"
-                            className="inline-flex items-center justify-center px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
+                            className="inline-flex items-center justify-center px-5 py-2.5 bg-orange-700 hover:bg-orange-800 text-white rounded-lg text-sm font-medium transition-colors"
                         >
                             Send a new link
                         </Link>
@@ -113,7 +113,7 @@ export default function ResetPasswordPage() {
                     <>
                         <div className="mb-8">
                             <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
-                                <Lock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                                <Lock className="w-6 h-6 text-orange-700 dark:text-orange-400" />
                             </div>
                             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                                 Choose a new password
@@ -165,7 +165,7 @@ export default function ResetPasswordPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full px-4 py-2.5 bg-orange-700 hover:bg-orange-800 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {loading && <Loader2 size={16} className="animate-spin" />}
                                 {loading ? 'Updating…' : 'Update password'}

@@ -58,7 +58,7 @@ export default function SignupPage() {
                 {/* Logo */}
                 <div className="text-center">
                     <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
-                        <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white">
+                        <div className="w-10 h-10 bg-orange-700 rounded-lg flex items-center justify-center text-white">
                             FQ
                         </div>
                         Feedquill
@@ -136,14 +136,14 @@ export default function SignupPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 px-4 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 px-4 bg-orange-700 hover:bg-orange-800 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? 'Creating account...' : 'Create account'}
                     </button>
 
                     <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-orange-600 hover:text-orange-700 font-medium">
+                        <Link href="/login" className="text-orange-700 hover:text-orange-800 font-medium">
                             Sign in
                         </Link>
                     </p>
