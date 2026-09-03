@@ -16,7 +16,7 @@ export default function Header({ user }: { user: User | null }) {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">
-                            SM
+                            FQ
                         </div>
                         Feedquill
                     </Link>

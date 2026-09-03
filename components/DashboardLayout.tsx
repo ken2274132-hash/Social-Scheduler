@@ -36,7 +36,7 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
             {/* Mobile Header */}
             <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 z-40 px-4 flex items-center justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
-                    <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[8px] font-bold">SM</div>
+                    <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-[8px] font-bold">FQ</div>
                     <span>Feedquill</span>
                 </Link>
                 <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
             <aside className="fixed left-0 top-0 h-full w-[260px] bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/50 hidden lg:flex flex-col z-50">
                 <div className="px-6 py-6">
                     <Link href="/dashboard" className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xs font-bold">SM</div>
+                        <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xs font-bold">FQ</div>
                         <span className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">Feedquill</span>
                     </Link>
                 </div>
