@@ -2,7 +2,6 @@
 
 import { Instagram, Facebook, Globe, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 
 type SocialAccount = {
@@ -22,15 +21,24 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
 
         setLoading(accountId)
         try {
-            const supabase = createClient()
-            await supabase
-                .from('social_accounts')
-                .update({ is_active: false })
-                .eq('id', accountId)
+            // Goes through the API rather than writing here: the browser's role
+            // has no UPDATE privilege on social_accounts, so the direct write
+            // this used to do failed silently and left the account connected.
+            const response = await fetch('/api/accounts/disconnect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accountId }),
+            })
+
+            if (!response.ok) {
+                const body = await response.json().catch(() => null)
+                alert(body?.error || 'Could not disconnect that account. Please try again.')
+                return
+            }
 
             window.location.reload()
-        } catch (error) {
-            alert('Failed to disconnect account')
+        } catch {
+            alert('Could not reach the server. Check your connection and try again.')
         } finally {
             setLoading(null)
         }

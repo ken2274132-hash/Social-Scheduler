@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { consumeOAuthState } from '@/lib/oauth-state'
 import { enforceRateLimit } from '@/lib/rate-limit'
+import { socialAccountsWriter } from '@/lib/social-accounts'
 
 export async function GET(request: NextRequest) {
     const limited = await enforceRateLimit(request, 'oauth')
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
         if (targetPlatform === 'facebook') {
             const profilePictureUrl = pageTokenData.picture?.data?.url || null
 
-            const { error: dbError } = await supabase.from('social_accounts').upsert({
+            const { error: dbError } = await socialAccountsWriter().from('social_accounts').upsert({
                 workspace_id: workspaceId,
                 platform: 'facebook',
                 account_id: pageId,
@@ -168,7 +169,7 @@ export async function GET(request: NextRequest) {
 
         const igDetails = await igDetailsResponse.json()
 
-        const { error: dbError } = await supabase.from('social_accounts').upsert({
+        const { error: dbError } = await socialAccountsWriter().from('social_accounts').upsert({
             workspace_id: workspaceId,
             platform: 'instagram',
             account_id: igBusinessId,

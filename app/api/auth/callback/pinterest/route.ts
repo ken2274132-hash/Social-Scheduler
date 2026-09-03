@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { socialAccountsWriter } from '@/lib/social-accounts'
 import { createClient } from '@/lib/supabase/server'
 import { consumeOAuthState } from '@/lib/oauth-state'
 import { enforceRateLimit } from '@/lib/rate-limit'
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Save Pinterest account to social_accounts table
-        const { error: upsertError } = await supabase
+        const { error: upsertError } = await socialAccountsWriter()
             .from('social_accounts')
             .upsert({
                 workspace_id: workspace.id,

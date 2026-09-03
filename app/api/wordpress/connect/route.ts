@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { errorResponse, clientError } from '@/lib/api'
 import { enforceRateLimit } from '@/lib/rate-limit'
+import { socialAccountsWriter } from '@/lib/social-accounts'
 import {
     WordPressError,
     resolveSiteUrl,
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
             return clientError('No workspace found for your account.', 400)
         }
 
-        const { error: upsertError } = await db
+        const { error: upsertError } = await socialAccountsWriter()
             .from('social_accounts')
             .upsert(
                 {
