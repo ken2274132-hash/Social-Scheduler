@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { Suspense } from "react";
-import LoadingBar from "@/components/LoadingBar";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -82,9 +80,6 @@ export default function RootLayout({
                 <link rel="manifest" href="/manifest.webmanifest" />
             </head>
             <body className={`${geistSans.variable} antialiased`}>
-                <Suspense fallback={null}>
-                    <LoadingBar />
-                </Suspense>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="system"

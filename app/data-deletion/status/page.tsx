@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 
 /**
@@ -54,14 +53,8 @@ export default async function DeletionStatusPage({
     const record = await lookup(code)
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="bg-gray-50 dark:bg-gray-900">
             <div className="container mx-auto px-4 py-12 max-w-2xl">
-                <Link
-                    href="/"
-                    className="text-orange-700 hover:underline mb-8 inline-block"
-                >
-                    ← Back to Home
-                </Link>
 
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">
                     Deletion status

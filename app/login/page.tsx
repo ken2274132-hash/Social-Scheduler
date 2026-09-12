@@ -21,12 +21,37 @@ const LINK_ERRORS: Record<string, string> = {
         'That link is incomplete — mail apps sometimes cut long links in half. Try opening it again, or request a new one.',
 }
 
+/**
+ * Supabase's own wording, rewritten to say what to do about it.
+ *
+ * "Invalid login credentials" is technically accurate and tells nobody whether
+ * to retype the password or check they signed up at all. It stays deliberately
+ * vague about WHICH field was wrong — saying "no account with that email" would
+ * let anyone test whether a given address is registered here.
+ */
+function loginErrorMessage(raw: string): string {
+    const message = raw.toLowerCase()
+
+    if (message.includes('email not confirmed')) {
+        return 'Confirm your email first — check your inbox for the link we sent when you signed up.'
+    }
+    if (message.includes('invalid login credentials')) {
+        return 'That email and password do not match. Check both, or reset your password below.'
+    }
+    if (message.includes('rate limit') || message.includes('too many')) {
+        return 'Too many attempts. Wait a minute and try again.'
+    }
+    return raw || 'Could not sign you in. Try again.'
+}
+
 export default function LoginPage() {
     const router = useRouter()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [needsConfirmation, setNeedsConfirmation] = useState(false)
+    const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle')
 
     // Read straight from the URL rather than useSearchParams, which would force
     // this statically rendered page behind a Suspense boundary for one string.
@@ -52,9 +77,32 @@ export default function LoginPage() {
 
             router.push('/dashboard')
         } catch (err: any) {
-            setError(err.message || 'Invalid email or password')
+            const raw = err?.message || ''
+            setError(loginErrorMessage(raw))
+            // Only this case has a useful next step on this page, so the resend
+            // button appears for it and nothing else.
+            setNeedsConfirmation(raw.toLowerCase().includes('email not confirmed'))
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleResend = async () => {
+        setResendState('sending')
+        try {
+            const supabase = createClient()
+            const { error: resendError } = await supabase.auth.resend({
+                type: 'signup',
+                email,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
+                },
+            })
+            if (resendError) throw resendError
+            setResendState('sent')
+        } catch {
+            setResendState('idle')
+            setError('Could not send another email. Try again in a minute.')
         }
     }
 
@@ -89,6 +137,20 @@ export default function LoginPage() {
                     {error && (
                         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
                             {error}
+                            {needsConfirmation && (
+                                <button
+                                    type="button"
+                                    onClick={handleResend}
+                                    disabled={resendState !== 'idle'}
+                                    className="block mt-2 font-medium underline underline-offset-2 disabled:no-underline disabled:opacity-70"
+                                >
+                                    {resendState === 'sending'
+                                        ? 'Sending...'
+                                        : resendState === 'sent'
+                                            ? 'Sent — check your inbox'
+                                            : 'Send the confirmation email again'}
+                                </button>
+                            )}
                         </div>
                     )}
 

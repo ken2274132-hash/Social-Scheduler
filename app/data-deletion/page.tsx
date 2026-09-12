@@ -1,4 +1,3 @@
-import Link from 'next/link'
 
 export const metadata = {
     title: 'Data Deletion | Feedquill',
@@ -7,14 +6,8 @@ export const metadata = {
 
 export default function DataDeletionPage() {
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="bg-gray-50 dark:bg-gray-900">
             <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <Link
-                    href="/"
-                    className="text-orange-700 hover:underline mb-8 inline-block"
-                >
-                    ← Back to Home
-                </Link>
 
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">
                     Data Deletion Instructions
