@@ -32,17 +32,26 @@ export default function DataDeletionPage() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Option 1: Delete from Your Account Settings</h2>
-                        <ol className="list-decimal pl-6 space-y-3">
-                            <li>Log in to your Feedquill account</li>
-                            <li>Navigate to <strong>Settings</strong></li>
-                            <li>Scroll down to the <strong>Account</strong> section</li>
-                            <li>Click on <strong>"Delete Account"</strong></li>
-                            <li>Confirm your decision when prompted</li>
+                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Option 1: Remove Feedquill from Facebook</h2>
+                        <p>
+                            This is the fastest route, and it needs nothing from us. Removing
+                            Feedquill in your Facebook settings tells us to delete your data
+                            automatically — you do not have to log in here or send an email.
+                        </p>
+                        <ol className="list-decimal pl-6 space-y-3 mt-4">
+                            <li>Go to Facebook <strong>Settings</strong> → <strong>Security and Login</strong></li>
+                            <li>Open <strong>Apps and Websites</strong></li>
+                            <li>Find <strong>Feedquill</strong> and click <strong>Remove</strong></li>
                         </ol>
+                        <p className="mt-4">
+                            Facebook will show you a confirmation code and a link. The deletion
+                            happens immediately, and that link shows you exactly what was
+                            removed.
+                        </p>
                         <p className="mt-4 text-sm bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                            <strong>⚠️ Warning:</strong> This action is irreversible. All your data, including
-                            scheduled posts, connected accounts, and account information will be permanently deleted.
+                            <strong>⚠️ Warning:</strong> This is irreversible. Your connected
+                            Facebook and Instagram accounts, their access tokens, and every post
+                            scheduled or published through them are permanently deleted.
                         </p>
                     </section>
 

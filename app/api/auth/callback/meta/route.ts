@@ -92,6 +92,21 @@ export async function GET(request: NextRequest) {
 
         const finalAccessToken = longLivedData.access_token || accessToken
 
+        // Who granted this. Meta's data deletion callback identifies a person by
+        // this app-scoped id and nothing else, so a row without it can never be
+        // matched to a deletion request — see app/api/data-deletion/route.ts.
+        const meResponse = await fetch(
+            `https://graph.facebook.com/v21.0/me?fields=id&access_token=${finalAccessToken}`
+        )
+        const meData = await meResponse.json()
+        const metaUserId: string | null = meData?.id ?? null
+
+        if (!metaUserId) {
+            // Not fatal to the connect, but worth knowing about: it means a
+            // future deletion request for this person will find nothing.
+            console.warn('Meta OAuth: could not read the granting user id')
+        }
+
         // Get the user's Facebook Pages.
         // Note: never log the response body — it contains page access tokens.
         const accountsResponse = await fetch(
@@ -133,6 +148,7 @@ export async function GET(request: NextRequest) {
                 platform: 'facebook',
                 account_id: pageId,
                 account_name: pageName,
+                platform_user_id: metaUserId,
                 profile_picture_url: profilePictureUrl,
                 access_token: pageAccessToken,
                 token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
@@ -174,6 +190,7 @@ export async function GET(request: NextRequest) {
             platform: 'instagram',
             account_id: igBusinessId,
             account_name: igDetails.username,
+            platform_user_id: metaUserId,
             profile_picture_url: igDetails.profile_picture_url,
             access_token: pageAccessToken,
             token_expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days
