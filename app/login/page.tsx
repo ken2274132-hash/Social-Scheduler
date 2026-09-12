@@ -1,10 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft } from 'lucide-react'
+
+/**
+ * Why a link from an email failed, in words the person can act on.
+ *
+ * /auth/confirm sends people here with one of these when a token will not
+ * verify. Without it they land on a plain login form having clicked a button
+ * that looked like it should have worked, and nothing on screen admits that
+ * anything went wrong.
+ */
+const LINK_ERRORS: Record<string, string> = {
+    link_expired:
+        'That link has expired or was already used. Request a new one below.',
+    invalid_link:
+        'That link is incomplete — mail apps sometimes cut long links in half. Try opening it again, or request a new one.',
+}
 
 export default function LoginPage() {
     const router = useRouter()
@@ -12,6 +27,13 @@ export default function LoginPage() {
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    // Read straight from the URL rather than useSearchParams, which would force
+    // this statically rendered page behind a Suspense boundary for one string.
+    useEffect(() => {
+        const reason = new URLSearchParams(window.location.search).get('error')
+        if (reason && LINK_ERRORS[reason]) setError(LINK_ERRORS[reason])
+    }, [])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()

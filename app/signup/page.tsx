@@ -29,6 +29,12 @@ export default function SignupPage() {
                     data: {
                         full_name: name,
                     },
+                    // Without this, Supabase builds the confirmation link from
+                    // the project's Site URL in the dashboard — which is how a
+                    // signup email ends up pointing at localhost or an old host.
+                    // Deriving it from the current origin keeps local, preview
+                    // and production each sending links to themselves.
+                    emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard`,
                 },
             })
 
