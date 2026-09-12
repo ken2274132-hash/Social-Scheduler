@@ -22,7 +22,7 @@ export default async function Home() {
                     <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-100/50 dark:bg-purple-900/10 rounded-full blur-3xl" />
 
                     <div className="container mx-auto px-4 relative z-10 py-20 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-sm font-semibold mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-sm font-semibold mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                             <Zap size={14} />
                             <span>AI-Powered Automation for Instagram & Facebook</span>
                         </div>
@@ -159,7 +159,7 @@ export default async function Home() {
 function FeatureCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
     return (
         <div className="group p-8 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1">
-            <div className="w-12 h-12 bg-gray-50 dark:bg-orange-900/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 {icon}
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>

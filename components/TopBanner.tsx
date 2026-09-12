@@ -11,13 +11,13 @@ export default function TopBanner() {
     return (
         <div className="relative z-[100] bg-slate-900 text-white overflow-hidden">
             {/* Subtle background glow */}
-            <div className="absolute top-0 left-1/4 w-1/2 h-full bg-indigo-500/10 blur-[40px] pointer-events-none" />
+            <div className="absolute top-0 left-1/4 w-1/2 h-full bg-orange-500/10 blur-[40px] pointer-events-none" />
 
             <div className="container mx-auto px-4 py-2 relative flex items-center justify-between gap-4">
                 <div className="flex-1 flex items-center justify-center gap-3 overflow-hidden">
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30">
-                        <Sparkles size={10} className="text-indigo-400 animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-indigo-300">Alpha Testing</span>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/20 border border-orange-500/30">
+                        <Sparkles size={10} className="text-orange-400 animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-orange-300">Alpha Testing</span>
                     </div>
 
                     <p className="text-[11px] font-medium tracking-tight whitespace-nowrap">
@@ -25,7 +25,7 @@ export default function TopBanner() {
                         <span className="hidden md:inline ml-1 text-slate-400">Join our early access program and lock in founder pricing.</span>
                     </p>
 
-                    <button className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors">
+                    <button className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-orange-400 hover:text-orange-300 transition-colors">
                         Get Started <ArrowRight size={12} />
                     </button>
                 </div>

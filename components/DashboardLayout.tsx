@@ -40,10 +40,10 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                     <span>Feedquill</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                    <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                         {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
-                    <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                    <button onClick={handleLogout} aria-label="Log out" className="p-2 text-slate-400 hover:text-red-500 transition-colors">
                         <LogOut size={18} />
                     </button>
                 </div>
@@ -67,7 +67,7 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                                 key={item.key}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] transition-all duration-200 ${isActive
-                                    ? 'bg-slate-100 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 font-medium'
+                                    ? 'bg-slate-100 dark:bg-slate-900 text-orange-700 dark:text-orange-400 font-medium'
                                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900/50'
                                     }`}
                             >
@@ -97,14 +97,17 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
             </aside>
 
             {/* Main */}
-            <main className="lg:ml-[260px] min-h-screen pt-14 lg:pt-12">
+            {/* pt-20 on mobile, not pt-14: the fixed header is h-14, so matching it
+                exactly left the page heading flush against the header with no
+                breathing room. The extra 24px mirrors the desktop lg:pt-12. */}
+            <main className="lg:ml-[260px] min-h-screen pt-20 lg:pt-12 pb-24 lg:pb-0">
                 <div className="px-6 sm:px-10 lg:px-12 max-w-6xl mx-auto">
                     {children}
                 </div>
             </main>
 
             {/* Mobile Bottom Nav */}
-            <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800/50 z-40 pb-safe">
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-100 dark:border-slate-800/50 z-40 safe-area-bottom">
                 <div className="flex items-center justify-around h-full">
                     {navItems.map((item) => {
                         const Icon = item.icon
@@ -113,7 +116,7 @@ export default function DashboardLayout({ children, currentPage }: DashboardLayo
                             <Link
                                 key={item.key}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'
+                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${isActive ? 'text-orange-700 dark:text-orange-400' : 'text-slate-400'
                                     }`}
                             >
                                 <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />

@@ -95,7 +95,7 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                 {/* Controls */}
                 <div className="space-y-6">
                     <div className="space-y-3">
-                        <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest px-1">
+                        <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">
                             Describe Your Vision
                         </label>
                         <textarea
@@ -103,14 +103,14 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder="A horse running in a green meadow, sunset, golden hour lighting..."
                             rows={4}
-                            className="w-full px-5 py-4 bg-white/50 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl text-sm font-medium text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
+                            className="w-full px-5 py-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-medium text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"
                         />
                     </div>
 
                     <button
                         onClick={handleGenerate}
                         disabled={loading || !prompt.trim()}
-                        className="w-full relative group overflow-hidden bg-purple-600 text-white p-5 rounded-2xl font-bold uppercase tracking-wider text-xs transition-all hover:bg-purple-700 active:scale-98 disabled:opacity-50 shadow-lg"
+                        className="w-full relative group overflow-hidden bg-orange-700 text-white p-5 rounded-2xl font-bold uppercase tracking-wider text-xs transition-all hover:bg-orange-800 active:scale-95 disabled:opacity-50 shadow-lg"
                     >
                         <div className="flex items-center justify-center gap-3">
                             {loading ? <Loader2 className="animate-spin" size={18} /> : <Wand2 size={18} />}
@@ -118,19 +118,19 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                         </div>
                     </button>
 
-                    <div className="p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl border border-purple-100/50 dark:border-purple-900/20">
-                        <h5 className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-orange-100/50 dark:border-orange-900/20">
+                        <h5 className="text-[10px] font-bold text-orange-700 uppercase tracking-wider mb-1 flex items-center gap-2">
                             <Sparkles size={12} />
                             Tips
                         </h5>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
                             Use descriptive words like: "professional photo", "high quality", "detailed", "realistic"
                         </p>
                     </div>
                 </div>
 
                 {/* Preview */}
-                <div className="relative aspect-square bg-gray-100 dark:bg-gray-900 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col items-center justify-center">
+                <div className="relative aspect-square bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col items-center justify-center">
                     {error ? (
                         <div className="flex flex-col items-center gap-4 px-6 text-center">
                             <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
@@ -147,11 +147,11 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                         </div>
                     ) : loading && !resultUrl ? (
                         <div className="flex flex-col items-center gap-4">
-                            <Loader2 size={40} className="animate-spin text-purple-500" />
-                            <p className="text-xs font-medium text-gray-400 text-center px-8">
+                            <Loader2 size={40} className="animate-spin text-orange-500" />
+                            <p className="text-xs font-medium text-slate-400 text-center px-8">
                                 AI is creating your image...
                                 <br />
-                                <span className="text-gray-300">(This takes 10-30 seconds)</span>
+                                <span className="text-slate-300">(This takes 10-30 seconds)</span>
                             </p>
                         </div>
                     ) : resultUrl ? (
@@ -168,8 +168,8 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
 
                             {/* Loading overlay while image loads */}
                             {!imageReady && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900">
-                                    <Loader2 size={40} className="animate-spin text-purple-500" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800">
+                                    <Loader2 size={40} className="animate-spin text-orange-500" />
                                     <p className="text-xs text-gray-400 mt-4">Loading image...</p>
                                 </div>
                             )}
@@ -181,7 +181,7 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                                 </div>
                             )}
                             {imageReady && provider === 'huggingface' && (
-                                <div className="absolute top-2 left-2 px-2 py-1 bg-purple-500/90 text-white text-[10px] font-semibold rounded-lg">
+                                <div className="absolute top-2 left-2 px-2 py-1 bg-orange-500/90 text-white text-[10px] font-semibold rounded-lg">
                                     AI Generated (Stable Diffusion)
                                 </div>
                             )}
@@ -206,8 +206,8 @@ export default function AIImageStudio({ onSelect, onClose, workspaceId }: AIImag
                         </>
                     ) : (
                         <div className="flex flex-col items-center gap-3">
-                            <ImageIcon size={48} className="text-gray-300 dark:text-gray-700" />
-                            <p className="text-xs font-medium text-gray-400 text-center">
+                            <ImageIcon size={48} className="text-slate-300 dark:text-slate-700" />
+                            <p className="text-xs font-medium text-slate-400 text-center">
                                 Your AI-generated image<br />will appear here
                             </p>
                         </div>

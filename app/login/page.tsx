@@ -110,7 +110,7 @@ export default function LoginPage() {
                                 id="remember-me"
                                 name="remember-me"
                                 type="checkbox"
-                                className="h-4 w-4 text-orange-700 focus:ring-orange-500 border-gray-300 rounded"
+                                className="h-4 w-4 rounded accent-orange-700 border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-orange-500 [color-scheme:light] dark:[color-scheme:dark]"
                             />
                             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-400">
                                 Remember me

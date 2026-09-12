@@ -2,6 +2,7 @@ import DashboardLayout from '@/components/DashboardLayout'
 import WorkflowBuilder from '@/components/WorkflowBuilder'
 import { getWorkspace } from '@/lib/get-workspace'
 import { SOCIAL_ACCOUNT_PUBLIC_COLUMNS } from '@/lib/api'
+import { isPublishingPlatform } from '@/lib/platforms'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,9 +24,11 @@ export default async function WorkflowPage() {
                     <p className="text-base text-slate-500 dark:text-slate-400 mt-1">Automate content across your accounts</p>
                 </div>
 
+                {/* Destinations only — the connected blog is a content source,
+                    offered in the Blog tab of the content library, not here. */}
                 <WorkflowBuilder
                     workspaceId={workspace?.id || ''}
-                    socialAccounts={socialAccounts || []}
+                    socialAccounts={(socialAccounts || []).filter((a) => isPublishingPlatform(a.platform))}
                 />
             </div>
         </DashboardLayout>

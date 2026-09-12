@@ -73,7 +73,7 @@ export default async function AnalyticsPage() {
                 </div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
                     <StatCard label="Total Posts" value={total} icon={<FileText size={18} />} />
                     <StatCard label="Published" value={published} icon={<Send size={18} />} color="text-emerald-500" />
                     <StatCard label="Scheduled" value={scheduled} icon={<Clock size={18} />} color="text-amber-500" />
@@ -84,7 +84,7 @@ export default async function AnalyticsPage() {
                     {/* Status Breakdown */}
                     <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/50 dark:shadow-none">
                         <div className="flex items-center gap-2 mb-5">
-                            <PieChart size={18} className="text-indigo-500" />
+                            <PieChart size={18} className="text-orange-500" />
                             <h2 className="text-base font-semibold text-slate-900 dark:text-white">Status Breakdown</h2>
                         </div>
                         <div className="space-y-4">
@@ -102,7 +102,7 @@ export default async function AnalyticsPage() {
                     {/* Platform Breakdown */}
                     <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/50 dark:shadow-none">
                         <div className="flex items-center gap-2 mb-5">
-                            <BarChart3 size={18} className="text-indigo-500" />
+                            <BarChart3 size={18} className="text-orange-500" />
                             <h2 className="text-base font-semibold text-slate-900 dark:text-white">Posts by Platform</h2>
                         </div>
                         {Object.keys(platformCounts).length > 0 ? (
@@ -140,16 +140,16 @@ export default async function AnalyticsPage() {
                 {/* Monthly Activity */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/50 dark:shadow-none">
                     <div className="flex items-center gap-2 mb-6">
-                        <TrendingUp size={18} className="text-indigo-500" />
+                        <TrendingUp size={18} className="text-orange-500" />
                         <h2 className="text-base font-semibold text-slate-900 dark:text-white">Monthly Activity</h2>
                     </div>
-                    <div className="flex items-end gap-3 h-48">
+                    <div className="flex items-stretch gap-3 h-48">
                         {Object.entries(monthlyData).map(([month, count]) => (
-                            <div key={month} className="flex-1 flex flex-col items-center gap-2">
+                            <div key={month} className="flex-1 flex flex-col items-center gap-2 h-full">
                                 <span className="text-xs font-medium text-slate-500 tabular-nums">{count}</span>
-                                <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-t-lg overflow-hidden relative" style={{ height: '100%' }}>
+                                <div className="w-full flex-1 min-h-0 bg-slate-100 dark:bg-slate-800 rounded-t-lg overflow-hidden relative">
                                     <div
-                                        className="absolute bottom-0 w-full bg-indigo-500 rounded-t-lg transition-all"
+                                        className="absolute bottom-0 w-full bg-orange-500 rounded-t-lg transition-all"
                                         style={{ height: `${(count / maxMonthly) * 100}%`, minHeight: count > 0 ? '8px' : '0px' }}
                                     />
                                 </div>
@@ -165,14 +165,14 @@ export default async function AnalyticsPage() {
 
 function StatCard({ label, value, icon, color }: { label: string; value: number; icon: React.ReactNode; color?: string }) {
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/50 dark:shadow-none">
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
-                <div className={`w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-4 sm:p-6 shadow-sm shadow-slate-200/50 dark:shadow-none">
+            <div className="flex items-start justify-between gap-2 mb-3">
+                <span className="text-[11px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>
                     {icon}
                 </div>
             </div>
-            <p className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
         </div>
     )
 }

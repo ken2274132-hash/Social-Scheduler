@@ -17,7 +17,7 @@ export default function ConnectFacebookButton({ workspaceId }: { workspaceId: st
         <button
             onClick={handleConnect}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#166FE5] transition-all font-medium disabled:opacity-50"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 bg-[#1877F2] text-white rounded-lg hover:bg-[#166FE5] transition-all font-medium disabled:opacity-50"
         >
             <Facebook size={20} />
             {loading ? 'Connecting...' : 'Connect Facebook'}

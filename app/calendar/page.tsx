@@ -33,7 +33,7 @@ export default async function CalendarPage() {
                     </div>
                     <Link
                         href="/composer"
-                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-sm shadow-indigo-600/20"
+                        className="px-6 py-2 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-sm shadow-orange-700/20"
                     >
                         <Plus size={16} /> New Post
                     </Link>

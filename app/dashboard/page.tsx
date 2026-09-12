@@ -79,7 +79,7 @@ export default async function DashboardPage(props: {
                     </div>
                     <Link
                         href="/composer"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-700 hover:bg-orange-800 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
                     >
                         <Plus size={16} />
                         Create Post
@@ -88,14 +88,14 @@ export default async function DashboardPage(props: {
 
                 {/* Failed Alert */}
                 {(failedPosts || 0) > 0 && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-red-50/50 dark:bg-red-950/20 border border-red-100/50 dark:border-red-900/30 rounded-xl">
-                        <div className="flex items-center gap-3">
-                            <AlertTriangle size={16} className="text-red-500" />
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 bg-red-50/50 dark:bg-red-950/20 border border-red-100/50 dark:border-red-900/30 rounded-xl">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <AlertTriangle size={16} className="text-red-500 shrink-0" />
                             <span className="text-sm text-red-700 dark:text-red-400">
                                 {failedPosts} post{(failedPosts || 0) > 1 ? 's' : ''} failed to publish
                             </span>
                         </div>
-                        <Link href="/settings" className="text-sm font-medium text-red-600 dark:text-red-400 hover:underline underline-offset-4">
+                        <Link href="/settings" className="shrink-0 text-sm font-medium text-red-600 dark:text-red-400 hover:underline underline-offset-4">
                             Details
                         </Link>
                     </div>
@@ -103,7 +103,7 @@ export default async function DashboardPage(props: {
 
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
                     <StatCard
                         label="Total Posts"
                         value={totalPostsCount || 0}
@@ -125,13 +125,13 @@ export default async function DashboardPage(props: {
                         label="Accounts"
                         value={connectedAccounts?.length || 0}
                         icon={<Zap size={18} />}
-                        color="text-indigo-500"
+                        color="text-orange-500"
                     />
                 </div>
 
                 {/* Posts Section */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl overflow-hidden shadow-sm shadow-slate-200/30 dark:shadow-none">
-                    <div className="px-6 py-5 flex items-center justify-between border-b border-slate-50 dark:border-slate-800/50">
+                    <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-800/50">
                         <h2 className="text-base font-semibold text-slate-900 dark:text-white">Recent Activity</h2>
                         <DashboardFilters />
                     </div>
@@ -153,8 +153,8 @@ export default async function DashboardPage(props: {
                                                 <Image
                                                     src={post.media_assets.url}
                                                     alt=""
-                                                    width={48}
-                                                    height={48}
+                                                    width={56}
+                                                    height={56}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                             ) : (
@@ -169,7 +169,7 @@ export default async function DashboardPage(props: {
                                             <p className="text-base text-slate-900 dark:text-white truncate font-medium">
                                                 {post.caption?.slice(0, 60) || 'No caption'}
                                             </p>
-                                            <div className="flex items-center gap-2 mt-1 px-0.5">
+                                            <div className="flex items-center gap-2 mt-1">
                                                 <span className={`w-3 h-3 rounded-full ${platformBg} shrink-0`} />
                                                 <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{platform}</span>
                                                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
@@ -197,11 +197,11 @@ export default async function DashboardPage(props: {
                             <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800">
                                 <Calendar size={24} className="text-slate-300 dark:text-slate-600" />
                             </div>
-                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Start your journey</h3>
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Start your journey</h3>
                             <p className="text-xs text-slate-500 mt-1 mb-8 max-w-[240px] mx-auto">Compose and schedule your first post to see it appear here.</p>
                             <Link
                                 href="/composer"
-                                className="inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all"
+                                className="inline-flex items-center gap-2 px-6 py-2 bg-orange-700 hover:bg-orange-800 text-white rounded-lg text-sm font-medium transition-all"
                             >
                                 <Plus size={14} />
                                 Create Post
@@ -212,7 +212,7 @@ export default async function DashboardPage(props: {
                     {/* Pagination */}
                     {totalPages > 1 && (
                         <div className="px-6 py-4 border-t border-slate-50 dark:border-slate-800/50 flex items-center justify-between bg-slate-50/30 dark:bg-transparent">
-                            <p className="text-[11px] font-medium text-slate-500">
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                                 Showing {from + 1}&ndash;{Math.min(to + 1, totalRecentPosts || 0)} of {totalRecentPosts}
                             </p>
                             <div className="flex items-center gap-1.5">
@@ -248,14 +248,14 @@ export default async function DashboardPage(props: {
 
 function StatCard({ label, value, icon, color }: { label: string, value: number | string, icon: React.ReactNode, color?: string }) {
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm shadow-slate-200/30 dark:shadow-none transition-all">
-            <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
-                <div className={`w-9 h-9 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-2xl p-4 sm:p-6 shadow-sm shadow-slate-200/30 dark:shadow-none transition-all">
+            <div className="flex items-start justify-between gap-2 mb-3">
+                <span className="text-[11px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center ${color || 'text-slate-400'}`}>
                     {icon}
                 </div>
             </div>
-            <p className="text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tabular-nums">{value}</p>
         </div>
     )
 }
@@ -264,14 +264,14 @@ function StatusPill({ status }: { status: string }) {
     const styles: Record<string, string> = {
         published: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 ring-emerald-100/50 dark:ring-emerald-800/20',
         failed: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 ring-red-100/50 dark:ring-red-800/20',
-        scheduled: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 ring-indigo-100/50 dark:ring-indigo-800/20',
+        scheduled: 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 ring-orange-100/50 dark:ring-orange-800/20',
         draft: 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400 ring-slate-100 dark:ring-slate-700',
     }
     return (
         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ring-1 shadow-sm ${styles[status] || styles.draft}`}>
             <span className={`w-1 h-1 rounded-full ${status === 'published' ? 'bg-emerald-500' :
                 status === 'failed' ? 'bg-red-500' :
-                    status === 'scheduled' ? 'bg-indigo-500' : 'bg-slate-400'
+                    status === 'scheduled' ? 'bg-orange-500' : 'bg-slate-400'
                 }`} />
             {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
@@ -290,7 +290,7 @@ function PageBtn({ href, children, disabled, active }: { href: string; children:
         <Link
             href={href}
             className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold transition-all ${active
-                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20'
+                ? 'bg-orange-700 text-white shadow-sm shadow-orange-700/20'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
         >
