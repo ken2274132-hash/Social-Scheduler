@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { ensureFreshToken, RECONNECT_REQUIRED } from './token-refresh'
 import { pinterestApiBaseUrl } from './pinterest'
+import { isPublishingPlatform } from './platforms'
 
 /**
  * Instagram Auto-Posting Function
@@ -67,6 +68,16 @@ export async function publishScheduledPosts(onlyPostId?: string) {
                     details: { timestamp: new Date().toISOString() },
                 })
 
+                // WordPress and anything else in CONTENT_SOURCE_PLATFORMS is
+                // somewhere we read from, never somewhere we publish to. A post
+                // still pointing at one — scheduled before this rule existed —
+                // fails here rather than writing to the user's own site.
+                if (!isPublishingPlatform(post.social_accounts.platform)) {
+                    throw new Error(
+                        `${post.social_accounts.platform} is a content source, not a publishing destination.`
+                    )
+                }
+
                 // Renew the token if it is at or near expiry. A refresh that
                 // cannot be recovered marks the account inactive and returns
                 // null — that fails this post only, the run continues.
@@ -84,8 +95,6 @@ export async function publishScheduledPosts(onlyPostId?: string) {
                     result = await publishToFacebook(post, accessToken)
                 } else if (post.social_accounts.platform === 'pinterest') {
                     result = await publishToPinterest(post, accessToken)
-                } else if (post.social_accounts.platform === 'wordpress') {
-                    result = await publishToWordPress(post, accessToken)
                 } else {
                     result = await publishToInstagram(post, accessToken)
                 }
@@ -363,110 +372,6 @@ async function publishToPinterest(post: any, accessToken: string) {
         return {
             success: true,
             postId: pinData.id,
-        }
-    } catch (error: any) {
-        return {
-            success: false,
-            error: error.message,
-        }
-    }
-}
-
-/**
- * Self-hosted WordPress.
- *
- * `accessToken` here is the base64 `username:application-password` built at
- * connect time, and `account_id` is the site origin. See lib/wordpress.ts.
- *
- * Posts in this app carry a caption but no separate title, so the first line
- * of the caption becomes the post title and the remainder becomes the body.
- * A single-line caption is used for both.
- */
-async function publishToWordPress(post: any, credential: string) {
-    try {
-        if (credential === 'demo_token_simulator') {
-            console.log('🚀 SIMULATION MODE: Publishing to WordPress...')
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            return {
-                success: true,
-                postId: `wp_demo_${Math.random().toString(36).substring(7)}`,
-            }
-        }
-
-        const origin = post.social_accounts.account_id
-        if (!origin) {
-            throw new Error('This WordPress account has no site address. Reconnect it.')
-        }
-
-        const auth = { Authorization: `Basic ${credential}` }
-        const caption: string = post.caption || ''
-        const [firstLine, ...rest] = caption.split('\n')
-        const title = (firstLine || 'Untitled').trim().slice(0, 200)
-        const bodyText = rest.join('\n').trim() || caption
-
-        // Media first: WordPress wants an attachment id, not a URL, and the
-        // upload has to carry the bytes rather than a link to them.
-        let featuredMediaId: number | undefined
-        const mediaUrl = post.media_assets?.url
-
-        if (mediaUrl) {
-            const imageResponse = await fetch(mediaUrl)
-            if (!imageResponse.ok) {
-                throw new Error('Could not read the attached image.')
-            }
-
-            const contentType = imageResponse.headers.get('content-type') || 'image/jpeg'
-            const bytes = await imageResponse.arrayBuffer()
-            const extension = contentType.split('/')[1]?.split(';')[0] || 'jpg'
-            const filename = `post-${post.id}.${extension}`
-
-            const uploadResponse = await fetch(`${origin}/wp-json/wp/v2/media`, {
-                method: 'POST',
-                headers: {
-                    ...auth,
-                    'Content-Type': contentType,
-                    'Content-Disposition': `attachment; filename="${filename}"`,
-                },
-                body: bytes,
-            })
-
-            const uploadText = await uploadResponse.text()
-            if (!uploadResponse.ok) {
-                throw new Error(`WordPress rejected the image upload (${uploadResponse.status}).`)
-            }
-
-            featuredMediaId = JSON.parse(uploadText).id
-        }
-
-        const payload: Record<string, unknown> = {
-            title,
-            content: bodyText.replace(/\n/g, '<br />'),
-            status: 'publish',
-        }
-        if (featuredMediaId) payload.featured_media = featuredMediaId
-
-        const createResponse = await fetch(`${origin}/wp-json/wp/v2/posts`, {
-            method: 'POST',
-            headers: { ...auth, 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        })
-
-        const createText = await createResponse.text()
-        if (!createResponse.ok) {
-            let detail = `HTTP ${createResponse.status}`
-            try {
-                const parsed = JSON.parse(createText)
-                if (parsed?.message) detail = parsed.message
-            } catch {
-                // WordPress errors are not always JSON — a security plugin
-                // returning an HTML block page is the usual reason.
-            }
-            throw new Error(`WordPress refused the post: ${detail}`)
-        }
-
-        return {
-            success: true,
-            postId: String(JSON.parse(createText).id),
         }
     } catch (error: any) {
         return {

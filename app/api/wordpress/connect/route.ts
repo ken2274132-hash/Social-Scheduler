@@ -82,8 +82,10 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Site title is a nicety; a failure here should not block the connect.
+        // Site title and icon are niceties; a failure here should not block the
+        // connect. Both come off the REST index, which needs no authentication.
         let siteTitle = origin.replace(/^https?:\/\//, '')
+        let siteIcon: string | null = null
         try {
             const rootResponse = await fetch(`${origin}/wp-json`, {
                 headers: { Accept: 'application/json' },
@@ -92,9 +94,22 @@ export async function POST(request: NextRequest) {
             if (rootResponse.ok) {
                 const root = await rootResponse.json()
                 if (root?.name) siteTitle = root.name
+                // WordPress 5.9+ publishes the Site Icon here. It is the blog's
+                // own mark, which identifies the site far better than the
+                // connecting user's gravatar.
+                if (typeof root?.site_icon_url === 'string' && root.site_icon_url) {
+                    siteIcon = root.site_icon_url
+                }
             }
         } catch {
             // keep the hostname
+        }
+
+        // Older WordPress, or no Site Icon set: fall back to the favicon, but
+        // only after checking one is really there. Many sites answer /favicon.ico
+        // with an HTML 404 page, which would render as a broken image.
+        if (!siteIcon) {
+            siteIcon = await probeFavicon(origin)
         }
 
         const { data: workspace } = await db
@@ -123,7 +138,7 @@ export async function POST(request: NextRequest) {
                     refresh_token: null,
                     // Application passwords do not expire on their own.
                     token_expires_at: null,
-                    profile_picture_url: me.avatar_urls?.['96'] ?? null,
+                    profile_picture_url: siteIcon ?? me.avatar_urls?.['96'] ?? null,
                     is_active: true,
                     updated_at: new Date().toISOString(),
                 },
@@ -138,4 +153,26 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         return errorResponse(error, 'wordpress/connect')
     }
+}
+
+/**
+ * The site's favicon, or null if it does not have a usable one.
+ *
+ * `origin` has already been through the SSRF checks in lib/wordpress.ts, so
+ * this cannot be pointed at a private address. A HEAD is enough: all we need
+ * is that the response exists and is actually an image.
+ */
+async function probeFavicon(origin: string): Promise<string | null> {
+    const url = `${origin}/favicon.ico`
+    try {
+        const response = await fetch(url, {
+            method: 'HEAD',
+            signal: AbortSignal.timeout(5_000),
+        })
+        const type = response.headers.get('content-type') || ''
+        if (response.ok && type.startsWith('image/')) return url
+    } catch {
+        // no favicon, or the site did not answer in time
+    }
+    return null
 }

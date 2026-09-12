@@ -13,13 +13,39 @@ type SocialAccount = {
     created_at: string
 }
 
+const PINTEREST_PATH =
+    'M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z'
+
+const PinterestGlyph = ({ size = 18 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+        <path d={PINTEREST_PATH} />
+    </svg>
+)
+
+/** Brand mark and label for each platform, in one place. */
+function platformMeta(platform: string) {
+    switch (platform) {
+        case 'facebook':
+            return { label: 'Facebook Page', color: '#1877F2', glyph: <Facebook size={18} /> }
+        case 'pinterest':
+            return { label: 'Pinterest Account', color: '#E60023', glyph: <PinterestGlyph /> }
+        case 'wordpress':
+            return { label: 'WordPress Blog', color: '#21759B', glyph: <Globe size={18} /> }
+        default:
+            return { label: 'Instagram Account', color: '#E1306C', glyph: <Instagram size={18} /> }
+    }
+}
+
 export default function ConnectedAccounts({ accounts }: { accounts: SocialAccount[] }) {
     const [loading, setLoading] = useState<string | null>(null)
+    // Which row is asking "are you sure?". An inline step rather than the
+    // native confirm() dialog, which does not match anything else in the app.
+    const [confirming, setConfirming] = useState<string | null>(null)
+    const [error, setError] = useState<{ id: string; message: string } | null>(null)
 
     const handleDisconnect = async (accountId: string) => {
-        if (!confirm('Are you sure you want to disconnect this account?')) return
-
         setLoading(accountId)
+        setError(null)
         try {
             // Goes through the API rather than writing here: the browser's role
             // has no UPDATE privilege on social_accounts, so the direct write
@@ -32,114 +58,121 @@ export default function ConnectedAccounts({ accounts }: { accounts: SocialAccoun
 
             if (!response.ok) {
                 const body = await response.json().catch(() => null)
-                alert(body?.error || 'Could not disconnect that account. Please try again.')
+                setError({
+                    id: accountId,
+                    message: body?.error || 'Could not disconnect. Please try again.',
+                })
                 return
             }
 
             window.location.reload()
         } catch {
-            alert('Could not reach the server. Check your connection and try again.')
+            setError({ id: accountId, message: 'Could not reach the server. Check your connection.' })
         } finally {
             setLoading(null)
+            setConfirming(null)
         }
-    }
-
-    const getPlatformIcon = (platform: string) => {
-        if (platform === 'facebook') {
-            return (
-                <div className="w-12 h-12 rounded-full bg-[#1877F2] flex items-center justify-center text-white">
-                    <Facebook size={24} />
-                </div>
-            )
-        }
-        if (platform === 'pinterest') {
-            return (
-                <div className="w-12 h-12 rounded-full bg-[#E60023] flex items-center justify-center text-white">
-                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
-                    </svg>
-                </div>
-            )
-        }
-        if (platform === 'wordpress') {
-            return (
-                <div className="w-12 h-12 rounded-full bg-[#21759B] flex items-center justify-center text-white">
-                    <Globe size={24} />
-                </div>
-            )
-        }
-        return (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white">
-                <Instagram size={24} />
-            </div>
-        )
-    }
-
-    const getPlatformLabel = (platform: string) => {
-        if (platform === 'facebook') return 'Facebook Page'
-        if (platform === 'pinterest') return 'Pinterest Account'
-        if (platform === 'wordpress') return 'WordPress Site'
-        return 'Instagram Account'
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {accounts.map((account) => (
-                <div
-                    key={account.id}
-                    className="group relative flex items-center justify-between p-6 bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl border border-gray-100 dark:border-gray-800/60 rounded-[2rem] hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/5 transition-all duration-500 overflow-hidden"
-                >
-                    <div className="flex items-center gap-5 relative z-10">
-                        {account.profile_picture_url ? (
-                            <div className="relative w-16 h-16 p-1 rounded-full bg-gradient-to-tr from-orange-500 via-purple-500 to-pink-500 shadow-lg group-hover:scale-105 transition-transform duration-500">
-                                <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white dark:border-gray-900">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {accounts.map((account) => {
+                const meta = platformMeta(account.platform)
+                const isConfirming = confirming === account.id
+                const isLoading = loading === account.id
+                const rowError = error?.id === account.id ? error.message : null
+
+                return (
+                    <div
+                        key={account.id}
+                        className="group flex items-center gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/50 rounded-xl shadow-sm shadow-slate-200/30 dark:shadow-none hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
+                    >
+                        {/* Avatar. A blog has no social profile picture worth
+                            showing, so every source falls back to its mark. */}
+                        <div className="relative shrink-0">
+                            {account.profile_picture_url && account.platform !== 'wordpress' ? (
+                                <div className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
                                     <Image
                                         src={account.profile_picture_url}
-                                        alt={account.account_name || 'Profile'}
+                                        alt={account.account_name || meta.label}
                                         fill
                                         className="object-cover"
                                         unoptimized
                                     />
                                 </div>
-                                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center border-2 border-gray-50 dark:border-gray-900 shadow-sm transition-transform group-hover:scale-110">
-                                    {account.platform === 'facebook' ? (
-                                        <Facebook size={12} className="text-[#1877F2]" />
-                                    ) : account.platform === 'pinterest' ? (
-                                        <div className="text-[#E60023]"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" /></svg></div>
-                                    ) : (
-                                        <Instagram size={12} className="text-pink-500" />
-                                    )}
+                            ) : (
+                                <div
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white"
+                                    style={{ backgroundColor: meta.color }}
+                                >
+                                    {meta.glyph}
                                 </div>
+                            )}
+                            <div
+                                className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center border border-slate-100 dark:border-slate-800"
+                                style={{ color: meta.color }}
+                                aria-hidden
+                            >
+                                {account.platform === 'facebook' ? (
+                                    <Facebook size={9} />
+                                ) : account.platform === 'pinterest' ? (
+                                    <PinterestGlyph size={9} />
+                                ) : account.platform === 'wordpress' ? (
+                                    <Globe size={9} />
+                                ) : (
+                                    <Instagram size={9} />
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                                {account.account_name || meta.label}
+                            </p>
+                            {rowError ? (
+                                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{rowError}</p>
+                            ) : (
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                        {meta.label}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {isConfirming ? (
+                            <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                    onClick={() => handleDisconnect(account.id)}
+                                    disabled={isLoading}
+                                    className="px-2.5 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {isLoading ? 'Removing…' : 'Remove'}
+                                </button>
+                                <button
+                                    onClick={() => setConfirming(null)}
+                                    disabled={isLoading}
+                                    className="px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
                             </div>
                         ) : (
-                            <div className="hover:scale-105 transition-transform duration-500">
-                                {getPlatformIcon(account.platform)}
-                            </div>
+                            <button
+                                onClick={() => {
+                                    setError(null)
+                                    setConfirming(account.id)
+                                }}
+                                className="p-2 shrink-0 text-slate-300 dark:text-slate-600 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors sm:opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                aria-label={`Disconnect ${account.account_name || meta.label}`}
+                            >
+                                <Trash2 size={16} />
+                            </button>
                         )}
-                        <div>
-                            <p className="text-base font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                                {account.account_name || getPlatformLabel(account.platform)}
-                            </p>
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 mt-1.5 bg-green-500/10 text-green-600 dark:text-green-400 text-[10px] font-black uppercase tracking-widest rounded-full">
-                                <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-                                Active Connection
-                            </span>
-                        </div>
                     </div>
-
-                    <button
-                        onClick={() => handleDisconnect(account.id)}
-                        disabled={loading === account.id}
-                        className="p-4 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-[1.5rem] transition-all relative z-10 group/btn"
-                        aria-label="Disconnect account"
-                    >
-                        <Trash2 size={20} className="group-hover/btn:rotate-12 transition-transform" />
-                    </button>
-
-                    {/* Subtle Background Accent */}
-                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/5 dark:bg-orange-400/5 rounded-full blur-3xl pointer-events-none group-hover:bg-orange-500/10 transition-colors" />
-                </div>
-            ))}
+                )
+            })}
         </div>
     )
 }

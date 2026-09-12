@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { Upload, X, Loader2, Sparkles, Calendar, Send, Heart, MessageCircle, Bookmark, AlertCircle, Trash2, Wand2, Clock, ChevronDown } from 'lucide-react'
+import { Upload, X, Loader2, Sparkles, Calendar, Send, Heart, MessageCircle, Bookmark, AlertCircle, Trash2, Wand2, ChevronDown, Globe } from 'lucide-react'
 import AIImageStudio from './AIImageStudio'
+import BlogPostPicker, { blogPostToCaption, type BlogPost } from './BlogPostPicker'
 import { toast } from 'sonner'
 
 // Platform config with emojis
@@ -14,7 +15,8 @@ const platformConfig: Record<string, { bg: string; icon: string }> = {
     facebook: { bg: 'bg-blue-600', icon: '👤' },
     pinterest: { bg: 'bg-red-600', icon: '📌' },
     twitter: { bg: 'bg-sky-500', icon: '🐦' },
-    wordpress: { bg: 'bg-[#21759B]', icon: '📝' },
+    // No wordpress entry on purpose: a blog is a content SOURCE, never a
+    // publish destination, so it can never be the selected account here.
 }
 
 type SocialAccount = { id: string; platform: string; account_name: string | null }
@@ -35,7 +37,20 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
     const [mediaPreview, setMediaPreview] = useState<string | null>(initialPost?.media_assets?.url || null)
     const [mediaId, setMediaId] = useState<string | null>(initialPost?.media_id || null)
     const [showAIStudio, setShowAIStudio] = useState<boolean>(false)
+    const [showBlogPicker, setShowBlogPicker] = useState<boolean>(false)
+    // An image that lives on someone else's server (a blog's featured image, or
+    // an AI result we were not given an id for). There is no media_assets row
+    // for it yet, so it is submitted as a URL and the API creates one.
+    const [remoteMediaUrl, setRemoteMediaUrl] = useState<string | null>(null)
     const searchParams = useSearchParams()
+
+    // Edit mode: the form was opened on an existing post, so saving has to
+    // update that row instead of inserting a second one.
+    const editingPostId: string | null = initialPost?.id ?? null
+    const isEditing = Boolean(editingPostId)
+    // A post that is already out (or going out this second) cannot be changed —
+    // the API refuses it, so don't offer it here either.
+    const isLocked = isEditing && ['published', 'publishing'].includes(initialPost?.status)
 
     useEffect(() => {
         const dateParam = searchParams.get('date')
@@ -73,7 +88,24 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
     }
 
     // AI images arrive already stored, with a media_assets row id.
-    const handleSelectAIImage = (imageUrl: string, aiMediaId: string | null) => { setMediaPreview(imageUrl); setMediaFile(null); setMediaId(aiMediaId); setShowAIStudio(false) }
+    const handleSelectAIImage = (imageUrl: string, aiMediaId: string | null) => { setMediaPreview(imageUrl); setMediaFile(null); setMediaId(aiMediaId); setRemoteMediaUrl(aiMediaId ? null : imageUrl); setShowAIStudio(false) }
+
+    /**
+     * Pull a post off the connected blog into this form. The caption is a
+     * starting point, not the finished thing — the AI Refine button is right
+     * there to rewrite it.
+     */
+    const handleSelectBlogPost = (post: BlogPost) => {
+        setCaption(blogPostToCaption(post))
+        if (post.image) {
+            setMediaPreview(post.image)
+            setMediaFile(null)
+            setMediaId(null)
+            setRemoteMediaUrl(post.image)
+        }
+        setShowBlogPicker(false)
+        toast.success(post.image ? 'Blog post imported' : 'Caption imported — add an image to post it')
+    }
 
     const handleGenerateAI = async () => {
         if (!userInput.trim()) { toast.error('Please enter some content first'); return }
@@ -89,17 +121,44 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
         finally { setLoading(false) }
     }
 
+    /**
+     * Persist the form. In edit mode this updates the post that was opened;
+     * otherwise it creates a new one. Both endpoints take the same body, so the
+     * only difference is the URL and the extra `postId`. Returns the saved row.
+     */
+    const savePost = async (scheduledAt: Date) => {
+        let currentMediaId = mediaId
+        if (!currentMediaId && mediaFile) currentMediaId = await uploadMedia(mediaFile)
+        if (!currentMediaId && !remoteMediaUrl) throw new Error('Media preparation failed')
+
+        const endpoint = isEditing ? '/api/posts/update' : '/api/posts/schedule'
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...(isEditing ? { postId: editingPostId } : {}),
+                workspaceId,
+                socialAccountId: selectedAccount,
+                caption,
+                scheduledAt: scheduledAt.toISOString(),
+                ...(currentMediaId ? { mediaId: currentMediaId } : { mediaUrl: remoteMediaUrl }),
+            }),
+        })
+
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(data.error || 'Failed to save post')
+        return data.post
+    }
+
     const handlePublishNow = async () => {
+        if (isLocked) { toast.error('This post has already been published.'); return }
         if (!mediaPreview && !mediaId) { toast.error('Please upload an image or video first'); return }
         setLoading(true)
         try {
-            let currentMediaId = mediaId
-            if (!currentMediaId && mediaFile) currentMediaId = await uploadMedia(mediaFile)
-            if (!currentMediaId) throw new Error('Media asset not ready')
-            const scheduleResponse = await fetch('/api/posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId, socialAccountId: selectedAccount, caption, scheduledAt: new Date().toISOString(), mediaId: currentMediaId }) })
-            const scheduleData = await scheduleResponse.json()
-            if (!scheduleResponse.ok) throw new Error(scheduleData.error || 'Failed to initialize post')
-            const publishResponse = await fetch('/api/posts/publish-now', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId: scheduleData.post.id, workspaceId }) })
+            const post = await savePost(new Date())
+            const postId = post?.id || editingPostId
+            if (!postId) throw new Error('Could not resolve the post to publish')
+            const publishResponse = await fetch('/api/posts/publish-now', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ postId, workspaceId }) })
             const publishData = await publishResponse.json()
             if (publishResponse.ok) { toast.success('Post published successfully!'); window.location.href = '/dashboard' }
             else throw new Error(publishData.error || 'Failed to publish post')
@@ -108,17 +167,14 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
     }
 
     const handleSchedulePost = async () => {
+        if (isLocked) { toast.error('This post has already been published.'); return }
         if (!scheduledDate || !scheduledTime) { toast.error('Please select date and time'); return }
         if (!mediaPreview && !mediaId) { toast.error('Please upload/generate media first'); return }
         setLoading(true)
         try {
-            let currentMediaId = mediaId
-            if (!currentMediaId && mediaFile) currentMediaId = await uploadMedia(mediaFile)
-            if (!currentMediaId) throw new Error('Media preparation failed')
-            const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`)
-            const response = await fetch('/api/posts/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId, socialAccountId: selectedAccount, caption, scheduledAt: scheduledAt.toISOString(), mediaId: currentMediaId }) })
-            if (response.ok) { toast.success('Post scheduled successfully!'); window.location.href = '/calendar' }
-            else { const data = await response.json(); throw new Error(data.error || 'Failed to schedule post') }
+            await savePost(new Date(`${scheduledDate}T${scheduledTime}`))
+            toast.success(isEditing ? 'Post updated successfully!' : 'Post scheduled successfully!')
+            window.location.href = '/calendar'
         } catch (error: any) { toast.error('Error: ' + error.message) }
         finally { setLoading(false) }
     }
@@ -135,7 +191,7 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                     <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
                         <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Media</h3>
                         {mediaPreview && (
-                            <button onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaId(null) }} className="text-[11px] font-medium text-red-500 hover:text-red-600 transition-colors">
+                            <button onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaId(null); setRemoteMediaUrl(null) }} className="text-[11px] font-medium text-red-500 hover:text-red-600 transition-colors">
                                 Remove
                             </button>
                         )}
@@ -153,24 +209,24 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-4">
-                                <label className="aspect-video rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-400 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group">
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                <label className="aspect-video rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 hover:border-orange-400 hover:bg-orange-50/20 dark:hover:bg-orange-950/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group">
                                     <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <Upload size={18} className="text-slate-400" />
                                     </div>
-                                    <div className="text-center">
+                                    <div className="text-center px-2">
                                         <span className="text-xs font-semibold text-slate-900 dark:text-white block">Upload media</span>
-                                        <span className="text-[10px] text-slate-400">JPG, PNG, MP4</span>
+                                        <span className="text-[10px] text-slate-400 block mt-0.5">JPG, PNG, MP4</span>
                                     </div>
                                     <input type="file" className="hidden" accept="image/*,video/*" onChange={handleFileChange} />
                                 </label>
-                                <button onClick={() => setShowAIStudio(true)} className="aspect-video rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 hover:border-violet-400 hover:bg-violet-50/20 dark:hover:bg-violet-950/20 transition-all flex flex-col items-center justify-center gap-3 group">
+                                <button onClick={() => setShowAIStudio(true)} className="aspect-video rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 hover:border-orange-400 hover:bg-orange-50/20 dark:hover:bg-orange-950/20 transition-all flex flex-col items-center justify-center gap-4 group">
                                     <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <Wand2 size={18} className="text-slate-400" />
                                     </div>
-                                    <div className="text-center">
+                                    <div className="text-center px-2">
                                         <span className="text-xs font-semibold text-slate-900 dark:text-white block">AI Generator</span>
-                                        <span className="text-[10px] text-slate-400">Create from prompt</span>
+                                        <span className="text-[10px] text-slate-400 block mt-0.5">Create from prompt</span>
                                     </div>
                                 </button>
                             </div>
@@ -180,12 +236,21 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
 
                 {/* Content */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
-                    <div className="px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50 flex items-center justify-between">
+                    <div className="px-4 sm:px-5 py-3.5 border-b border-slate-50 dark:border-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Caption</h3>
-                        <button onClick={handleGenerateAI} disabled={loading || !userInput.trim()} className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 hover:text-indigo-700 disabled:opacity-50 transition-all">
+                        <div className="flex items-center gap-4 flex-wrap">
+                        <button
+                            onClick={() => setShowBlogPicker(true)}
+                            className="text-[11px] font-semibold text-[#21759B] flex items-center gap-1.5 whitespace-nowrap hover:opacity-80 transition-all"
+                        >
+                            <Globe size={12} />
+                            Import from blog
+                        </button>
+                        <button onClick={handleGenerateAI} disabled={loading || !userInput.trim()} className="text-[11px] font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-1.5 whitespace-nowrap hover:text-orange-800 disabled:opacity-50 transition-all">
                             {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                             {loading ? 'Thinking...' : 'AI Refine'}
                         </button>
+                        </div>
                     </div>
                     <div className="p-6 space-y-5">
                         <textarea
@@ -193,7 +258,7 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                             onChange={(e) => setUserInput(e.target.value)}
                             rows={2}
                             placeholder="Briefly describe your post idea..."
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm resize-none focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/50 outline-none transition-all placeholder:text-slate-400"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm resize-none focus:ring-1 focus:ring-orange-500/30 focus:border-orange-500/50 outline-none transition-all placeholder:text-slate-400"
                         />
 
                         {aiGeneration && (
@@ -215,7 +280,7 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                             onChange={(e) => setCaption(e.target.value)}
                             rows={6}
                             placeholder="The final caption will be displayed here..."
-                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm resize-none focus:ring-1 focus:ring-indigo-500/30 focus:border-indigo-500/50 outline-none transition-all"
+                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm resize-none focus:ring-1 focus:ring-orange-500/30 focus:border-orange-500/50 outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -237,7 +302,7 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                                         <button
                                             key={account.id}
                                             onClick={() => setSelectedAccount(account.id)}
-                                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-[13px] transition-all ${isActive ? 'border-indigo-500 bg-indigo-50/30 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400' : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
+                                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border text-[13px] transition-all ${isActive ? 'border-orange-500 bg-orange-50/30 dark:bg-orange-900/10 text-orange-700 dark:text-orange-400' : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200 hover:bg-slate-50'}`}
                                         >
                                             <span className={`w-2.5 h-2.5 rounded-full ${pConfig.bg} shadow-sm`} />
                                             <span className="font-medium">{account.account_name}</span>
@@ -252,26 +317,34 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                             <div className="space-y-3">
                                 <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Schedule Date</label>
                                 <div className="relative">
-                                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-indigo-500/30 outline-none transition-all" />
-                                    <Calendar size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                    <input type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-orange-500/30 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]" />
                                 </div>
                             </div>
                             <div className="space-y-3">
                                 <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Time</label>
                                 <div className="relative">
-                                    <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-indigo-500/30 outline-none transition-all" />
-                                    <Clock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                    <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-orange-500/30 outline-none transition-all [color-scheme:light] dark:[color-scheme:dark]" />
                                 </div>
                             </div>
                         </div>
 
                         {/* Action Buttons */}
+                        {isLocked && (
+                            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-[12px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                                <AlertCircle size={15} className="shrink-0 mt-px" />
+                                <span>
+                                    This post has already {initialPost?.status === 'published' ? 'been published' : 'started publishing'}, so it can no longer be edited. Create a new post instead.
+                                </span>
+                            </div>
+                        )}
                         <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                            <button onClick={handleSchedulePost} disabled={loading || !scheduledDate || !scheduledTime} className="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-indigo-600/20">
+                            <button onClick={handleSchedulePost} disabled={loading || isLocked || !scheduledDate || !scheduledTime} className="flex-[2] py-3 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-orange-700/20">
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Calendar size={16} />}
-                                {loading ? 'Scheduling...' : 'Schedule Post'}
+                                {loading
+                                    ? (isEditing ? 'Updating...' : 'Scheduling...')
+                                    : (isEditing ? 'Update Post' : 'Schedule Post')}
                             </button>
-                            <button onClick={handlePublishNow} disabled={loading} className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                            <button onClick={handlePublishNow} disabled={loading || isLocked} className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-all">
                                 <Send size={16} /> Publish Now
                             </button>
                         </div>
@@ -284,10 +357,10 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                 <div className="sticky top-10 space-y-4">
                     <div className="flex items-center justify-between px-1">
                         <label className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Post Preview</label>
-                        <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">{selectedPlatform}</span>
+                        <span className="text-[10px] font-bold text-orange-500 uppercase tracking-tight">{selectedPlatform}</span>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-xl shadow-slate-200/40 dark:shadow-none">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 overflow-hidden shadow-sm shadow-slate-200/50 dark:shadow-none">
                         {/* Preview Header */}
                         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-50 dark:border-slate-800/50">
                             <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center text-white text-[10px] shadow-sm`}>
@@ -358,6 +431,13 @@ export default function ComposerForm({ workspaceId, socialAccounts, initialPost 
                     </div>
                 </div>
             )}
+
+            {/* Blog import — its own top-level modal, not nested in the AI one */}
+            <BlogPostPicker
+                open={showBlogPicker}
+                onClose={() => setShowBlogPicker(false)}
+                onSelect={handleSelectBlogPost}
+            />
         </div>
     )
 }

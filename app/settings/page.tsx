@@ -6,9 +6,10 @@ import ConnectShopifyButton from '@/components/ConnectShopifyButton'
 import ConnectedAccounts from '@/components/ConnectedAccounts'
 import ShopifyStatus from '@/components/ShopifyStatus'
 import DashboardLayout from '@/components/DashboardLayout'
-import { AlertCircle, CheckCircle2, Link2, ShoppingBag, User, Mail, Building2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Link2, ShoppingBag, User, Mail, Building2, Download, Globe } from 'lucide-react'
 import { getWorkspace } from '@/lib/get-workspace'
 import { SOCIAL_ACCOUNT_PUBLIC_COLUMNS } from '@/lib/api'
+import { splitByRole } from '@/lib/platforms'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +32,11 @@ export default async function SettingsPage({
         .eq('workspace_id', currentWorkspace?.id || '')
         .eq('is_active', true)
 
+    // Two different things live in this table: places we publish TO, and places
+    // we pull content FROM. They get their own sections so the page cannot
+    // imply that a blog is somewhere posts are sent.
+    const { destinations, sources } = splitByRole(socialAccounts || [])
+
     const connectedCount = socialAccounts?.length || 0
 
     return (
@@ -39,14 +45,14 @@ export default async function SettingsPage({
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                        <h1 className="text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
                             Settings
                         </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                             Manage your workspace and connected accounts
                         </p>
                     </div>
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400">
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400">
                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                         {connectedCount} connected
                     </div>
@@ -95,35 +101,35 @@ export default async function SettingsPage({
                 )}
 
                 {/* Workspace Section */}
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm shadow-slate-200/30 dark:shadow-none overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                                 <Building2 className="w-5 h-5 text-orange-700 dark:text-orange-400" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                                     Workspace
                                 </h2>
-                                <p className="text-xs text-gray-500">Your account details</p>
+                                <p className="text-xs text-slate-500">Your account details</p>
                             </div>
                         </div>
                     </div>
-                    <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                            <User className="w-5 h-5 text-gray-400" />
-                            <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Workspace Name</p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                            <User className="w-5 h-5 shrink-0 text-slate-400" />
+                            <div className="min-w-0">
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Workspace Name</p>
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">
                                     {currentWorkspace?.name || 'Default Workspace'}
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                            <Mail className="w-5 h-5 text-gray-400" />
-                            <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+                            <Mail className="w-5 h-5 shrink-0 text-slate-400" />
+                            <div className="min-w-0">
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Email</p>
+                                <p className="text-sm font-medium text-slate-900 dark:text-white break-all">
                                     {user.email}
                                 </p>
                             </div>
@@ -132,40 +138,39 @@ export default async function SettingsPage({
                 </div>
 
                 {/* Social Accounts Section */}
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm shadow-slate-200/30 dark:shadow-none overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                                     <Link2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                                         Social Accounts
                                     </h2>
-                                    <p className="text-xs text-gray-500">Connect your social media platforms</p>
+                                    <p className="text-xs text-slate-500">Where your posts are published</p>
                                 </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
                                 <ConnectInstagramButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectFacebookButton workspaceId={currentWorkspace?.id || 'default'} />
                                 <ConnectPinterestButton workspaceId={currentWorkspace?.id || 'default'} />
-                                <ConnectWordPressButton workspaceId={currentWorkspace?.id || 'default'} />
                             </div>
                         </div>
                     </div>
                     <div className="p-6">
-                        {socialAccounts && socialAccounts.length > 0 ? (
-                            <ConnectedAccounts accounts={socialAccounts} />
+                        {destinations.length > 0 ? (
+                            <ConnectedAccounts accounts={destinations} />
                         ) : (
                             <div className="text-center py-12 px-4">
-                                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-3xl">📱</span>
+                                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-800">
+                                    <Link2 size={24} className="text-slate-300 dark:text-slate-600" />
                                 </div>
-                                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                                <h3 className="text-base font-semibold text-slate-900 dark:text-white mb-2">
                                     No accounts connected
                                 </h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                                     Connect your first social media account using the buttons above to start scheduling posts.
                                 </p>
                             </div>
@@ -173,25 +178,68 @@ export default async function SettingsPage({
                     </div>
                 </div>
 
-                {/* Shopify Section */}
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Content Sources — where posts are pulled FROM, never sent to */}
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm shadow-slate-200/30 dark:shadow-none overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                                <Download className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                                    Content Sources
+                                </h2>
+                                <p className="text-xs text-slate-500">
+                                    Bring content in from your blog or store. Nothing is ever posted back to these.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* WordPress blog */}
+                    <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#21759B]/10 flex items-center justify-center">
+                                    <Globe className="w-5 h-5 text-[#21759B]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                                        WordPress Blog
+                                    </h3>
+                                    <p className="text-xs text-slate-500">Turn your blog posts into social posts</p>
+                                </div>
+                            </div>
+                            <ConnectWordPressButton workspaceId={currentWorkspace?.id || 'default'} />
+                        </div>
+                        {sources.length > 0 ? (
+                            <ConnectedAccounts accounts={sources} />
+                        ) : (
+                            <div className="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                                <Globe className="w-10 h-10 mx-auto text-slate-400 mb-3" />
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                    No blog connected. Connect one above to import posts.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Shopify store */}
+                    <div className="px-6 py-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                                     <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                                         Shopify
-                                    </h2>
-                                    <p className="text-xs text-gray-500">Create posts from your products</p>
+                                    </h3>
+                                    <p className="text-xs text-slate-500">Create posts from your products</p>
                                 </div>
                             </div>
                             <ConnectShopifyButton workspaceId={currentWorkspace?.id || 'default'} />
                         </div>
-                    </div>
-                    <div className="p-6">
                         <ShopifyStatus />
                     </div>
                 </div>
