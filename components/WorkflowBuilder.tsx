@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2, X, Sparkles, Wand2, FileText } from 'lucide-react'
+import { Calendar, Plus, Trash2, ChevronRight, Package, Clock, ImageIcon, Upload, Instagram, Facebook, Share2, X, Sparkles, Wand2, FileText, AlertCircle, RefreshCw } from 'lucide-react'
 import Image from 'next/image'
+import { toast } from 'sonner'
 import AIImageStudio from './AIImageStudio'
 import { createClient } from '@/lib/supabase/client'
 
@@ -34,12 +35,54 @@ type ScheduledItem = {
     item: ContentItem
     date: string
     time: string
+    /** Set when this item failed to schedule, so it stays visible with a reason. */
+    error?: string
 }
+
+/** Local-date formatting for <input type="date">; toISOString() would shift the day. */
+const toDateInput = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+const INTERVAL_DAYS = { daily: 1, every2days: 2, weekly: 7 } as const
 
 type SocialAccount = {
     id: string
     platform: string
     account_name: string | null
+}
+
+/** Shown inside the Content Library when a source fails to load, so a connected
+ *  store or blog is never just silently missing. */
+function LoadFailure({
+    what,
+    detail,
+    retrying,
+    onRetry
+}: {
+    what: string
+    detail: string
+    retrying: boolean
+    onRetry: () => void
+}) {
+    return (
+        <div className="py-12 text-center">
+            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+                <AlertCircle size={22} />
+            </div>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">Couldn&apos;t load {what}</p>
+            <p className="text-xs text-slate-500 mt-1 mb-5 max-w-xs mx-auto">{detail}</p>
+            <button
+                onClick={onRetry}
+                disabled={retrying}
+                className="px-5 py-2.5 bg-orange-700 text-white rounded-xl text-xs font-semibold hover:bg-orange-800 disabled:opacity-50 transition-all shadow-sm inline-flex items-center gap-2"
+            >
+                <RefreshCw size={14} className={retrying ? 'animate-spin' : ''} />
+                {retrying ? 'Retrying...' : 'Retry'}
+            </button>
+        </div>
+    )
 }
 
 export default function WorkflowBuilder({
@@ -53,14 +96,18 @@ export default function WorkflowBuilder({
     const [manualItems, setManualItems] = useState<ContentItem[]>([])
     const [loading, setLoading] = useState(true)
     const [shopifyConnected, setShopifyConnected] = useState(false)
+    const [shopifyError, setShopifyError] = useState<string | null>(null)
+    const [shopifyLoading, setShopifyLoading] = useState(false)
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
     const [wordpressConnected, setWordpressConnected] = useState(false)
+    const [wordpressError, setWordpressError] = useState<string | null>(null)
+    const [wordpressLoading, setWordpressLoading] = useState(false)
     const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([])
     const [selectedAccount, setSelectedAccount] = useState<string>('')
     const [startDate, setStartDate] = useState(() => {
         const tomorrow = new Date()
         tomorrow.setDate(tomorrow.getDate() + 1)
-        return tomorrow.toISOString().split('T')[0]
+        return toDateInput(tomorrow)
     })
     const [postTime, setPostTime] = useState('10:00')
     const [interval, setInterval] = useState<'daily' | 'every2days' | 'weekly'>('daily')
@@ -75,15 +122,24 @@ export default function WorkflowBuilder({
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const hasAnyConnectedAccount = socialAccounts.length > 0
+    const failedCount = scheduledItems.filter((s) => s.error).length
 
     useEffect(() => {
         fetchProducts()
         fetchBlogPosts()
     }, [])
 
+    /**
+     * A failure here used to leave `shopifyConnected` false, which silently hid the
+     * tab from someone who *does* have a store connected. Record the error instead,
+     * so the tab still renders and the load can be retried.
+     */
     const fetchProducts = async () => {
+        setShopifyLoading(true)
+        setShopifyError(null)
         try {
             const res = await fetch('/api/shopify/products')
+            if (!res.ok) throw new Error(`Store request failed (${res.status})`)
             const data = await res.json()
 
             if (data.connected) {
@@ -92,26 +148,37 @@ export default function WorkflowBuilder({
             } else {
                 setShopifyConnected(false)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fetch products:', error)
+            setShopifyError(error?.message || 'Could not reach your store')
         } finally {
+            setShopifyLoading(false)
             setLoading(false)
         }
     }
 
     const fetchBlogPosts = async () => {
+        setWordpressLoading(true)
+        setWordpressError(null)
         try {
             const res = await fetch('/api/wordpress/posts')
+            if (!res.ok) throw new Error(`Blog request failed (${res.status})`)
             const data = await res.json()
 
             if (data.connected && Array.isArray(data.posts)) {
                 setWordpressConnected(true)
                 setBlogPosts(data.posts)
+            } else if (data.connected) {
+                setWordpressConnected(true)
+                throw new Error('Your blog returned an unreadable list of posts')
             } else {
                 setWordpressConnected(false)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fetch blog posts:', error)
+            setWordpressError(error?.message || 'Could not reach your blog')
+        } finally {
+            setWordpressLoading(false)
         }
     }
 
@@ -136,17 +203,15 @@ export default function WorkflowBuilder({
             setManualImage(publicUrl)
         } catch (error: any) {
             console.error('Upload failed:', error)
-            alert('Could not upload that image: ' + (error?.message || 'please try again'))
+            toast.error('Could not upload that image: ' + (error?.message || 'please try again'))
         } finally {
             setUploading(false)
         }
     }
 
     const addManualItem = () => {
-        if (!manualTitle.trim()) {
-            alert('Please enter a title')
-            return
-        }
+        // The Save button is disabled without a title; this is only a guard.
+        if (!manualTitle.trim()) return
 
         const newItem: ContentItem = {
             id: `manual-${Date.now()}`,
@@ -162,23 +227,34 @@ export default function WorkflowBuilder({
         setShowManualForm(false)
     }
 
+    /**
+     * Queue dates are *derived* from Start Date + Frequency + Post Time, so changing
+     * any of those re-spaces the whole queue instead of leaving the dates frozen at
+     * whatever they were when each item was added.
+     */
+    const spaceOutQueue = (items: ScheduledItem[]): ScheduledItem[] => {
+        if (!startDate) return items
+        const step = INTERVAL_DAYS[interval]
+        return items.map((entry, i) => {
+            const d = new Date(`${startDate}T00:00:00`)
+            if (Number.isNaN(d.getTime())) return entry
+            d.setDate(d.getDate() + i * step)
+            return { ...entry, date: toDateInput(d), time: postTime }
+        })
+    }
+
+    useEffect(() => {
+        setScheduledItems((prev) => {
+            if (prev.length === 0) return prev
+            const next = spaceOutQueue(prev)
+            const unchanged = next.every((e, i) => e.date === prev[i].date && e.time === prev[i].time)
+            return unchanged ? prev : next
+        })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [startDate, interval, postTime])
+
     const addItemToSchedule = (item: ContentItem) => {
-        const lastDate = scheduledItems.length > 0
-            ? scheduledItems[scheduledItems.length - 1].date
-            : startDate
-
-        let nextDate = new Date(lastDate)
-        if (scheduledItems.length > 0) {
-            if (interval === 'daily') nextDate.setDate(nextDate.getDate() + 1)
-            else if (interval === 'every2days') nextDate.setDate(nextDate.getDate() + 2)
-            else if (interval === 'weekly') nextDate.setDate(nextDate.getDate() + 7)
-        }
-
-        setScheduledItems([...scheduledItems, {
-            item,
-            date: nextDate.toISOString().split('T')[0],
-            time: postTime
-        }])
+        setScheduledItems((prev) => spaceOutQueue([...prev, { item, date: startDate, time: postTime }]))
         setShowItemPicker(false)
     }
 
@@ -214,7 +290,7 @@ export default function WorkflowBuilder({
     }
 
     const removeItem = (index: number) => {
-        setScheduledItems(scheduledItems.filter((_, i) => i !== index))
+        setScheduledItems((prev) => spaceOutQueue(prev.filter((_, i) => i !== index)))
     }
 
     const updateItemDate = (index: number, date: string) => {
@@ -223,48 +299,79 @@ export default function WorkflowBuilder({
         setScheduledItems(updated)
     }
 
+    /**
+     * Each item is scheduled independently and one failure no longer aborts the run.
+     * Anything that succeeded is REMOVED from the queue, so pressing the button
+     * again retries only what actually failed — the old version threw on the first
+     * error and left the whole queue intact, which duplicated the posts that had
+     * already been written to the database.
+     */
     const createWorkflow = async () => {
-        if (!selectedAccount) {
-            alert('Please select a social account')
-            return
-        }
-        if (scheduledItems.length === 0) {
-            alert('Please add at least one item')
-            return
-        }
+        // Both of these are already enforced by the disabled button; guards only.
+        if (!selectedAccount || scheduledItems.length === 0) return
+
         const missingImage = scheduledItems.find(s => !s.item.image)
         if (missingImage) {
-            alert(`"${missingImage.item.title}" has no image. Every post needs one.`)
+            toast.error(`"${missingImage.item.title}" has no image. Every post needs one.`)
             return
         }
 
         setCreating(true)
+        // Clear last run's errors so the queue doesn't show stale reasons mid-retry.
+        setScheduledItems((prev) => prev.map(({ error, ...rest }) => rest))
+
+        const total = scheduledItems.length
+        const stillQueued: ScheduledItem[] = []
+        let succeeded = 0
+
         try {
             for (const scheduled of scheduledItems) {
-                const scheduledAt = new Date(`${scheduled.date}T${scheduled.time}:00`)
+                try {
+                    const scheduledAt = new Date(`${scheduled.date}T${scheduled.time}:00`)
+                    if (Number.isNaN(scheduledAt.getTime())) {
+                        throw new Error('That date and time could not be read')
+                    }
 
-                const res = await fetch('/api/posts/schedule', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        workspaceId,
-                        socialAccountId: selectedAccount,
-                        caption: scheduled.item.caption,
-                        mediaUrl: scheduled.item.image,
-                        scheduledAt: scheduledAt.toISOString(),
+                    const res = await fetch('/api/posts/schedule', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            workspaceId,
+                            socialAccountId: selectedAccount,
+                            caption: scheduled.item.caption,
+                            mediaUrl: scheduled.item.image,
+                            scheduledAt: scheduledAt.toISOString(),
+                        })
                     })
-                })
 
-                if (!res.ok) {
-                    const data = await res.json().catch(() => ({}))
-                    throw new Error(data.error || `Failed to schedule "${scheduled.item.title}"`)
+                    if (!res.ok) {
+                        const data = await res.json().catch(() => ({}))
+                        throw new Error(data.error || `The server said no (${res.status})`)
+                    }
+
+                    succeeded++
+                } catch (error: any) {
+                    console.error('Failed to schedule item:', scheduled.item.title, error)
+                    stillQueued.push({ ...scheduled, error: error?.message || 'Could not be scheduled' })
                 }
             }
 
-            alert(`Successfully scheduled ${scheduledItems.length} posts!`)
-            setScheduledItems([])
-        } catch (error: any) {
-            alert('Error creating workflow: ' + error.message)
+            // Only the failures survive, so a retry cannot double-post the successes.
+            setScheduledItems(stillQueued)
+
+            const failures = stillQueued.length
+            if (failures === 0) {
+                toast.success(`Scheduled ${succeeded} ${succeeded === 1 ? 'post' : 'posts'}`)
+            } else if (succeeded === 0) {
+                toast.error(
+                    `Nothing was scheduled — all ${failures} ${failures === 1 ? 'post is' : 'posts are'} still in your queue`
+                )
+            } else {
+                toast.warning(
+                    `${succeeded} of ${total} scheduled — ${failures} failed, still in your queue`,
+                    { duration: 8000 }
+                )
+            }
         } finally {
             setCreating(false)
         }
@@ -280,19 +387,19 @@ export default function WorkflowBuilder({
 
     if (!hasAnyConnectedAccount) {
         return (
-            <div className="bg-white dark:bg-gray-950 rounded-[2.5rem] border border-gray-200 dark:border-gray-800 p-16 text-center max-w-2xl mx-auto shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm shadow-slate-200/30 dark:shadow-none p-12 text-center max-w-2xl mx-auto">
                 <div className="w-20 h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-8">
                     <Share2 className="w-10 h-10 text-gray-400" />
                 </div>
-                <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-4">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight mb-4">
                     Connect a Social Account First
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 font-medium mb-10 leading-relaxed uppercase text-[10px] tracking-widest px-10">
+                <p className="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed text-sm px-10">
                     To use the Workflow Builder, connect at least one social account (Instagram, Facebook, or Pinterest) in Settings.
                 </p>
                 <a
                     href="/settings"
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-orange-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-800 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-500/20"
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-orange-700 text-white rounded-2xl font-semibold text-sm hover:bg-orange-800 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-orange-500/20"
                 >
                     Enable Accounts
                     <ChevronRight size={18} />
@@ -304,8 +411,8 @@ export default function WorkflowBuilder({
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* How It Works - Step Indicator */}
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/30 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-900/50">
-                <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 mb-4">How It Works</h3>
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 rounded-2xl p-6 border border-orange-100 dark:border-orange-900/50">
+                <h3 className="text-sm font-semibold text-orange-900 dark:text-orange-300 mb-4">How It Works</h3>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-0">
                     {[
                         { step: 1, title: 'Configure', desc: 'Choose account & schedule' },
@@ -317,7 +424,7 @@ export default function WorkflowBuilder({
                                 (item.step === 1 && selectedAccount) ||
                                 (item.step === 2 && scheduledItems.length > 0) ||
                                 (item.step === 3 && scheduledItems.length > 0 && selectedAccount)
-                                    ? 'bg-indigo-600 text-white'
+                                    ? 'bg-orange-700 text-white'
                                     : 'bg-white dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700'
                             }`}>
                                 {item.step}
@@ -333,11 +440,7 @@ export default function WorkflowBuilder({
             </div>
 
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">Auto Workflow</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Batch schedule posts with automatic date spacing</p>
-                </div>
+            <div className="flex justify-end gap-3">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setShowItemPicker(true)}
@@ -348,7 +451,14 @@ export default function WorkflowBuilder({
                     <button
                         onClick={createWorkflow}
                         disabled={creating || scheduledItems.length === 0 || !selectedAccount}
-                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-indigo-600/20"
+                        title={
+                            scheduledItems.length === 0
+                                ? 'Add at least one item to the queue first'
+                                : !selectedAccount
+                                    ? 'Choose a destination account first'
+                                    : undefined
+                        }
+                        className="px-6 py-2 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50 transition-all shadow-sm shadow-orange-700/20"
                     >
                         {creating ? <Clock size={16} className="animate-spin" /> : <Share2 size={16} />}
                         {creating ? 'Processing...' : `Schedule ${scheduledItems.length} Posts`}
@@ -367,11 +477,11 @@ export default function WorkflowBuilder({
                             {/* Destination */}
                             <div className="space-y-2">
                                 <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Destination</label>
-                                <p className="text-[10px] text-slate-400 -mt-1">Where to post your content</p>
+                                <p className="text-[10px] text-slate-400">Where to post your content</p>
                                 <select
                                     value={selectedAccount}
                                     onChange={(e) => setSelectedAccount(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-orange-500/30 transition-all text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                                 >
                                     <option value="">Select account...</option>
                                     {socialAccounts.map((account) => (
@@ -380,28 +490,33 @@ export default function WorkflowBuilder({
                                         </option>
                                     ))}
                                 </select>
+                                {!selectedAccount && scheduledItems.length > 0 && (
+                                    <p className="text-[10px] font-medium text-red-600 dark:text-red-400">
+                                        Pick an account before scheduling.
+                                    </p>
+                                )}
                             </div>
 
                             {/* Schedule */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Start Date</label>
-                                    <p className="text-[10px] text-slate-400 -mt-1">First post date</p>
+                                    <p className="text-[10px] text-slate-400">First post date</p>
                                     <input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-orange-500/30 transition-all [color-scheme:light] dark:[color-scheme:dark]"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Post Time</label>
-                                    <p className="text-[10px] text-slate-400 -mt-1">Daily time</p>
+                                    <p className="text-[10px] text-slate-400">Daily time</p>
                                     <input
                                         type="time"
                                         value={postTime}
                                         onChange={(e) => setPostTime(e.target.value)}
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-orange-500/30 transition-all [color-scheme:light] dark:[color-scheme:dark]"
                                     />
                                 </div>
                             </div>
@@ -409,21 +524,21 @@ export default function WorkflowBuilder({
                             {/* Frequency */}
                             <div className="space-y-2">
                                 <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Frequency</label>
-                                <p className="text-[10px] text-slate-400 -mt-1">Days between each post</p>
+                                <p className="text-[10px] text-slate-400">Days between each post</p>
                                 <div className="space-y-2">
                                     {(['daily', 'every2days', 'weekly'] as const).map((opt) => (
                                         <button
                                             key={opt}
                                             onClick={() => setInterval(opt)}
                                             className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${interval === opt
-                                                ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-medium'
+                                                ? 'bg-orange-50/50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400 font-medium'
                                                 : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                                                 }`}
                                         >
                                             <span className="text-xs">
                                                 {opt === 'daily' ? 'Every Day' : opt === 'every2days' ? 'Every 2 Days' : 'Every Week'}
                                             </span>
-                                            {interval === opt && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />}
+                                            {interval === opt && <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />}
                                         </button>
                                     ))}
                                 </div>
@@ -431,7 +546,7 @@ export default function WorkflowBuilder({
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-600/20 relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-orange-700 to-orange-800 rounded-2xl p-5 text-white shadow-lg shadow-orange-700/20 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-4 opacity-10">
                             <Sparkles size={60} />
                         </div>
@@ -439,7 +554,7 @@ export default function WorkflowBuilder({
                             <h4 className="text-xs font-bold mb-2 flex items-center gap-1.5">
                                 <Wand2 size={12} /> Quick Guide
                             </h4>
-                            <ol className="text-[11px] text-indigo-100 leading-relaxed space-y-1.5">
+                            <ol className="text-[11px] text-orange-100 leading-relaxed space-y-1.5">
                                 <li>1. Select your social account above</li>
                                 <li>2. Set start date and posting frequency</li>
                                 <li>3. Click "Add Content" to add items</li>
@@ -456,7 +571,10 @@ export default function WorkflowBuilder({
                             <h3 className="text-[13px] font-semibold text-slate-900 dark:text-white">Content Queue</h3>
                             {scheduledItems.length > 0 && (
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    {scheduledItems.length} items queued
+                                    {scheduledItems.length} {scheduledItems.length === 1 ? 'item' : 'items'} queued
+                                    {failedCount > 0 && (
+                                        <span className="text-red-600 dark:text-red-400"> · {failedCount} failed</span>
+                                    )}
                                 </span>
                             )}
                         </div>
@@ -470,8 +588,8 @@ export default function WorkflowBuilder({
                                     <p className="text-xs text-slate-500 mt-1 mb-6 max-w-xs mx-auto">
                                         Add images or products. Each item will be scheduled based on your frequency settings.
                                     </p>
-                                    <button onClick={() => setShowItemPicker(true)} className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">
-                                        <Plus size={14} className="inline mr-1.5 -mt-0.5" />
+                                    <button onClick={() => setShowItemPicker(true)} className="px-5 py-2.5 bg-orange-700 text-white rounded-xl text-xs font-semibold hover:bg-orange-800 transition-all shadow-sm">
+                                        <Plus size={14} className="inline mr-1.5" />
                                         Add First Item
                                     </button>
 
@@ -479,18 +597,21 @@ export default function WorkflowBuilder({
                                     <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
                                         <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-3">Example with 3 items & "Every 2 Days"</p>
                                         <div className="flex justify-center gap-2 text-[10px]">
-                                            <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md">Feb 7</span>
+                                            <span className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-md">Feb 7</span>
                                             <span className="text-slate-300">→</span>
-                                            <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md">Feb 9</span>
+                                            <span className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-md">Feb 9</span>
                                             <span className="text-slate-300">→</span>
-                                            <span className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-md">Feb 11</span>
+                                            <span className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-md">Feb 11</span>
                                         </div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     {scheduledItems.map((scheduled, index) => (
-                                        <div key={index} className="flex items-center gap-4 p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100/50 dark:border-slate-800/50 group">
+                                        <div key={index} className={`flex items-center gap-4 p-4 rounded-xl border group ${scheduled.error
+                                            ? 'bg-red-50/50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50'
+                                            : 'bg-slate-50/50 dark:bg-slate-800/30 border-slate-100/50 dark:border-slate-800/50'
+                                            }`}>
                                             <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100 dark:border-slate-700">
                                                 {scheduled.item.image ? (
                                                     <Image src={scheduled.item.image} alt={scheduled.item.title} fill className="object-cover" unoptimized />
@@ -503,7 +624,7 @@ export default function WorkflowBuilder({
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{scheduled.item.title}</p>
                                                 <div className="flex items-center gap-3 mt-1">
-                                                    <div className="flex items-center gap-1.5 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
+                                                    <div className="flex items-center gap-1.5 text-[11px] text-orange-700 dark:text-orange-400 font-medium">
                                                         <Calendar size={12} />
                                                         <span>{new Date(scheduled.date).toLocaleDateString()}</span>
                                                     </div>
@@ -512,6 +633,12 @@ export default function WorkflowBuilder({
                                                         <span>{scheduled.time}</span>
                                                     </div>
                                                 </div>
+                                                {scheduled.error && (
+                                                    <p className="flex items-start gap-1.5 mt-1.5 text-[11px] font-medium text-red-600 dark:text-red-400">
+                                                        <AlertCircle size={12} className="mt-px flex-none" />
+                                                        <span>Not scheduled: {scheduled.error}</span>
+                                                    </p>
+                                                )}
                                             </div>
                                             <button onClick={() => removeItem(index)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
                                                 <Trash2 size={16} />
@@ -534,10 +661,10 @@ export default function WorkflowBuilder({
                             <div className="flex items-center gap-4">
                                 <h3 className="text-base font-semibold text-slate-900 dark:text-white">Content Library</h3>
                                 <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
-                                    <button onClick={() => setActiveTab('upload')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Upload</button>
-                                    {shopifyConnected && <button onClick={() => setActiveTab('shopify')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'shopify' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Shopify</button>}
-                                    {wordpressConnected && <button onClick={() => setActiveTab('wordpress')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'wordpress' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>Blog</button>}
-                                    <button onClick={() => setActiveTab('ai')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500'}`}>AI Studio</button>
+                                    <button onClick={() => setActiveTab('upload')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'upload' ? 'bg-white dark:bg-slate-700 text-orange-700 shadow-sm' : 'text-slate-500'}`}>Upload</button>
+                                    {(shopifyConnected || shopifyError) && <button onClick={() => setActiveTab('shopify')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'shopify' ? 'bg-white dark:bg-slate-700 text-orange-700 shadow-sm' : 'text-slate-500'}`}>Shopify{shopifyError && <span className="text-red-500"> !</span>}</button>}
+                                    {(wordpressConnected || wordpressError) && <button onClick={() => setActiveTab('wordpress')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'wordpress' ? 'bg-white dark:bg-slate-700 text-orange-700 shadow-sm' : 'text-slate-500'}`}>Blog{wordpressError && <span className="text-red-500"> !</span>}</button>}
+                                    <button onClick={() => setActiveTab('ai')} className={`px-3 py-1 text-[11px] font-semibold rounded-md transition-all ${activeTab === 'ai' ? 'bg-white dark:bg-slate-700 text-orange-700 shadow-sm' : 'text-slate-500'}`}>AI Studio</button>
                                 </div>
                             </div>
                             <button onClick={() => setShowItemPicker(false)} className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
@@ -549,7 +676,7 @@ export default function WorkflowBuilder({
                             {activeTab === 'upload' && (
                                 <div className="space-y-6">
                                     {!showManualForm ? (
-                                        <button onClick={() => setShowManualForm(true)} className="w-full py-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 transition-all bg-slate-50/50 dark:bg-slate-800/20">
+                                        <button onClick={() => setShowManualForm(true)} className="w-full py-8 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center gap-3 text-slate-400 hover:border-orange-400 hover:text-orange-500 transition-all bg-slate-50/50 dark:bg-slate-800/20">
                                             <Plus size={24} />
                                             <span className="text-xs font-semibold uppercase tracking-wider">Create Custom Entry</span>
                                         </button>
@@ -559,11 +686,12 @@ export default function WorkflowBuilder({
                                                 <div className="space-y-4">
                                                     <div className="space-y-2">
                                                         <label className="text-[11px] font-semibold text-slate-400 uppercase">Title</label>
-                                                        <input type="text" value={manualTitle} onChange={(e) => setManualTitle(e.target.value)} placeholder="Post title..." className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500/30" />
+                                                        <input type="text" value={manualTitle} onChange={(e) => setManualTitle(e.target.value)} placeholder="Post title..." className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-1 focus:ring-orange-500/30" />
+                                                        <p className="text-[10px] text-slate-400">Required &mdash; used to name the item in your queue.</p>
                                                     </div>
                                                     <div className="space-y-2">
                                                         <label className="text-[11px] font-semibold text-slate-400 uppercase">Caption</label>
-                                                        <textarea value={manualCaption} onChange={(e) => setManualCaption(e.target.value)} placeholder="Post caption..." rows={3} className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500/30 resize-none" />
+                                                        <textarea value={manualCaption} onChange={(e) => setManualCaption(e.target.value)} placeholder="Post caption..." rows={3} className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-1 focus:ring-orange-500/30 resize-none" />
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
@@ -584,7 +712,7 @@ export default function WorkflowBuilder({
                                             </div>
                                             <div className="flex gap-3 pt-2">
                                                 <button onClick={() => setShowManualForm(false)} className="flex-1 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">Cancel</button>
-                                                <button onClick={addManualItem} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-all shadow-sm">Save to Library</button>
+                                                <button onClick={addManualItem} disabled={!manualTitle.trim()} title={!manualTitle.trim() ? 'Enter a title first' : undefined} className="flex-1 py-2 bg-orange-700 text-white rounded-lg text-xs font-semibold hover:bg-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">Save to Library</button>
                                             </div>
                                         </div>
                                     )}
@@ -604,7 +732,22 @@ export default function WorkflowBuilder({
                                 </div>
                             )}
 
-                            {activeTab === 'shopify' && (
+                            {activeTab === 'shopify' && shopifyError && (
+                                <LoadFailure
+                                    what="your Shopify products"
+                                    detail={shopifyError}
+                                    retrying={shopifyLoading}
+                                    onRetry={fetchProducts}
+                                />
+                            )}
+
+                            {activeTab === 'shopify' && !shopifyError && products.length === 0 && (
+                                <p className="text-sm text-slate-500 py-8 text-center">
+                                    No products found in your store yet.
+                                </p>
+                            )}
+
+                            {activeTab === 'shopify' && !shopifyError && products.length > 0 && (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                     {products.map((product) => (
                                         <button key={product.id} onClick={() => addProductToSchedule(product)} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800">
@@ -617,7 +760,16 @@ export default function WorkflowBuilder({
                                 </div>
                             )}
 
-                            {activeTab === 'wordpress' && (
+                            {activeTab === 'wordpress' && wordpressError && (
+                                <LoadFailure
+                                    what="your blog posts"
+                                    detail={wordpressError}
+                                    retrying={wordpressLoading}
+                                    onRetry={fetchBlogPosts}
+                                />
+                            )}
+
+                            {activeTab === 'wordpress' && !wordpressError && (
                                 <div className="flex flex-col gap-2">
                                     {blogPosts.length === 0 && (
                                         <p className="text-sm text-slate-500 py-8 text-center">
@@ -628,7 +780,7 @@ export default function WorkflowBuilder({
                                         <button
                                             key={post.id}
                                             onClick={() => addBlogPostToSchedule(post)}
-                                            className="group flex items-center gap-4 p-3 text-left rounded-xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all"
+                                            className="group flex items-center gap-4 p-3 text-left rounded-xl border border-slate-100 dark:border-slate-800 hover:border-orange-500/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all"
                                         >
                                             <div className="relative w-16 h-16 flex-none rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                                                 {post.image ? (
@@ -646,7 +798,7 @@ export default function WorkflowBuilder({
                                                     {new Date(post.date).toLocaleDateString()}
                                                 </p>
                                             </div>
-                                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex-none">
+                                            <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity flex-none">
                                                 Repurpose
                                             </span>
                                         </button>
