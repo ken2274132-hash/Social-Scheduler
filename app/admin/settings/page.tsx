@@ -20,7 +20,7 @@ export default async function AdminSettings() {
             icon: Globe,
             items: [
                 { label: 'Site Name', value: 'Feedquill', type: 'text' },
-                { label: 'Support Email', value: 'support@example.com', type: 'email' },
+                { label: 'Support Email', value: 'hassanasghardeveloper@gmail.com', type: 'email' },
                 { label: 'Maintenance Mode', value: false, type: 'toggle' },
             ]
         },

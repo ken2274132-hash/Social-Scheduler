@@ -132,7 +132,7 @@ export default function PrivacyPolicyPage() {
                             If you have any questions about this Privacy Policy, please contact us at:
                         </p>
                         <p className="mt-2">
-                            <strong>Email:</strong> rankbyhassan@gmail.com
+                            <strong>Email:</strong> hassanasghardeveloper@gmail.com
                         </p>
                     </section>
                 </div>

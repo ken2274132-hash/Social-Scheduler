@@ -72,7 +72,7 @@ export default function DataDeletionPage() {
                             You can also request data deletion by sending an email to our support team:
                         </p>
                         <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                            <p><strong>Email:</strong> rankbyhassan@gmail.com</p>
+                            <p><strong>Email:</strong> hassanasghardeveloper@gmail.com</p>
                             <p className="mt-2"><strong>Subject:</strong> Data Deletion Request</p>
                             <p className="mt-2"><strong>Include:</strong></p>
                             <ul className="list-disc pl-6 mt-1">
@@ -139,7 +139,7 @@ export default function DataDeletionPage() {
                             If you have any questions about data deletion or need assistance, please contact us:
                         </p>
                         <p className="mt-2">
-                            <strong>Email:</strong> rankbyhassan@gmail.com
+                            <strong>Email:</strong> hassanasghardeveloper@gmail.com
                         </p>
                     </section>
                 </div>

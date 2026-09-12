@@ -82,10 +82,10 @@ export default async function DeletionStatusPage({
                                 Check the code for a typo. If it is correct and you still see
                                 this, email{' '}
                                 <a
-                                    href="mailto:rankbyhassan@gmail.com"
+                                    href="mailto:hassanasghardeveloper@gmail.com"
                                     className="text-orange-700 hover:underline"
                                 >
-                                    rankbyhassan@gmail.com
+                                    hassanasghardeveloper@gmail.com
                                 </a>{' '}
                                 and quote it.
                             </p>

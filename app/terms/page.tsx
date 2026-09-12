@@ -136,7 +136,7 @@ export default function TermsOfServicePage() {
                             If you have any questions about these Terms of Service, please contact us at:
                         </p>
                         <p className="mt-2">
-                            <strong>Email:</strong> rankbyhassan@gmail.com
+                            <strong>Email:</strong> hassanasghardeveloper@gmail.com
                         </p>
                     </section>
                 </div>
